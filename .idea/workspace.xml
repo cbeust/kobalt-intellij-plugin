@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="9e6201ce-422c-450f-85d5-ecfb809d6427" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/KobaltWeigher.kt" afterPath="$PROJECT_DIR$/src/KobaltWeigher.kt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="kobalt-intellij-plugin.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -31,11 +30,21 @@
           <file leaf-file-name="KobaltWeigher.kt" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/src/KobaltWeigher.kt">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.32175502">
-                  <caret line="11" column="21" selection-start-line="11" selection-start-column="21" selection-end-line="11" selection-end-column="21" />
+                <state vertical-scroll-proportion="0.2632541">
+                  <caret line="9" column="21" selection-start-line="9" selection-start-column="21" selection-end-line="9" selection-end-column="21" />
                   <folding>
                     <element signature="e#42#282#0" expanded="true" />
                   </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="_Arrays.kt" pinned="false" current-in-tab="false">
+            <entry file="jar://$PROJECT_DIR$/lib/kotlin-runtime-sources.jar!/generated/_Arrays.kt">
+              <provider selected="true" editor-type-id="text-editor">
+                <state vertical-scroll-proportion="0.0">
+                  <caret line="7659" column="35" selection-start-line="7659" selection-start-column="35" selection-end-line="7659" selection-end-column="35" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -118,16 +127,6 @@
               <provider selected="true" editor-type-id="text-editor">
                 <state vertical-scroll-proportion="-2.3703704">
                   <caret line="86" column="5" selection-start-line="86" selection-start-column="5" selection-end-line="86" selection-end-column="5" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="LookupElement.class" pinned="false" current-in-tab="false">
-            <entry file="jar://$APPLICATION_HOME_DIR$/lib/openapi.jar!/com/intellij/codeInsight/lookup/LookupElement.class">
-              <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="3.5555556">
-                  <caret line="21" column="22" selection-start-line="21" selection-start-column="22" selection-end-line="21" selection-end-column="22" />
                   <folding />
                 </state>
               </provider>
@@ -598,18 +597,11 @@
           <option name="timeStamp" value="16" />
         </line-breakpoint>
       </breakpoints>
-      <option name="time" value="24" />
+      <option name="time" value="27" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar://$APPLICATION_HOME_DIR$/lib/idea.jar!/com/intellij/codeInsight/template/macro/TemplateCompletionProcessor.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-6.5185184">
-          <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$APPLICATION_HOME_DIR$/lib/openapi.jar!/com/intellij/codeInsight/completion/CompletionContributor.class">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-3.5555556">
@@ -1010,10 +1002,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="jar://$PROJECT_DIR$/lib/kotlin-runtime-sources.jar!/generated/_Arrays.kt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="7659" column="35" selection-start-line="7659" selection-start-column="35" selection-end-line="7659" selection-end-column="35" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/KobaltWeigher.kt">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.32175502">
-          <caret line="11" column="21" selection-start-line="11" selection-start-column="21" selection-end-line="11" selection-end-column="21" />
+        <state vertical-scroll-proportion="0.2632541">
+          <caret line="9" column="21" selection-start-line="9" selection-start-column="21" selection-end-line="9" selection-end-column="21" />
           <folding>
             <element signature="e#42#282#0" expanded="true" />
           </folding>
