@@ -9,7 +9,7 @@ class KobaltWeigher : CompletionWeigher() {
     override fun weigh(element: LookupElement, location: CompletionLocation): Comparable<Nothing>? {
         if ("Build.kt" == element.psiElement?.containingFile?.name && element is JavaMethodCallElement) {
             val annotations = element.`object`.modifierList.annotations
-            if (annotations.size() > 0 && annotations.get(0).qualifiedName == "Directive") {
+            if (annotations.any { it.qualifiedName == "Directive" }) {
                 return 1
             } else {
                 return -1
