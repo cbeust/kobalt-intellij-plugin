@@ -31,22 +31,20 @@
         <weigher key="completion" implementationClass="com.beust.kobalt.intellij.plugin.KobaltWeigher" />
     </extensions>
 
-    <application-components>
-        <!-- Add your application components here -->
-    </application-components>
-
-    <project-components>
-        <!-- Add your project components here -->
-    </project-components>
+    <module-components>
+        <component>
+            <implementation-class>
+                com.beust.kobalt.intelli.plugin.LibraryManagerImpl
+            </implementation-class>
+        </component>
+    </module-components>
 
     <actions>
         <group id="MyPlugin.SampleMenu" text="_Sample Menu" description="Sample menu">
             <add-to-group group-id="MainMenu" anchor="last"/>
             <action id="Myplugin.Textboxes" class="com.beust.kobalt.intelli.plugin.TextBoxes"
                     text="Text _Boxes" description="A test menu item"/>
-            <!--
-                  <action id="Myplugin.Dialogs" class="Mypackage.MyShowDialog" text="Show _Dialog" description="A test menu item" />
-            -->
+            <!--<action id="Myplugin.Dialogs" class="Mypackage.MyShowDialog" text="Show _Dialog" description="A test menu item" />-->
         </group>
     </actions>
 
