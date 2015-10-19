@@ -40,11 +40,10 @@
     </module-components>
 
     <actions>
-        <group id="MyPlugin.SampleMenu" text="_Sample Menu" description="Sample menu">
+        <group id="MyPlugin.Kobalt" text="_Kobalt" description="Kobalt">
             <add-to-group group-id="MainMenu" anchor="last"/>
-            <action id="Myplugin.Textboxes" class="com.beust.kobalt.intelli.plugin.TextBoxes"
-                    text="Text _Boxes" description="A test menu item"/>
-            <!--<action id="Myplugin.Dialogs" class="Mypackage.MyShowDialog" text="Show _Dialog" description="A test menu item" />-->
+            <action id="Myplugin.SyncBuildFile" class="com.beust.kobalt.intelli.plugin.SyncBuildFileAction"
+                    text="_Sync build file" description="Sync the build file"/>
         </group>
     </actions>
 

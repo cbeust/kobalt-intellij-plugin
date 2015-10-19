@@ -9,7 +9,7 @@ import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
 import com.intellij.openapi.vfs.JarFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 
-public class TextBoxes : AnAction("Text boxes") {
+public class SyncBuildFileAction : AnAction("Sync build file") {
     override fun actionPerformed(event: AnActionEvent) {
         val project = event.project
 
