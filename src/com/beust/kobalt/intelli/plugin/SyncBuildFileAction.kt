@@ -4,7 +4,6 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.intellij.openapi.actionSystem.*
-import com.intellij.openapi.application.*
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
@@ -22,7 +21,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 public class SyncBuildFileAction : AnAction("Sync build file") {
     companion object {
@@ -34,8 +32,18 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
         val port = 1234
         event.project?.let { project ->
             readVersion(project)?.let { version ->
-                val serverFuture = executor.submit { launchServer(port, version, project.basePath!!) }
-                val getFuture = executor.submit { sendGetDependencies(port, project) }
+//                ProgressManager.getInstance().runProcess({
+//                    launchServer(port, version, project.basePath!!)
+//                }, null)
+//                ProgressManager.getInstance().runProcess({
+//
+//                }, null)
+                val serverFuture = executor.submit {
+                    launchServer(port, version, project.basePath!!)
+                }
+                val getFuture = executor.submit {
+                    sendGetDependencies(port, project)
+                }
 //                executor.awaitTermination(30, TimeUnit.SECONDS)
 //                executor.shutdown()
             }
@@ -46,13 +54,14 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
         var attempts = 0
         var connected = false
         var socket: Socket? = null
-        while (attempts < 3 && ! connected) {
+        while (attempts < 5 && ! connected) {
             try {
                 socket = Socket("localhost", port)
                 connected = true
             } catch(ex: ConnectException) {
                 logInfo("Server not started yet, sleeping a bit")
                 Thread.sleep(2000)
+                attempts++
             }
         }
         if (connected) {
@@ -80,6 +89,9 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
 
                             logInfo("Read GetDependencyData, project count: ${dd.projects.size()}")
 
+                            dd.projects.forEach { kobaltProject ->
+                                addToDependencies(project, kobaltProject.dependencies)
+                            }
                             line = ins.readLine()
                         }
                     }
@@ -112,9 +124,15 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
         }
     }
 
+    private val DEV_MODE = false
+
     private fun findKobaltJar(version: String) =
-//            Paths.get(System.getProperty("user.home"),".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
+        if (DEV_MODE) {
             Paths.get("/Users/beust/kotlin/kobalt/kobaltBuild/libs/kobalt-0.193.jar")
+        } else {
+            Paths.get(System.getProperty("user.home"),
+                    ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
+        }
 
     private fun readVersion(project: Project): String? {
         val scope = GlobalSearchScope.allScope(project)
@@ -133,30 +151,48 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
         return properties.getProperty("kobalt.version", null)
     }
 
-
-    private fun addToDependencies(project: Project) {
+    /**
+     * Add the dependencies received from the server to the IDEA project.
+     */
+    private fun addToDependencies(project: Project, dependencies: List<DependencyData>) {
         val modules = ModuleManager.getInstance(project).modules
         if (modules.size() > 0) {
             val registrar = LibraryTablesRegistrar.getInstance()
             val libraryTable = registrar.getLibraryTable(project)
 
-            ApplicationManager.getApplication().runWriteAction {
-                val ltModel = libraryTable.modifiableModel
-                val library = ltModel.createLibrary("JCommander")
+            with(ApplicationManager.getApplication()) {
+                invokeLater {
+                    runWriteAction {
+                        val LIBRARY_NAME = "Kobalt Dependencies"
+                        libraryTable.modifiableModel.let { ltModel ->
+                            // Delete the old library if there's one
+                            ltModel.getLibraryByName(LIBRARY_NAME)?.let {
+                                ltModel.removeLibrary(it)
+                            }
 
-                val location = "c:\\users\\cbeust\\.kobalt\\repository\\com\\beust\\jcommander\\1.48\\jcommander-1.48.jar"
-                val url = VirtualFileManager.constructUrl(JarFileSystem.PROTOCOL, location) +
-                        JarFileSystem.JAR_SEPARATOR
-                val libModel = library.modifiableModel
-                libModel.addRoot(url, OrderRootType.CLASSES)
-                libModel.commit()
-                ltModel.commit()
+                            // Create the library
+                            var library = ltModel.createLibrary(LIBRARY_NAME)
+                            library.modifiableModel.let { libModel ->
+                                dependencies.forEach { dependency ->
+                                    val location = dependency.path
+                                    val url = VirtualFileManager.constructUrl(JarFileSystem.PROTOCOL, location) +
+                                            JarFileSystem.JAR_SEPARATOR
+                                    libModel.addRoot(url, OrderRootType.CLASSES)
+                                }
+                                libModel.commit()
+                            }
+                            ltModel.commit()
 
-                val moduleRootManager = ModuleRootManager.getInstance(modules[0])
-                val moduleModel = moduleRootManager.modifiableModel
+                            // Add the library as dependencies to the project
+                            // TODO: Do this to all models? How do we map IDEA modules to Kobalt projects?
+                            val moduleRootManager = ModuleRootManager.getInstance(modules[0])
+                            val moduleModel = moduleRootManager.modifiableModel
 
-                moduleModel.addLibraryEntry(library)
-                moduleModel.commit()
+                            moduleModel.addLibraryEntry(library)
+                            moduleModel.commit()
+                        }
+                    }
+                }
             }
         }
 
