@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.application.*
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
@@ -21,9 +22,9 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 public class SyncBuildFileAction : AnAction("Sync build file") {
-
     companion object {
         const val WRAPPER = "kobalt-wrapper.properties"
     }
@@ -34,17 +35,11 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
         event.project?.let { project ->
             readVersion(project)?.let { version ->
                 val serverFuture = executor.submit { launchServer(port, version, project.basePath!!) }
-                sendGetDependencies(port, project)
+                val getFuture = executor.submit { sendGetDependencies(port, project) }
+//                executor.awaitTermination(30, TimeUnit.SECONDS)
+//                executor.shutdown()
             }
         }
-    }
-
-    private fun log(level: Int, s: String) {
-        println("[SyncBuildFileAction] $s")
-    }
-
-    private fun error(s: String) {
-        println("[SyncBuildFileAction] *** ERROR: $s")
     }
 
     private fun sendGetDependencies(port: Int, project: Project) {
@@ -56,43 +51,44 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
                 socket = Socket("localhost", port)
                 connected = true
             } catch(ex: ConnectException) {
-                log(1, "Server not started yet, sleeping a bit")
+                logInfo("Server not started yet, sleeping a bit")
                 Thread.sleep(2000)
             }
         }
         if (connected) {
             val outgoing = PrintWriter(socket!!.outputStream, true)
-            val buildFiles = FilenameIndex.getFilesByName(project, "Build.kt", GlobalSearchScope.allScope(project))
-            buildFiles.forEach {
-                val buildFile = it.viewProvider.virtualFile.canonicalPath
-                val command: String = "{ \"name\":\"GetDependencies\", \"buildFile\": \"$buildFile\"}"
+            ApplicationManager.getApplication().runReadAction {
+                val buildFiles = FilenameIndex.getFilesByName(project, "Build.kt", GlobalSearchScope.allScope(project))
+                buildFiles.forEach {
+                    val buildFile = it.viewProvider.virtualFile.canonicalPath
+                    val command: String = "{ \"name\":\"GetDependencies\", \"buildFile\": \"$buildFile\"}"
 
-                outgoing.println(command)
+                    outgoing.println(command)
 
-                val ins = BufferedReader(InputStreamReader(socket!!.inputStream))
-                var line = ins.readLine()
-                var done = false
-                while (!done && line != null) {
-                    log(1, "Received from server:\n" + line)
-                    val jo = JsonParser().parse(line) as JsonObject
-                    if (jo.has("name") && "Quit" == jo.get("name").asString) {
-                        log(1, "Quitting")
-                        outgoing.println("{ \"name\": \"Quit\" }")
-                        done = true
-                    } else {
-                        val data = jo.get("data").asString
-                        val dd = Gson().fromJson(data, GetDependenciesData::class.java)
+                    val ins = BufferedReader(InputStreamReader(socket!!.inputStream))
+                    var line = ins.readLine()
+                    var done = false
+                    while (!done && line != null) {
+                        logInfo("Received from server:\n" + line)
+                        val jo = JsonParser().parse(line) as JsonObject
+                        if (jo.has("name") && "Quit" == jo.get("name").asString) {
+                            logInfo("Quitting")
+                            done = true
+                        } else {
+                            val data = jo.get("data").asString
+                            val dd = Gson().fromJson(data, GetDependenciesData::class.java)
 
-                        println("Read GetDependencyData, project count: ${dd.projects.size()}")
+                            logInfo("Read GetDependencyData, project count: ${dd.projects.size()}")
 
-                        line = ins.readLine()
+                            line = ins.readLine()
+                        }
                     }
                 }
             }
 
             outgoing.println(QUIT_COMMAND)
         } else {
-            error("Couldn't connect to server")
+            logError("Couldn't connect to server")
         }
 
     }
@@ -101,18 +97,18 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
 
     private fun launchServer(port: Int, version: String, directory: String) {
         val kobaltJar = findKobaltJar(version)
-        println("Kobalt jar: $kobaltJar")
+        logInfo("Kobalt jar: $kobaltJar")
         val args = arrayListOf("java", "-jar", kobaltJar.toFile().absolutePath, "--server", "--port", port.toString())
         val pb = ProcessBuilder(args)
         pb.directory(File(directory))
         pb.inheritIO()
-        println("Launching " + args.join(" "))
+        logInfo("Launching " + args.join(" "))
         val process = pb.start()
         val errorCode = process.waitFor()
         if (errorCode == 0) {
-            println("Server exiting")
+            logInfo("Server exiting")
         } else {
-            println("Server exiting with error")
+            logInfo("Server exiting with error")
         }
     }
 
@@ -164,5 +160,13 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
             }
         }
 
+    }
+
+    private fun logInfo(s: String) {
+        println("[SyncBuildFileAction] $s")
+    }
+
+    private fun logError(s: String) {
+        println("[SyncBuildFileAction] ***** ERROR: $s")
     }
 }
