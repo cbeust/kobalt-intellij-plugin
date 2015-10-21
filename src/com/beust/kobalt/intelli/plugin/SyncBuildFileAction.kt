@@ -1,14 +1,19 @@
 package com.beust.kobalt.intelli.plugin
 
+import com.google.common.collect.ArrayListMultimap
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.OrderRootType
+import com.intellij.openapi.roots.libraries.Library
+import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
 import com.intellij.openapi.vfs.JarFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -124,7 +129,7 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
         }
     }
 
-    private val DEV_MODE = false
+    private val DEV_MODE = true
 
     private fun findKobaltJar(version: String) =
         if (DEV_MODE) {
@@ -157,46 +162,92 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
     private fun addToDependencies(project: Project, dependencies: List<DependencyData>) {
         val modules = ModuleManager.getInstance(project).modules
         if (modules.size() > 0) {
-            val registrar = LibraryTablesRegistrar.getInstance()
-            val libraryTable = registrar.getLibraryTable(project)
 
-            with(ApplicationManager.getApplication()) {
-                invokeLater {
-                    runWriteAction {
-                        val LIBRARY_NAME = "Kobalt Dependencies"
-                        libraryTable.modifiableModel.let { ltModel ->
-                            // Delete the old library if there's one
-                            ltModel.getLibraryByName(LIBRARY_NAME)?.let {
-                                ltModel.removeLibrary(it)
+            val byScope = ArrayListMultimap.create<String, DependencyData>()
+            dependencies.forEach {
+                byScope.put(it.scope, it)
+            }
+
+            byScope.keySet().forEach { scope ->
+                // Add the library as dependencies to the project
+                // TODO: Do this to all models? How do we map IDEA modules to Kobalt projects?
+                val dependencies = byScope.get(scope)
+                if (dependencies.size() > 0) {
+                    addToDependencies(modules[0], project, dependencies, scope)
+                }
+            }
+        }
+    }
+
+    private fun addToDependencies(module: Module, project: Project, dependencies: List<DependencyData>, scope: String) {
+        val registrar = LibraryTablesRegistrar.getInstance()
+        val libraryTable = registrar.getLibraryTable(project)
+
+        with(ApplicationManager.getApplication()) {
+            invokeLater {
+                runWriteAction {
+                    val library = createLibrary(libraryTable, dependencies, scope)
+
+                    if (library != null) {
+                        // Add the library to the module
+                        val moduleRootManager = ModuleRootManager.getInstance(module)
+                        moduleRootManager.modifiableModel.let { moduleModel ->
+                            val existing = moduleModel.findLibraryOrderEntry(library)
+                            if (existing == null) {
+                                moduleModel.addLibraryEntry(library)
                             }
-
-                            // Create the library
-                            var library = ltModel.createLibrary(LIBRARY_NAME)
-                            library.modifiableModel.let { libModel ->
-                                dependencies.forEach { dependency ->
-                                    val location = dependency.path
-                                    val url = VirtualFileManager.constructUrl(JarFileSystem.PROTOCOL, location) +
-                                            JarFileSystem.JAR_SEPARATOR
-                                    libModel.addRoot(url, OrderRootType.CLASSES)
-                                }
-                                libModel.commit()
-                            }
-                            ltModel.commit()
-
-                            // Add the library as dependencies to the project
-                            // TODO: Do this to all models? How do we map IDEA modules to Kobalt projects?
-                            val moduleRootManager = ModuleRootManager.getInstance(modules[0])
-                            val moduleModel = moduleRootManager.modifiableModel
-
-                            moduleModel.addLibraryEntry(library)
                             moduleModel.commit()
                         }
+
+                        // Update the scope for the library
+                        moduleRootManager.modifiableModel.let { moduleModel ->
+                            moduleModel.findLibraryOrderEntry(library)?.let {
+                                it.scope = toScope(scope)
+                            }
+                            moduleModel.commit()
+                        }
+                    } else {
+                        error("Couldn't create library for scope $scope")
                     }
                 }
             }
         }
-
     }
+
+    private fun createLibrary(libraryTable: LibraryTable, dependencies: List<DependencyData>, scope: String): Library? {
+        var result: Library? = null
+        val LIBRARY_NAME = "Kobalt (${toScope(scope)})"
+        libraryTable.modifiableModel.let { ltModel ->
+            // Delete the old library if there's one
+            ltModel.getLibraryByName(LIBRARY_NAME)?.let {
+                logInfo("Removing existing library $it")
+                ltModel.removeLibrary(it)
+            }
+
+            // Create the library
+            result = ltModel.createLibrary(LIBRARY_NAME)
+            result!!.modifiableModel.let { libModel ->
+                dependencies.forEach { dependency ->
+                    val location = dependency.path
+                    val url = VirtualFileManager.constructUrl(JarFileSystem.PROTOCOL, location) +
+                            JarFileSystem.JAR_SEPARATOR
+                    libModel.addRoot(url, OrderRootType.CLASSES)
+
+                }
+                libModel.commit()
+            }
+            ltModel.commit()
+        }
+        return result
+    }
+
+    private fun toScope(scope: String) =
+        when(scope) {
+            "provided" -> DependencyScope.PROVIDED
+            "runtime" -> DependencyScope.RUNTIME
+            "testCompile" -> DependencyScope.TEST
+            else -> DependencyScope.COMPILE
+        }
 
     private fun logInfo(s: String) {
         println("[SyncBuildFileAction] $s")
