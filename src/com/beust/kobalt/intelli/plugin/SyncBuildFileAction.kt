@@ -15,6 +15,7 @@ import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.JarFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.search.FilenameIndex
@@ -153,7 +154,19 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
         val properties = Properties()
         val ins = ByteArrayInputStream(content.toString().toByteArray(StandardCharsets.UTF_8))
         properties.load(ins)
-        return properties.getProperty("kobalt.version", null)
+        val result = properties.getProperty("kobalt.version", null)
+        if (result != null) {
+            val MIN = 0.194
+            if (java.lang.Float.parseFloat(result) < MIN) {
+                Messages.showMessageDialog(project,
+                        "You need Kobalt version $MIN or above, please update your kobalt-wrapper.properties file" +
+                                " to the latest version",
+                        "Can't synchronize build file",
+                        Messages.getInformationIcon())
+                return null
+            }
+        }
+        return result
     }
 
     /**
