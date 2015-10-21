@@ -9,6 +9,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.OrderRootType
@@ -120,6 +121,7 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
         val pb = ProcessBuilder(args)
         pb.directory(File(directory))
         pb.inheritIO()
+        pb.environment().put("JAVA_HOME", ProjectJdkTable.getInstance().allJdks[0].homePath)
         logInfo("Launching " + args.join(" "))
         val process = pb.start()
         val errorCode = process.waitFor()
@@ -134,7 +136,7 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
 
     private fun findKobaltJar(version: String) =
         if (DEV_MODE) {
-            Paths.get("/Users/beust/kotlin/kobalt/kobaltBuild/libs/kobalt-0.193.jar")
+            Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-0.194.jar")
         } else {
             Paths.get(System.getProperty("user.home"),
                     ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
