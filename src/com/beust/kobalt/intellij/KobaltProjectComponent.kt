@@ -4,7 +4,6 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.module.Module
@@ -29,7 +28,6 @@ import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.*
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class KobaltProjectComponent(val project: Project) : ProjectComponent {
@@ -40,7 +38,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     override fun getComponentName() = "KobaltProjectComponent"
 
     val executor = Executors.newFixedThreadPool(2)
-    val port = 1234
+    val port = findPort()
 
     override fun initComponent() {
     }
@@ -291,4 +289,22 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         println("[KobaltProjectComponent] $s")
     }
 
+    private fun findPort() : Int {
+        for (i in 2127..65000) {
+            if (isPortAvailable(i)) return i
+        }
+        throw IllegalArgumentException("Couldn't find any port available, something is very wrong")
+    }
+
+    private fun isPortAvailable(port: Int) : Boolean {
+        var s : Socket? = null
+        try {
+            s = Socket("localhost", port)
+            return false
+        } catch(ex: IOException) {
+            return true
+        } finally {
+            s?.close()
+        }
+    }
 }
