@@ -39,6 +39,7 @@ import java.util.*
 
 class KobaltProjectComponent(val project: Project) : ProjectComponent {
     companion object {
+        const val MIN_KOBALT_VERSION = 0.195
         const val WRAPPER = "kobalt-wrapper.properties"
         val LOG = Logger.getInstance(KobaltProjectComponent::class.java)
 
@@ -190,7 +191,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
 
     private fun findKobaltJar(version: String) =
         if (DEV_MODE) {
-            Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-0.194.jar")
+            Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-0.195.jar")
         } else {
             Paths.get(System.getProperty("user.home"),
                     ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
