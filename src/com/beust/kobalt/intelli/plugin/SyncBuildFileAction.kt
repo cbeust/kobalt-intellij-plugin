@@ -85,7 +85,7 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
                     var line = ins.readLine()
                     var done = false
                     while (!done && line != null) {
-                        logInfo("Received from server:\n" + line)
+                        logInfo("Received from server: " + line)
                         val jo = JsonParser().parse(line) as JsonObject
                         if (jo.has("name") && "Quit" == jo.get("name").asString) {
                             logInfo("Quitting")
