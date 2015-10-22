@@ -87,9 +87,8 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         // Display the notification
         //
         val group = NotificationGroup.logOnlyGroup("Kobalt")
-        val notification = group.createNotification("Synchronizing Kobalt build file...",
-                NotificationType.INFORMATION)
-        notification.notify(project)
+        val notificationText = "Synchronizing Kobalt build file..."
+        group.createNotification(notificationText, NotificationType.INFORMATION).notify(project)
 
         //
         // Connect to the server
@@ -151,9 +150,9 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
 
         //
-        // All done, remove the notification
+        // All done, let the user know
         //
-        notification.expire()
+        group.createNotification(notificationText + " Done!", NotificationType.INFORMATION).notify(project)
     }
 
     private val QUIT_COMMAND = "{ \"name\" : \"Quit\" }"
