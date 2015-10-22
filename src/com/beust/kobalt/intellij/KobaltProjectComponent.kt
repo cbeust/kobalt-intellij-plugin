@@ -134,7 +134,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                     while (!done && line != null) {
                         logInfo("Received from server: " + line)
                         val jo = JsonParser().parse(line) as JsonObject
-                        if (jo.has("name") && "Quit" == jo.get("name").asString) {
+                        if (jo.has("name") && "quit" == jo.get("name").asString) {
                             logInfo("Quitting")
                             done = true
                         } else {
@@ -165,7 +165,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         group.createNotification(notificationText + " Done!", NotificationType.INFORMATION).notify(project)
     }
 
-    private val QUIT_COMMAND = "{ \"name\" : \"Quit\" }"
+    private val QUIT_COMMAND = "{ \"name\" : \"quit\" }"
 
     private fun launchServer(port: Int, version: String, directory: String) {
         val kobaltJar = findKobaltJar(version)
