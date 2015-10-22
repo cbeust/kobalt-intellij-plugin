@@ -8,6 +8,7 @@ import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ProjectComponent
+import com.intellij.openapi.diagnostic.Log
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
@@ -56,9 +57,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     var progress = StatusBarProgress()
 
     fun syncBuildFile() {
-        LOG.info("LOG INFO SYNCING KOBALT BUILD FILE")
-        LOG.debug("LOG DEBUG SYNCING KOBALT BUILD FILE")
-        println("SYNCING BUILD FILE FOR $project")
+        LOG.info("Syncing build file for project $project")
 
         readVersion(project)?.let { version ->
             with(ProgressManager.getInstance()) {
@@ -187,7 +186,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
-    private val DEV_MODE = false
+    private val DEV_MODE = true
 
     private fun findKobaltJar(version: String) =
         if (DEV_MODE) {
@@ -319,12 +318,12 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                 else -> DependencyScope.COMPILE
             }
 
-    private fun logError(s: String) {
-        println("[KobaltProjectComponent] ***** ERROR: $s")
+    private fun logError(s: String, e: Throwable? = null) {
+        LOG.error(s, e)
     }
 
     private fun logInfo(s: String) {
-        println("[KobaltProjectComponent ${Thread.currentThread().id}] $s")
+        LOG.info(s)
     }
 
     private fun findPort() : Int {
