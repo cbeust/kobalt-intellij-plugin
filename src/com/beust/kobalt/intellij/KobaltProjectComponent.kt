@@ -4,6 +4,7 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.intellij.codeInsight.completion.CompletionProgressIndicator
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
@@ -11,6 +12,12 @@ import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
+import com.intellij.openapi.progress.EmptyProgressIndicator
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
+import com.intellij.openapi.progress.util.ProgressWindowWithNotification
+import com.intellij.openapi.progress.util.StatusBarProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.roots.DependencyScope
@@ -19,7 +26,6 @@ import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
-import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.JarFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -32,7 +38,7 @@ import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.*
-import java.util.concurrent.Executors
+import kotlin.properties.Delegates
 
 class KobaltProjectComponent(val project: Project) : ProjectComponent {
     companion object {
@@ -41,54 +47,56 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
 
     }
 
-    override fun getComponentName() = "KobaltProjectComponent"
-
-    val executor = Executors.newFixedThreadPool(2)
     val port = findPort()
 
-    override fun initComponent() {
-    }
+    override fun getComponentName() = "KobaltProjectComponent"
+    override fun initComponent() {}
+    override fun disposeComponent() {}
+    override fun projectOpened() {}
+    override fun projectClosed() {}
 
-    override fun disposeComponent() {
-        executor.shutdown()
-    }
-
-    override fun projectOpened() {
-    }
-
-    override fun projectClosed() {
-    }
+    var progress = StatusBarProgress()
 
     fun syncBuildFile() {
         LOG.info("LOG INFO SYNCING KOBALT BUILD FILE")
-        LOG.debug("LOG DEUBG SYNCING KOBALT BUILD FILE")
+        LOG.debug("LOG DEBUG SYNCING KOBALT BUILD FILE")
         println("SYNCING BUILD FILE FOR $project")
 
         readVersion(project)?.let { version ->
-//                ProgressManager.getInstance().runProcess({
-//                    launchServer(port, version, project.basePath!!)
-//                }, null)
-//                ProgressManager.getInstance().runProcess({
-//
-//                }, null)
-            executor.submit {
-                launchServer(port, version, project.basePath!!)
+            with(ProgressManager.getInstance()) {
+                runProcessWithProgressAsynchronously(
+                        toBackgroundTask("Kobalt: Launch server", {
+                            launchServer(port, version, project.basePath!!)
+                        }), EmptyProgressIndicator())
+
+                runProcessWithProgressAsynchronously(
+                        toBackgroundTask("Kobalt: Get dependencies", {
+                            sendGetDependencies(port, project)
+                        }), progress)
             }
-            executor.submit {
-                sendGetDependencies(port, project)
+        }
+    }
+
+    private fun toBackgroundTask(title: String, function: Function0<Unit>): Task.Backgroundable {
+        return object: Task.Backgroundable(project, title) {
+            override fun run(p0: ProgressIndicator) {
+                function.invoke()
             }
-//                executor.awaitTermination(30, TimeUnit.SECONDS)
-//                executor.shutdown()
         }
     }
 
     private fun sendGetDependencies(port: Int, project: Project) {
+
         //
         // Display the notification
         //
-        val group = NotificationGroup.logOnlyGroup("Kobalt")
         val notificationText = "Synchronizing Kobalt build file..."
+        progress.text = notificationText
+        progress.fraction = 0.25
+        val group = NotificationGroup.logOnlyGroup("Kobalt")
         group.createNotification(notificationText, NotificationType.INFORMATION).notify(project)
+
+        progress.fraction = 0.50
 
         //
         // Connect to the server
@@ -106,6 +114,8 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                 attempts++
             }
         }
+
+        progress.fraction = 0.75
 
         //
         // Send the "GetDependencies" command to the server
@@ -148,6 +158,8 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         } else {
             logError("Couldn't connect to server")
         }
+
+        progress.fraction = 1.0
 
         //
         // All done, let the user know
