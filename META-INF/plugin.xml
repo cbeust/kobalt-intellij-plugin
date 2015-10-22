@@ -1,16 +1,15 @@
 <idea-plugin version="2">
-    <id>com.beust.kobalt.intellij-plugin</id>
+    <id>com.beust.kobalt.intellij</id>
     <name>Plugin for Kobalt</name>
-    <version>1.0</version>
-    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+    <version>1.1</version>
+    <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
       Plugin for <b>Kobalt</b>
     ]]></description>
 
     <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
+        Initial release.
     ]]>
     </change-notes>
 
