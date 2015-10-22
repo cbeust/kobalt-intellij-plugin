@@ -212,11 +212,11 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         properties.load(ins)
         val result = properties.getProperty("kobalt.version", null)
         if (result != null) {
-            val MIN = 0.194
-            if (Float.parseFloat(result) < MIN) {
+            val min = Float(MIN_KOBALT_VERSION).floatValue()
+            if (Float.parseFloat(result) < min) {
                 Messages.showMessageDialog(project,
-                        "You need Kobalt version $MIN or above, please update your kobalt-wrapper.properties file" +
-                                " to the latest version",
+                        "You need Kobalt version $min or above. Please update your kobalt-wrapper.properties file" +
+                                " to the latest version and run ./kobaltw to download it",
                         "Can't synchronize build file",
                         Messages.getInformationIcon())
                 return null
