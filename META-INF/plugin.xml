@@ -24,20 +24,8 @@
     -->
 
     <extensions defaultExtensionNs="com.intellij">
-<!--
-        <completion.contributor language="JAVA"
-                                implementationClass="com.beust.kobalt.intellij.plugin.SimpleCompletionContributor"/>
--->
         <weigher key="completion" implementationClass="com.beust.kobalt.intellij.plugin.KobaltWeigher" />
     </extensions>
-
-    <module-components>
-        <component>
-            <implementation-class>
-                com.beust.kobalt.intelli.plugin.LibraryManagerImpl
-            </implementation-class>
-        </component>
-    </module-components>
 
     <actions>
         <group id="MyPlugin.Kobalt" text="_Kobalt" description="Kobalt">
@@ -49,4 +37,9 @@
         </group>
     </actions>
 
+    <project-components>
+        <component>
+            <implementation-class>com.beust.kobalt.intelli.plugin.KobaltProjectComponent</implementation-class>
+        </component>
+    </project-components>
 </idea-plugin>
