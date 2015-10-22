@@ -1,9 +1,10 @@
-package com.beust.kobalt.intelli.plugin;
+package com.beust.kobalt.intellij;
 
 import com.google.common.collect.ArrayListMultimap
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.intellij.openapi.application.Application
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.module.Module
@@ -22,11 +23,13 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import java.io.*
+import java.lang.Float
 import java.net.ConnectException
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.*
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class KobaltProjectComponent(val project: Project) : ProjectComponent {
@@ -175,7 +178,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         val result = properties.getProperty("kobalt.version", null)
         if (result != null) {
             val MIN = 0.194
-            if (java.lang.Float.parseFloat(result) < MIN) {
+            if (Float.parseFloat(result) < MIN) {
                 Messages.showMessageDialog(project,
                         "You need Kobalt version $MIN or above, please update your kobalt-wrapper.properties file" +
                                 " to the latest version",

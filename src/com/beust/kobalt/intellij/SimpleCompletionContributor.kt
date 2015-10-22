@@ -1,4 +1,4 @@
-package com.beust.kobalt.intellij.plugin
+package com.beust.kobalt.intellij
 
 import com.intellij.codeInsight.completion.*
 import com.intellij.codeInsight.lookup.LookupElementBuilder

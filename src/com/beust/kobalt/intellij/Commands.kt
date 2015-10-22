@@ -1,4 +1,4 @@
-package com.beust.kobalt.intelli.plugin
+package com.beust.kobalt.intellij
 
 class DependencyData(val id: String, val scope: String, val path: String)
 

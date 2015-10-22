@@ -1,4 +1,4 @@
-package com.beust.kobalt.intelli.plugin
+package com.beust.kobalt.intellij
 
 import com.intellij.openapi.actionSystem.*
 
