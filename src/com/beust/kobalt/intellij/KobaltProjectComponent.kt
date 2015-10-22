@@ -4,7 +4,6 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.intellij.codeInsight.completion.CompletionProgressIndicator
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
@@ -16,7 +15,6 @@ import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
-import com.intellij.openapi.progress.util.ProgressWindowWithNotification
 import com.intellij.openapi.progress.util.StatusBarProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
@@ -38,7 +36,6 @@ import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.*
-import kotlin.properties.Delegates
 
 class KobaltProjectComponent(val project: Project) : ProjectComponent {
     companion object {
@@ -86,6 +83,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     }
 
     private fun sendGetDependencies(port: Int, project: Project) {
+        logInfo("sendGetDependencies")
 
         //
         // Display the notification
@@ -126,7 +124,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                 val buildFiles = FilenameIndex.getFilesByName(project, "Build.kt", GlobalSearchScope.allScope(project))
                 buildFiles.forEach {
                     val buildFile = it.viewProvider.virtualFile.canonicalPath
-                    val command: String = "{ \"name\":\"GetDependencies\", \"buildFile\": \"$buildFile\"}"
+                    val command: String = "{ \"name\":\"getDependencies\", \"buildFile\": \"$buildFile\"}"
 
                     outgoing.println(command)
 
@@ -172,7 +170,8 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     private fun launchServer(port: Int, version: String, directory: String) {
         val kobaltJar = findKobaltJar(version)
         logInfo("Kobalt jar: $kobaltJar")
-        val args = arrayListOf("java", "-jar", kobaltJar.toFile().absolutePath, "--server", "--port", port.toString())
+        val args = arrayListOf("java", "-jar", kobaltJar.toFile().absolutePath, "--dev",
+                "--server", "--port", port.toString())
         val pb = ProcessBuilder(args)
         pb.directory(File(directory))
         pb.inheritIO()
@@ -187,15 +186,15 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
-    private val DEV_MODE = true
+    private val DEV_MODE = false
 
     private fun findKobaltJar(version: String) =
-            if (DEV_MODE) {
-                Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-0.194.jar")
-            } else {
-                Paths.get(System.getProperty("user.home"),
-                        ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
-            }
+        if (DEV_MODE) {
+            Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-0.194.jar")
+        } else {
+            Paths.get(System.getProperty("user.home"),
+                    ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
+        }
 
     private fun readVersion(project: Project): String? {
         val scope = GlobalSearchScope.allScope(project)
@@ -324,7 +323,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     }
 
     private fun logInfo(s: String) {
-        println("[KobaltProjectComponent] $s")
+        println("[KobaltProjectComponent ${Thread.currentThread().id}] $s")
     }
 
     private fun findPort() : Int {
