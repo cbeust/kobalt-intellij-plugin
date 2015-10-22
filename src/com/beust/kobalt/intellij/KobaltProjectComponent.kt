@@ -4,11 +4,14 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.intellij.notification.NotificationGroup
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ProjectComponent
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
-import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.roots.ModuleRootManager
@@ -16,6 +19,7 @@ import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
+import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.JarFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -33,6 +37,8 @@ import java.util.concurrent.Executors
 class KobaltProjectComponent(val project: Project) : ProjectComponent {
     companion object {
         const val WRAPPER = "kobalt-wrapper.properties"
+        val LOG = Logger.getInstance(KobaltProjectComponent::class.java)
+
     }
 
     override fun getComponentName() = "KobaltProjectComponent"
@@ -54,6 +60,8 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     }
 
     fun syncBuildFile() {
+        LOG.info("LOG INFO SYNCING KOBALT BUILD FILE")
+        LOG.debug("LOG DEUBG SYNCING KOBALT BUILD FILE")
         println("SYNCING BUILD FILE FOR $project")
 
         readVersion(project)?.let { version ->
@@ -75,6 +83,17 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     }
 
     private fun sendGetDependencies(port: Int, project: Project) {
+        //
+        // Display the notification
+        //
+        val group = NotificationGroup.logOnlyGroup("Kobalt")
+        val notification = group.createNotification("Synchronizing Kobalt build file...",
+                NotificationType.INFORMATION)
+        notification.notify(project)
+
+        //
+        // Connect to the server
+        //
         var attempts = 0
         var connected = false
         var socket: Socket? = null
@@ -88,6 +107,10 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                 attempts++
             }
         }
+
+        //
+        // Send the "GetDependencies" command to the server
+        //
         if (connected) {
             val outgoing = PrintWriter(socket!!.outputStream, true)
             ApplicationManager.getApplication().runReadAction {
@@ -127,6 +150,10 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
             logError("Couldn't connect to server")
         }
 
+        //
+        // All done, remove the notification
+        //
+        notification.expire()
     }
 
     private val QUIT_COMMAND = "{ \"name\" : \"Quit\" }"
