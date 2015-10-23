@@ -27,9 +27,9 @@
     </extensions>
 
     <actions>
-        <group id="MyPlugin.Kobalt" text="_Kobalt" description="Kobalt">
+        <group id="kobalt.MainMenu" text="_Kobalt" description="Kobalt">
             <add-to-group group-id="MainMenu" relative-to-action="HelpMenu" anchor="before"/>
-            <action id="Myplugin.SyncBuildFile" class="com.beust.kobalt.intellij.SyncBuildFileAction"
+            <action id="kobalt.SyncBuildFile" class="com.beust.kobalt.intellij.SyncBuildFileAction"
                     text="_Sync build file" description="Sync the build file">
                 <keyboard-shortcut first-keystroke="control alt K" keymap="$default"/>
             </action>
