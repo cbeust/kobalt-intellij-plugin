@@ -1,11 +1,11 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
-    <name>Plugin for Kobalt</name>
-    <version>1.1</version>
+    <name>Kobalt</name>
+    <version>1.2</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
-      Plugin for <b>Kobalt</b>
+      A plugin for the <b>Kobalt</b> build system.
     ]]></description>
 
     <change-notes><![CDATA[
@@ -36,6 +36,11 @@
         </group>
     </actions>
 
+    <application-components>
+        <component>
+            <implementation-class>com.beust.kobalt.intellij.KobaltApplicationComponent</implementation-class>
+        </component>
+    </application-components>
     <project-components>
         <component>
             <implementation-class>com.beust.kobalt.intellij.KobaltProjectComponent</implementation-class>

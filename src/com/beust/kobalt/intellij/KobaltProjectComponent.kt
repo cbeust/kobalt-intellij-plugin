@@ -8,7 +8,6 @@ import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ProjectComponent
-import com.intellij.openapi.diagnostic.Log
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
@@ -25,30 +24,31 @@ import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.JarFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import java.io.*
-import java.lang.Float
 import java.net.ConnectException
 import java.net.Socket
-import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
-import java.util.*
 
+/**
+ * Invoked from the "Sync build file" action: launch a kobalt --server in the background, connect to it
+ * and send it a getDependencies() command for the current project. When the answer is received, update
+ * the project's libraries and dependencies with that information.
+ *
+ * @author Cedric Beust <cedric@beust.com>
+ * @since 10 23, 2015
+ */
 class KobaltProjectComponent(val project: Project) : ProjectComponent {
     companion object {
-        const val MIN_KOBALT_VERSION = 0.195
         const val WRAPPER = "kobalt-wrapper.properties"
         val LOG = Logger.getInstance(KobaltProjectComponent::class.java)
 
     }
 
-    val port = findPort()
-
-    override fun getComponentName() = "KobaltProjectComponent"
+    override fun getComponentName() = "kobalt.ProjectComponent"
     override fun initComponent() {}
     override fun disposeComponent() {}
     override fun projectOpened() {}
@@ -59,18 +59,18 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     fun syncBuildFile() {
         LOG.info("Syncing build file for project $project")
 
-        readVersion(project)?.let { version ->
-            with(ProgressManager.getInstance()) {
-                runProcessWithProgressAsynchronously(
-                        toBackgroundTask("Kobalt: Launch server", {
-                            launchServer(port, version, project.basePath!!)
-                        }), EmptyProgressIndicator())
+        val version = KobaltApplicationComponent.MIN_KOBALT_VERSION
+        with(ProgressManager.getInstance()) {
+            val port = findPort()
+            runProcessWithProgressAsynchronously(
+                    toBackgroundTask("Kobalt: Launch server", {
+                        launchServer(port, version, project.basePath!!)
+                    }), EmptyProgressIndicator())
 
-                runProcessWithProgressAsynchronously(
-                        toBackgroundTask("Kobalt: Get dependencies", {
-                            sendGetDependencies(port, project)
-                        }), progress)
-            }
+            runProcessWithProgressAsynchronously(
+                    toBackgroundTask("Kobalt: Get dependencies", {
+                        sendGetDependencies(port, project)
+                    }), progress)
         }
     }
 
@@ -195,35 +195,6 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
             Paths.get(System.getProperty("user.home"),
                     ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
         }
-
-    private fun readVersion(project: Project): String? {
-        val scope = GlobalSearchScope.allScope(project)
-
-        val wrappers = FilenameIndex.getFilesByName(project, WRAPPER, scope)
-        if (wrappers.size() != 1) {
-            logError("Expected to find exactly one $WRAPPER, found ${wrappers.size()}")
-            return null
-        }
-
-        val wrapper = wrappers[0]
-        val content = wrapper.viewProvider.contents
-        val properties = Properties()
-        val ins = ByteArrayInputStream(content.toString().toByteArray(StandardCharsets.UTF_8))
-        properties.load(ins)
-        val result = properties.getProperty("kobalt.version", null)
-        if (result != null) {
-            val min = Float(MIN_KOBALT_VERSION).floatValue()
-            if (Float.parseFloat(result) < min) {
-                Messages.showMessageDialog(project,
-                        "You need Kobalt version $min or above. Please update your kobalt-wrapper.properties file" +
-                                " to the latest version and run ./kobaltw to download it",
-                        "Can't synchronize build file",
-                        Messages.getInformationIcon())
-                return null
-            }
-        }
-        return result
-    }
 
     /**
      * Add the dependencies received from the server to the IDEA project.
