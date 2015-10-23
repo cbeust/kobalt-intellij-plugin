@@ -43,7 +43,6 @@ import java.nio.file.Paths
  */
 class KobaltProjectComponent(val project: Project) : ProjectComponent {
     companion object {
-        const val WRAPPER = "kobalt-wrapper.properties"
         val LOG = Logger.getInstance(KobaltProjectComponent::class.java)
 
     }
@@ -141,7 +140,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                             val data = jo.get("data").asString
                             val dd = Gson().fromJson(data, GetDependenciesData::class.java)
 
-                            logInfo("Read GetDependencyData, project count: ${dd.projects.size()}")
+                            logInfo("Read GetDependencyData, project count: ${dd.projects.size}")
 
                             dd.projects.forEach { kobaltProject ->
                                 addToDependencies(project, kobaltProject.dependencies)
@@ -176,7 +175,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         pb.directory(File(directory))
         pb.inheritIO()
         pb.environment().put("JAVA_HOME", ProjectJdkTable.getInstance().allJdks[0].homePath)
-        logInfo("Launching " + args.join(" "))
+        logInfo("Launching " + args.joinToString(" "))
         val process = pb.start()
         val errorCode = process.waitFor()
         if (errorCode == 0) {
@@ -186,11 +185,11 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
-    private val DEV_MODE = true
+    private val DEV_MODE = false
 
     private fun findKobaltJar(version: String) =
         if (DEV_MODE) {
-            Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-0.195.jar")
+            Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-0.198.jar")
         } else {
             Paths.get(System.getProperty("user.home"),
                     ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
@@ -201,7 +200,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
      */
     private fun addToDependencies(project: Project, dependencies: List<DependencyData>) {
         val modules = ModuleManager.getInstance(project).modules
-        if (modules.size() > 0) {
+        if (modules.size > 0) {
 
             val byScope = ArrayListMultimap.create<String, DependencyData>()
             dependencies.forEach {
@@ -212,7 +211,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                 // Add the library as dependencies to the project
                 // TODO: Do this to all models? How do we map IDEA modules to Kobalt projects?
                 val scopedDependencies = byScope.get(scope)
-                if (scopedDependencies.size() > 0) {
+                if (scopedDependencies.size > 0) {
                     addToDependencies(modules[0], project, scopedDependencies, scope)
                 }
             }

@@ -24,7 +24,7 @@ class KFiles {
         /** Where all the .zip files are extracted */
         val distributionsDir = homeDir(KOBALT_DOT_DIR, "wrapper", "dist")
         fun homeDir(vararg dirs: String) : String = System.getProperty("user.home") +
-                File.separator + dirs.toArrayList().join(File.separator)
+                File.separator + dirs.toArrayList().joinToString(File.separator)
 
         fun saveFile(file: File, text: String) {
             file.absoluteFile.parentFile.mkdirs()
@@ -120,11 +120,11 @@ public class DistributionDownloader {
                 // extracts file name from header field
                 val index = disposition.indexOf("filename=")
                 if (index > 0) {
-                    fileName = disposition.substring(index + 10, disposition.length() - 1)
+                    fileName = disposition.substring(index + 10, disposition.length - 1)
                 }
             } else {
                 // extracts file name from URL
-                fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1, fileUrl.length())
+                fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1, fileUrl.length)
             }
 
             log(2, "Content-Type = " + contentType)
