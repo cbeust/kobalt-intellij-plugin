@@ -9,5 +9,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="kotlin-1.0.0-beta-1038" level="project" />
+    <orderEntry type="library" name="gson-2.4" level="project" />
   </component>
 </module>
