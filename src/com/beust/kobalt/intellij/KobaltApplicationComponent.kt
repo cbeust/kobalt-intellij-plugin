@@ -13,7 +13,7 @@ import com.intellij.openapi.progress.util.StatusBarProgress
  */
 public class KobaltApplicationComponent : ApplicationComponent {
     companion object {
-        val MIN_KOBALT_VERSION = "0.198"
+        val MIN_KOBALT_VERSION = "0.199"
     }
 
     override fun getComponentName() = "kobalt.ApplicationComponent"

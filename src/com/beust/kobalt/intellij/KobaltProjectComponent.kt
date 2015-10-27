@@ -31,6 +31,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import java.io.*
 import java.net.ConnectException
 import java.net.Socket
+import java.nio.file.Path
 import java.nio.file.Paths
 
 /**
@@ -59,16 +60,17 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         LOG.info("Syncing build file for project $project")
 
         val version = KobaltApplicationComponent.MIN_KOBALT_VERSION
+        val kobaltJar = findKobaltJar(version)
         with(ProgressManager.getInstance()) {
             val port = findPort()
             runProcessWithProgressAsynchronously(
                     toBackgroundTask("Kobalt: Launch server", {
-                        launchServer(port, version, project.basePath!!)
+                        launchServer(port, version, project.basePath!!, kobaltJar)
                     }), EmptyProgressIndicator())
 
             runProcessWithProgressAsynchronously(
                     toBackgroundTask("Kobalt: Get dependencies", {
-                        sendGetDependencies(port, project)
+                        sendGetDependencies(port, project, kobaltJar)
                     }), progress)
         }
     }
@@ -81,7 +83,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
-    private fun sendGetDependencies(port: Int, project: Project) {
+    private fun sendGetDependencies(port: Int, project: Project, kobaltJar: Path) {
         logInfo("sendGetDependencies")
 
         //
@@ -115,7 +117,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         progress.fraction = 0.75
 
         //
-        // Send the "GetDependencies" command to the server
+        // Send the "getDependencies" command to the server
         //
         if (connected) {
             val outgoing = PrintWriter(socket!!.outputStream, true)
@@ -143,7 +145,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                             logInfo("Read GetDependencyData, project count: ${dd.projects.size}")
 
                             dd.projects.forEach { kobaltProject ->
-                                addToDependencies(project, kobaltProject.dependencies)
+                                addToDependencies(project, kobaltProject.dependencies, kobaltJar)
                             }
                             line = ins.readLine()
                         }
@@ -166,8 +168,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
 
     private val QUIT_COMMAND = "{ \"name\" : \"quit\" }"
 
-    private fun launchServer(port: Int, version: String, directory: String) {
-        val kobaltJar = findKobaltJar(version)
+    private fun launchServer(port: Int, version: String, directory: String, kobaltJar: Path) {
         logInfo("Kobalt jar: $kobaltJar")
         val args = arrayListOf("java", "-jar", kobaltJar.toFile().absolutePath, "--dev",
                 "--server", "--port", port.toString())
@@ -195,76 +196,124 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                     ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
         }
 
-    /**
-     * Add the dependencies received from the server to the IDEA project.
-     */
-    private fun addToDependencies(project: Project, dependencies: List<DependencyData>) {
+    private fun addToDependencies(project: Project, dependencies: List<DependencyData>, kobaltJar: Path) {
         val modules = ModuleManager.getInstance(project).modules
-        if (modules.size > 0) {
-
-            val byScope = ArrayListMultimap.create<String, DependencyData>()
-            dependencies.forEach {
-                byScope.put(it.scope, it)
-            }
-
-            byScope.keySet().forEach { scope ->
-                // Add the library as dependencies to the project
-                // TODO: Do this to all models? How do we map IDEA modules to Kobalt projects?
-                val scopedDependencies = byScope.get(scope)
-                if (scopedDependencies.size > 0) {
-                    addToDependencies(modules[0], project, scopedDependencies, scope)
-                }
-            }
-        }
-    }
-
-    private fun addToDependencies(module: Module, project: Project, dependencies: List<DependencyData>, scope: String) {
         val registrar = LibraryTablesRegistrar.getInstance()
         val libraryTable = registrar.getLibraryTable(project)
 
         with(ApplicationManager.getApplication()) {
             invokeLater {
                 runWriteAction {
-                    val library = createLibrary(libraryTable, dependencies, scope)
-
-                    if (library != null) {
-                        // Add the library to the module
-                        val moduleRootManager = ModuleRootManager.getInstance(module)
-                        moduleRootManager.modifiableModel.let { moduleModel ->
-                            val existing = moduleModel.findLibraryOrderEntry(library)
-                            if (existing == null) {
-                                moduleModel.addLibraryEntry(library)
-                            }
-                            moduleModel.commit()
-                        }
-
-                        // Update the scope for the library
-                        moduleRootManager.modifiableModel.let { moduleModel ->
-                            moduleModel.findLibraryOrderEntry(library)?.let {
-                                it.scope = toScope(scope)
-                            }
-                            moduleModel.commit()
-                        }
-                    } else {
-                        error("Couldn't create library for scope $scope")
-                    }
+                    deleteLibrariesAndContentEntries(modules, libraryTable)
+                    addDependencies(modules, dependencies, kobaltJar, libraryTable)
                 }
             }
         }
     }
 
-    private fun createLibrary(libraryTable: LibraryTable, dependencies: List<DependencyData>, scope: String): Library? {
+    private fun addDependencies(modules: Array<Module>, dependencies: List<DependencyData>, kobaltJar: Path,
+            libraryTable: LibraryTable) {
+        //
+        // Finally, add all the dependencies received from the server
+        //
+        val byScope = ArrayListMultimap.create<String, DependencyData>()
+        dependencies.forEach {
+            byScope.put(it.scope, it)
+        }
+
+        modules.forEach { module ->
+            //
+            // Add kobalt.jar
+            //
+            val kobaltDependency = DependencyData("", "compile", kobaltJar.toFile().absolutePath)
+            val kobaltLibrary= createLibrary(libraryTable, arrayListOf(kobaltDependency), "compile",
+                    "kobalt.jar")
+            addLibrary(kobaltLibrary, module, "compile")
+
+            //
+            // Add each dependency per scope
+            //
+            byScope.keySet().forEach { scope ->
+                // Add the library as dependencies to the project
+                // TODO: Do this to all models? How do we map IDEA modules to Kobalt projects?
+                val scopedDependencies = byScope.get(scope)
+                if (scopedDependencies.size > 0) {
+                    val libraryName = "kobalt (${toScope(scope)})"
+                    val library = createLibrary(libraryTable, scopedDependencies, scope, libraryName)
+                    addLibrary(library, module, scope)
+                }
+            }
+        }
+    }
+
+    /**
+     * Delete all the Kobalt libraries and their ContentEntries.
+     */
+    private fun deleteLibrariesAndContentEntries(modules: Array<Module>, libraryTable: LibraryTable) {
+        fun isKobalt(name: String) = name.toLowerCase().startsWith("kobalt")
+
+        //
+        // Delete all the kobalt libraries
+        //
+        libraryTable.modifiableModel.libraries.filter {
+            isKobalt(it.name!!)
+        }.map {
+            val library = libraryTable.getLibraryByName(it.name!!)
+            if (library != null) {
+                libraryTable.removeLibrary(library)
+            } else {
+                LOG.error("Couldn't find library: " + it.name!!)
+            }
+        }
+        // ... and their OrderEntries
+        modules.forEach { module ->
+            with (ModuleRootManager.getInstance(module).modifiableModel) {
+                orderEntries.forEach { ce ->
+                    if (isKobalt(ce.presentableName)) {
+                        removeOrderEntry(ce)
+                    }
+                }
+                commit()
+            }
+        }
+    }
+
+    private fun addLibrary(library: Library?, module: Module, scope: String) {
+        if (library != null) {
+            // Add the library to the module
+            val moduleRootManager = ModuleRootManager.getInstance(module)
+            moduleRootManager.modifiableModel.let { moduleModel ->
+                val existing = moduleModel.findLibraryOrderEntry(library)
+                if (existing == null) {
+                    moduleModel.addLibraryEntry(library)
+                }
+                moduleModel.commit()
+            }
+
+            // Update the scope for the library
+            moduleRootManager.modifiableModel.let { moduleModel ->
+                moduleModel.findLibraryOrderEntry(library)?.let {
+                    it.scope = toScope(scope)
+                }
+                moduleModel.commit()
+            }
+        } else {
+            error("Couldn't create library for scope $scope")
+        }
+    }
+
+    private fun createLibrary(libraryTable: LibraryTable, dependencies: List<DependencyData>, scope: String,
+            libraryName: String): Library? {
         var result: Library? = null
-        val LIBRARY_NAME = "Kobalt (${toScope(scope)})"
         libraryTable.modifiableModel.let { ltModel ->
             // Delete the old library if there's one
-            ltModel.getLibraryByName(LIBRARY_NAME)?.let {
+            ltModel.getLibraryByName(libraryName)?.let {
                 logInfo("Removing existing library $it")
                 ltModel.removeLibrary(it)
             }
 
             // Create the library
-            result = ltModel.createLibrary(LIBRARY_NAME)
+            result = ltModel.createLibrary(libraryName)
             result!!.modifiableModel.let { libModel ->
                 dependencies.forEach { dependency ->
                     val location = dependency.path
