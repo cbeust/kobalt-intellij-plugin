@@ -24,6 +24,7 @@ import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.JarFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.search.FilenameIndex
@@ -63,10 +64,12 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         val kobaltJar = findKobaltJar(version)
         with(ProgressManager.getInstance()) {
             val port = findPort()
-            runProcessWithProgressAsynchronously(
-                    toBackgroundTask("Kobalt: Launch server", {
-                        launchServer(port, version, project.basePath!!, kobaltJar)
-                    }), EmptyProgressIndicator())
+            if (! DEV_MODE) {
+                runProcessWithProgressAsynchronously(
+                        toBackgroundTask("Kobalt: Launch server", {
+                            launchServer(port, version, project.basePath!!, kobaltJar)
+                        }), EmptyProgressIndicator())
+            }
 
             runProcessWithProgressAsynchronously(
                     toBackgroundTask("Kobalt: Get dependencies", {
@@ -139,15 +142,24 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                             logInfo("Quitting")
                             done = true
                         } else {
-                            val data = jo.get("data").asString
-                            val dd = Gson().fromJson(data, GetDependenciesData::class.java)
+                            val error = jo.get("error").asString
+                            if (error != null) {
+                                println("Received error: $error")
+                                ApplicationManager.getApplication().invokeLater {
+                                    Messages.showErrorDialog(error, "Kobalt: Error while building")
+                                }
+                                done = true
+                            } else {
+                                val data = jo.get("data").asString
+                                val dd = Gson().fromJson(data, GetDependenciesData::class.java)
 
-                            logInfo("Read GetDependencyData, project count: ${dd.projects.size}")
+                                logInfo("Read GetDependencyData, project count: ${dd.projects.size}")
 
-                            dd.projects.forEach { kobaltProject ->
-                                addToDependencies(project, kobaltProject.dependencies, kobaltJar)
+                                dd.projects.forEach { kobaltProject ->
+                                    addToDependencies(project, kobaltProject.dependencies, kobaltJar)
+                                }
+                                line = ins.readLine()
                             }
-                            line = ins.readLine()
                         }
                     }
                 }
@@ -155,7 +167,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
 
             outgoing.println(QUIT_COMMAND)
         } else {
-            logError("Couldn't connect to server")
+            logError("Couldn't connect to server on port $port")
         }
 
         progress.fraction = 1.0
@@ -190,7 +202,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
 
     private fun findKobaltJar(version: String) =
         if (DEV_MODE) {
-            Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-0.198.jar")
+            Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/classes")
         } else {
             Paths.get(System.getProperty("user.home"),
                     ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
@@ -346,7 +358,8 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     }
 
     private fun findPort() : Int {
-        for (i in 2127..65000) {
+        if (DEV_MODE) return 1234
+        else for (i in 1234..65000) {
             if (isPortAvailable(i)) return i
         }
         throw IllegalArgumentException("Couldn't find any port available, something is very wrong")
