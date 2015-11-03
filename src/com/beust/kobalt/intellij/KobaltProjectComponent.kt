@@ -142,7 +142,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                             logInfo("Quitting")
                             done = true
                         } else {
-                            val error = jo.get("error").asString
+                            val error = jo.get("error")?.asString
                             if (error != null) {
                                 println("Received error: $error")
                                 ApplicationManager.getApplication().invokeLater {

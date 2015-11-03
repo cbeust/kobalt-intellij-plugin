@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.10</version>
+    <version>1.11</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,15 +9,19 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h3>1.10</h3>
+        <h1>1.11</h1>
+        <ul>
+            <li>Fix crash in the protocol parsing.
+        </ul>
+        <h1>1.10</h1>
         <ul>
             <li>Display build errors in a dialog.
         </ul>
-        <h3>1.6</h3>
+        <h1>1.6</h1>
         <ul>
             <li>Clean up all the libraries and dependencies correctly.
         </ul>
-        <h3>1.0</h3>
+        <h1>1.0</h1>
         Initial release.
     ]]>
     </change-notes>
