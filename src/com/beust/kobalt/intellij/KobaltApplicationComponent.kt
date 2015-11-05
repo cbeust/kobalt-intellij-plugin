@@ -12,21 +12,17 @@ import com.intellij.openapi.progress.util.StatusBarProgress
  * @since 10 23, 2015
  */
 public class KobaltApplicationComponent : ApplicationComponent {
-    companion object {
-        val MIN_KOBALT_VERSION = "0.213"
-    }
-
     override fun getComponentName() = "kobalt.ApplicationComponent"
 
     override fun initComponent() {
         var progress = StatusBarProgress().apply {
             start()
-            text = "Downloading Kobalt $MIN_KOBALT_VERSION"
+            text = "Downloading Kobalt ${Constants.MIN_KOBALT_VERSION}"
         }
 
         ApplicationManager.getApplication().executeOnPooledThread {
             ProgressManager.getInstance().runProcess( {
-                DistributionDownloader().install(MIN_KOBALT_VERSION, progress)
+                DistributionDownloader().install(Constants.MIN_KOBALT_VERSION, progress)
             }, progress)
         }
     }

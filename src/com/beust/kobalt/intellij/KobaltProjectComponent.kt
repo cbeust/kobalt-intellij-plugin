@@ -60,11 +60,11 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     fun syncBuildFile() {
         LOG.info("Syncing build file for project $project")
 
-        val version = KobaltApplicationComponent.MIN_KOBALT_VERSION
+        val version = Constants.MIN_KOBALT_VERSION
         val kobaltJar = findKobaltJar(version)
         with(ProgressManager.getInstance()) {
             val port = findPort()
-            if (! DEV_MODE) {
+            if (! Constants.DEV_MODE) {
                 runProcessWithProgressAsynchronously(
                         toBackgroundTask("Kobalt: Launch server", {
                             launchServer(port, version, project.basePath!!, kobaltJar)
@@ -198,10 +198,8 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
-    private val DEV_MODE = false
-
     private fun findKobaltJar(version: String) =
-        if (DEV_MODE) {
+        if (Constants.DEV_MODE) {
             Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/classes")
         } else {
             Paths.get(System.getProperty("user.home"),
@@ -358,7 +356,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     }
 
     private fun findPort() : Int {
-        if (DEV_MODE) return 1234
+        if (Constants.DEV_MODE) return 1234
         else for (i in 1234..65000) {
             if (isPortAvailable(i)) return i
         }
