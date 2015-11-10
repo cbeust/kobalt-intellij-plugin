@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.16</version>
+    <version>1.17</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.17</h1>
+        <ul>
+            <li>Updated to the new distribution URL.
+        </ul>
         <h1>1.14</h1>
         <ul>
             <li>$JAVA_HOME no longer necessary.
