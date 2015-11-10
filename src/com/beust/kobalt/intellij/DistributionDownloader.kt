@@ -51,7 +51,6 @@ public class DistributionDownloader {
     private val KOBALT_WRAPPER_PROPERTIES = "kobalt-wrapper.properties"
     private val PROPERTY_VERSION = "kobalt.version"
 
-    val URL = "https://dl.bintray.com/cbeust/generic/"
     val FILE_NAME = "kobalt"
 
     /**
@@ -102,14 +101,27 @@ public class DistributionDownloader {
     }
 
     private fun download(fn: String, file: File, progress: ProgressIndicatorBase) {
-        val fileUrl = URL + fn
+        val version = Constants.MIN_KOBALT_VERSION
+        var fileUrl = "http://beust.com/kobalt/kobalt-$version.zip"
 
-        val url = URL(fileUrl)
-        val httpConn = url.openConnection() as HttpURLConnection
-        val responseCode = httpConn.responseCode
+        var done = false
+        var httpConn: HttpURLConnection? = null
+        var responseCode = 0
+        var url: URL? = null
+        while (!done) {
+            url = URL(fileUrl)
+            httpConn = url.openConnection() as HttpURLConnection
+            responseCode = httpConn.responseCode
+            if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP
+                    || responseCode == HttpURLConnection.HTTP_MOVED_PERM) {
+                fileUrl = httpConn.getHeaderField("Location")
+            } else {
+                done = true
+            }
+        }
 
         // always check HTTP response code first
-        if (responseCode == HttpURLConnection.HTTP_OK) {
+        if (responseCode == HttpURLConnection.HTTP_OK && httpConn != null) {
             var fileName = ""
             val disposition = httpConn.getHeaderField("Content-Disposition")
             val contentType = httpConn.contentType
