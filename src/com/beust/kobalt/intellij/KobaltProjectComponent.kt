@@ -64,12 +64,12 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         val kobaltJar = findKobaltJar(version)
         with(ProgressManager.getInstance()) {
             val port = findPort()
-            if (! Constants.DEV_MODE) {
+//            if (! Constants.DEV_MODE) {
                 runProcessWithProgressAsynchronously(
                         toBackgroundTask("Kobalt: Launch server", {
                             launchServer(port, version, project.basePath!!, kobaltJar)
                         }), EmptyProgressIndicator())
-            }
+//            }
 
             runProcessWithProgressAsynchronously(
                     toBackgroundTask("Kobalt: Get dependencies", {
@@ -144,21 +144,23 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                         } else {
                             val error = jo.get("error")?.asString
                             if (error != null) {
-                                println("Received error: $error")
-                                ApplicationManager.getApplication().invokeLater {
-                                    Messages.showErrorDialog(error, "Kobalt: Error while building")
-                                }
+                                error("Could not build: $error")
                                 done = true
                             } else {
-                                val data = jo.get("data").asString
-                                val dd = Gson().fromJson(data, GetDependenciesData::class.java)
+                                val data = jo.get("data")
+                                if (data != null) {
+                                    val dataString = data.asString
+                                    val dd = Gson().fromJson(dataString, GetDependenciesData::class.java)
 
-                                logInfo("Read GetDependencyData, project count: ${dd.projects.size}")
+                                    logInfo("Read GetDependencyData, project count: ${dd.projects.size}")
 
-                                dd.projects.forEach { kobaltProject ->
-                                    addToDependencies(project, kobaltProject.dependencies, kobaltJar)
+                                    dd.projects.forEach { kobaltProject ->
+                                        addToDependencies(project, kobaltProject.dependencies, kobaltJar)
+                                    }
+                                    line = ins.readLine()
+                                } else {
+                                    error("Did not receive a \"data\" field")
                                 }
-                                line = ins.readLine()
                             }
                         }
                     }
@@ -346,6 +348,13 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                 "testCompile" -> DependencyScope.TEST
                 else -> DependencyScope.COMPILE
             }
+
+    private fun error(message: String) {
+        logError(message)
+        ApplicationManager.getApplication().invokeLater {
+            Messages.showErrorDialog("Could not build: $message", "Kobalt error")
+        }
+    }
 
     private fun logError(s: String, e: Throwable? = null) {
         LOG.error(s, e)
