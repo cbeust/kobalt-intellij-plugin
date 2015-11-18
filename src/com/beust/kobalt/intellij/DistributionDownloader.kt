@@ -40,16 +40,10 @@ class KFiles {
 public class DistributionDownloader {
     companion object {
         private val log = Logger.getInstance(DistributionDownloader::class.java)
-        private fun log(level: Int, s: String) {
-            log.info(s)
-        }
+        private fun log(level: Int, s: String) = log.info(s)
+        fun warn(s: String) = log.warn(s)
+        const val RELEASE_URL = "https://api.github.com/repos/cbeust/kobalt/releases"
     }
-
-    // kobalt.properties
-    private val WRAPPER_DIR = KFiles.KOBALT_DIR + "/wrapper"
-
-    private val KOBALT_WRAPPER_PROPERTIES = "kobalt-wrapper.properties"
-    private val PROPERTY_VERSION = "kobalt.version"
 
     val FILE_NAME = "kobalt"
 
@@ -69,7 +63,7 @@ public class DistributionDownloader {
             // Either the .zip or the .jar is missing, downloading it
             //
             log(1, "Downloading $fileName")
-            download(fileName, localZipFile.toFile(), progress)
+            download(version, fileName, localZipFile.toFile(), progress)
 
             //
             // Extract all the zip files
@@ -100,8 +94,7 @@ public class DistributionDownloader {
         return kobaltJarFile
     }
 
-    private fun download(fn: String, file: File, progress: ProgressIndicatorBase) {
-        val version = Constants.MIN_KOBALT_VERSION
+    private fun download(version: String, fn: String, file: File, progress: ProgressIndicatorBase) {
         var fileUrl = "http://beust.com/kobalt/kobalt-$version.zip"
 
         var done = false

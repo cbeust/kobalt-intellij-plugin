@@ -60,7 +60,8 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     fun syncBuildFile() {
         LOG.info("Syncing build file for project $project")
 
-        val version = Constants.MIN_KOBALT_VERSION
+        val version = KobaltApplicationComponent.version!!
+
         val kobaltJar = findKobaltJar(version)
         with(ProgressManager.getInstance()) {
             val port = findPort()
