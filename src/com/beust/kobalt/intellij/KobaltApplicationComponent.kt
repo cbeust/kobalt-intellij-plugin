@@ -67,7 +67,7 @@ public class KobaltApplicationComponent : ApplicationComponent {
 
         ApplicationManager.getApplication().executeOnPooledThread {
             ProgressManager.getInstance().runProcess( {
-                DistributionDownloader().install(version!!, progress)
+                DistributionDownloader().install(version, progress)
             }, progress)
         }
     }
