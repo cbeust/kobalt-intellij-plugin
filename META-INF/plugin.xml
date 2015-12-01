@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.23</version>
+    <version>1.26</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.26</h1>
+        <ul>
+            <li>Dependencies were no longer being set.
+        </ul>
         <h1>1.23</h1>
         <ul>
             <li>Automatically loads the latest version of Kobalt on start up.
