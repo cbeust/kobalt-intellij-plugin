@@ -103,14 +103,15 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         val registrar = LibraryTablesRegistrar.getInstance()
         val libraryTable = registrar.getLibraryTable(project)
 
-        val alreadyExists = ModuleManager.getInstance(project).modules.any { it.name == BUILD_MODULE_NAME }
-        if (alreadyExists) return
+        ModuleManager.getInstance(project).let { moduleManager ->
+            // Does the module already exist ?
+            if (moduleManager.modules.any { it.name == BUILD_MODULE_NAME }) return
 
-        runWriteAction {
-            with(ModuleManager.getInstance(project)) {
-                val module = newModule(project.baseDir.path + "/kobalt/$BUILD_IML_NAME", StdModuleTypes.JAVA.id)
-                val moduleRootManager = ModuleRootManager.getInstance(module)
-                moduleRootManager.modifiableModel.let { moduleModel ->
+            // No, create it
+            runWriteAction {
+                val module = moduleManager.newModule(project.baseDir.path + "/kobalt/$BUILD_IML_NAME",
+                        StdModuleTypes.JAVA.id)
+                ModuleRootManager.getInstance(module).modifiableModel.let { moduleModel ->
                     val kobaltDir = VirtualFileManager.getInstance().findFileByUrl(project.baseDir.url)
                             ?.findChild("kobalt")
                     if (kobaltDir != null) {
@@ -123,7 +124,6 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                         val kobaltLibrary = createLibrary(libraryTable, arrayListOf(kobaltDependency), "compile",
                                 KOBALT_JAR)
                         addLibrary(kobaltLibrary, module, "compile")
-                        moduleModel.commit()
                     } else {
                         logWarn("Couldn't find kobalt/src, autocomplete disabled")
                         moduleModel.dispose()
