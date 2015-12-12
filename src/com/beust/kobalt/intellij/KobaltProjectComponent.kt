@@ -51,10 +51,13 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
 
     }
 
+    override fun projectOpened() {
+        addBuildModule(findKobaltJar(KobaltApplicationComponent.version))
+    }
+
     override fun getComponentName() = "kobalt.ProjectComponent"
     override fun initComponent() {}
     override fun disposeComponent() {}
-    override fun projectOpened() {}
     override fun projectClosed() {}
 
     var progress = StatusBarProgress()
@@ -62,11 +65,9 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     fun syncBuildFile() {
         LOG.info("Syncing build file for project $project")
 
-        val version = KobaltApplicationComponent.version!!
+        val version = KobaltApplicationComponent.version
 
         val kobaltJar = findKobaltJar(version)
-
-        addBuildModule(kobaltJar)
 
         with(ProgressManager.getInstance()) {
             val port = findPort()
