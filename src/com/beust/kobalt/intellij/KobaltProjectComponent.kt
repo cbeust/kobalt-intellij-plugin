@@ -48,11 +48,22 @@ import java.nio.file.Paths
 class KobaltProjectComponent(val project: Project) : ProjectComponent {
     companion object {
         val LOG = Logger.getInstance(KobaltProjectComponent::class.java)
-
     }
 
+    val kobaltJar: Path by lazy {
+        findKobaltJar(KobaltApplicationComponent.version)
+    }
+
+    private fun findKobaltJar(version: String) =
+            if (Constants.DEV_MODE) {
+                Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/classes")
+            } else {
+                Paths.get(System.getProperty("user.home"),
+                        ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
+            }
+
     override fun projectOpened() {
-        addBuildModule(findKobaltJar(KobaltApplicationComponent.version))
+        addBuildModule(kobaltJar)
     }
 
     override fun getComponentName() = "kobalt.ProjectComponent"
@@ -65,22 +76,18 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     fun syncBuildFile() {
         LOG.info("Syncing build file for project $project")
 
-        val version = KobaltApplicationComponent.version
-
-        val kobaltJar = findKobaltJar(version)
-
         with(ProgressManager.getInstance()) {
             val port = findPort()
 //            if (! Constants.DEV_MODE) {
                 runProcessWithProgressAsynchronously(
                         toBackgroundTask("Kobalt: Launch server", {
-                            launchServer(port, version, project.basePath!!, kobaltJar)
+                            launchServer(port, project.basePath!!, kobaltJar)
                         }), EmptyProgressIndicator())
 //            }
 
             runProcessWithProgressAsynchronously(
                     toBackgroundTask("Kobalt: Get dependencies", {
-                        sendGetDependencies(port, project, kobaltJar)
+                        sendGetDependencies(port, project)
                     }), progress)
         }
     }
@@ -118,12 +125,11 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                     if (kobaltDir != null) {
                         // Setting the content root to the "kobalt" directory will automatically add "src"
                         // as a source folder
-                        val kobaltEntry = moduleModel.addContentEntry(kobaltDir)
+                        moduleModel.addContentEntry(kobaltDir)
 
                         // Add kobalt.jar
                         val kobaltDependency = DependencyData("", "compile", kobaltJar.toFile().absolutePath)
-                        val kobaltLibrary = createLibrary(libraryTable, arrayListOf(kobaltDependency), "compile",
-                                KOBALT_JAR)
+                        val kobaltLibrary = createLibrary(libraryTable, arrayListOf(kobaltDependency), KOBALT_JAR)
                         addLibrary(kobaltLibrary, module, "compile")
                     } else {
                         logWarn("Couldn't find kobalt/src, autocomplete disabled")
@@ -134,7 +140,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
-    private fun sendGetDependencies(port: Int, project: Project, kobaltJar: Path) {
+    private fun sendGetDependencies(port: Int, project: Project) {
         logInfo("sendGetDependencies")
 
         //
@@ -203,7 +209,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                                     logInfo("Read GetDependencyData, project count: ${dd.projects.size}")
 
                                     dd.projects.forEach { kobaltProject ->
-                                        addToDependencies(project, kobaltProject.dependencies, kobaltJar)
+                                        addToDependencies(project, kobaltProject.dependencies)
                                     }
                                     line = ins.readLine()
                                 } else {
@@ -236,7 +242,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         return result
     }
 
-    private fun launchServer(port: Int, version: String, directory: String, kobaltJar: Path) {
+    private fun launchServer(port: Int, directory: String, kobaltJar: Path) {
         logInfo("Kobalt jar: $kobaltJar")
         val args = arrayListOf(findJava(), "-jar", kobaltJar.toFile().absolutePath, "--dev",
                 "--server", "--port", port.toString())
@@ -257,15 +263,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
-    private fun findKobaltJar(version: String) =
-        if (Constants.DEV_MODE) {
-            Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/classes")
-        } else {
-            Paths.get(System.getProperty("user.home"),
-                    ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
-        }
-
-    private fun addToDependencies(project: Project, dependencies: List<DependencyData>, kobaltJar: Path) {
+    private fun addToDependencies(project: Project, dependencies: List<DependencyData>) {
         val modules = ModuleManager.getInstance(project).modules.filter { it.name != BUILD_MODULE_NAME }
         val registrar = LibraryTablesRegistrar.getInstance()
         val libraryTable = registrar.getLibraryTable(project)
@@ -274,14 +272,13 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
             invokeLater {
                 runWriteAction {
                     deleteLibrariesAndContentEntries(modules, libraryTable)
-                    addDependencies(modules, dependencies, kobaltJar, libraryTable)
+                    addDependencies(modules, dependencies, libraryTable)
                 }
             }
         }
     }
 
-    private fun addDependencies(modules: List<Module>, dependencies: List<DependencyData>, kobaltJar: Path,
-            libraryTable: LibraryTable) {
+    private fun addDependencies(modules: List<Module>, dependencies: List<DependencyData>, libraryTable: LibraryTable) {
         //
         // Finally, add all the dependencies received from the server
         //
@@ -300,7 +297,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                 val scopedDependencies = byScope.get(scope)
                 if (scopedDependencies.size > 0) {
                     val libraryName = "kobalt (${toScope(scope)})"
-                    val library = createLibrary(libraryTable, scopedDependencies, scope, libraryName)
+                    val library = createLibrary(libraryTable, scopedDependencies, libraryName)
                     addLibrary(library, module, scope)
                 }
             }
@@ -364,7 +361,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
-    private fun createLibrary(libraryTable: LibraryTable, dependencies: List<DependencyData>, scope: String,
+    private fun createLibrary(libraryTable: LibraryTable, dependencies: List<DependencyData>,
             libraryName: String): Library? {
         var result: Library? = null
         libraryTable.modifiableModel.let { ltModel ->
