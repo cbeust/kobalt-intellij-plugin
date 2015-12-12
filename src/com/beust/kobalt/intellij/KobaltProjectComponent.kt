@@ -92,6 +92,10 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
+    private val KOBALT_JAR = "kobalt.jar"
+    private val BUILD_MODULE_NAME = "BuildFile"
+    private val BUILD_IML_NAME = BUILD_MODULE_NAME + ".iml"
+
     /**
      * Add a new "build" module that enables auto completion on Build.kt.
      */
@@ -99,28 +103,33 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         val registrar = LibraryTablesRegistrar.getInstance()
         val libraryTable = registrar.getLibraryTable(project)
 
+        val alreadyExists = ModuleManager.getInstance(project).modules.any { it.name == BUILD_MODULE_NAME }
+        if (alreadyExists) return
+
         runWriteAction {
             with(ModuleManager.getInstance(project)) {
-                val module = newModule(project.baseDir.path + "/kobalt/build.iml", StdModuleTypes.JAVA.id)
+                val module = newModule(project.baseDir.path + "/kobalt/$BUILD_IML_NAME", StdModuleTypes.JAVA.id)
                 val moduleRootManager = ModuleRootManager.getInstance(module)
                 moduleRootManager.modifiableModel.let { moduleModel ->
-                    val kobaltDir = VirtualFileManager.getInstance().findFileByUrl(project.baseDir.path + "/kobalt")
+                    val kobaltDir = VirtualFileManager.getInstance().findFileByUrl(project.baseDir.url)
+                            ?.findChild("kobalt")
                     if (kobaltDir != null) {
+                        // Setting the content root to the "kobalt" directory will automatically add "src"
+                        // as a source folder
                         val kobaltEntry = moduleModel.addContentEntry(kobaltDir)
 
                         // Add kobalt.jar
                         val kobaltDependency = DependencyData("", "compile", kobaltJar.toFile().absolutePath)
-                        val kobaltLibrary= createLibrary(libraryTable, arrayListOf(kobaltDependency), "compile",
-                                "kobalt.jar")
+                        val kobaltLibrary = createLibrary(libraryTable, arrayListOf(kobaltDependency), "compile",
+                                KOBALT_JAR)
                         addLibrary(kobaltLibrary, module, "compile")
+                        moduleModel.commit()
+                    } else {
+                        logWarn("Couldn't find kobalt/src, autocomplete disabled")
+                        moduleModel.dispose()
                     }
-                    moduleModel.commit()
                 }
             }
-
-            //
-            // Add kobalt.jar
-            //
         }
     }
 
@@ -256,7 +265,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
 
     private fun addToDependencies(project: Project, dependencies: List<DependencyData>, kobaltJar: Path) {
-        val modules = ModuleManager.getInstance(project).modules
+        val modules = ModuleManager.getInstance(project).modules.filter { it.name != BUILD_MODULE_NAME }
         val registrar = LibraryTablesRegistrar.getInstance()
         val libraryTable = registrar.getLibraryTable(project)
 
@@ -270,7 +279,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
-    private fun addDependencies(modules: Array<Module>, dependencies: List<DependencyData>, kobaltJar: Path,
+    private fun addDependencies(modules: List<Module>, dependencies: List<DependencyData>, kobaltJar: Path,
             libraryTable: LibraryTable) {
         //
         // Finally, add all the dependencies received from the server
@@ -281,14 +290,6 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
 
         modules.forEach { module ->
-            //
-            // Add kobalt.jar
-            //
-            val kobaltDependency = DependencyData("", "compile", kobaltJar.toFile().absolutePath)
-            val kobaltLibrary= createLibrary(libraryTable, arrayListOf(kobaltDependency), "compile",
-                    "kobalt.jar")
-            addLibrary(kobaltLibrary, module, "compile")
-
             //
             // Add each dependency per scope
             //
@@ -308,8 +309,9 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     /**
      * Delete all the Kobalt libraries and their ContentEntries.
      */
-    private fun deleteLibrariesAndContentEntries(modules: Array<Module>, libraryTable: LibraryTable) {
+    private fun deleteLibrariesAndContentEntries(modules: List<Module>, libraryTable: LibraryTable) {
         fun isKobalt(name: String) = name.toLowerCase().startsWith("kobalt")
+            && name.toLowerCase() != KOBALT_JAR
 
         //
         // Delete all the kobalt libraries
