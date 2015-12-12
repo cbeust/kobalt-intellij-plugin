@@ -7,10 +7,12 @@ import com.google.gson.JsonParser
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
+import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
@@ -63,6 +65,9 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         val version = KobaltApplicationComponent.version!!
 
         val kobaltJar = findKobaltJar(version)
+
+        addBuildModule(kobaltJar)
+
         with(ProgressManager.getInstance()) {
             val port = findPort()
 //            if (! Constants.DEV_MODE) {
@@ -84,6 +89,38 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
             override fun run(p0: ProgressIndicator) {
                 function.invoke()
             }
+        }
+    }
+
+    /**
+     * Add a new "build" module that enables auto completion on Build.kt.
+     */
+    private fun addBuildModule(kobaltJar: Path) {
+        val registrar = LibraryTablesRegistrar.getInstance()
+        val libraryTable = registrar.getLibraryTable(project)
+
+        runWriteAction {
+            with(ModuleManager.getInstance(project)) {
+                val module = newModule(project.baseDir.path + "/kobalt/build.iml", StdModuleTypes.JAVA.id)
+                val moduleRootManager = ModuleRootManager.getInstance(module)
+                moduleRootManager.modifiableModel.let { moduleModel ->
+                    val kobaltDir = VirtualFileManager.getInstance().findFileByUrl(project.baseDir.path + "/kobalt")
+                    if (kobaltDir != null) {
+                        val kobaltEntry = moduleModel.addContentEntry(kobaltDir)
+
+                        // Add kobalt.jar
+                        val kobaltDependency = DependencyData("", "compile", kobaltJar.toFile().absolutePath)
+                        val kobaltLibrary= createLibrary(libraryTable, arrayListOf(kobaltDependency), "compile",
+                                "kobalt.jar")
+                        addLibrary(kobaltLibrary, module, "compile")
+                    }
+                    moduleModel.commit()
+                }
+            }
+
+            //
+            // Add kobalt.jar
+            //
         }
     }
 
@@ -183,15 +220,24 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
 
     private val QUIT_COMMAND = "{ \"name\" : \"quit\" }"
 
+    private fun findJava() : String {
+        val javaHome = System.getProperty("java.home")
+        val result = if (javaHome != null) "$javaHome/bin/java" else "java"
+        return result
+    }
+
     private fun launchServer(port: Int, version: String, directory: String, kobaltJar: Path) {
         logInfo("Kobalt jar: $kobaltJar")
-        val args = arrayListOf("java", "-jar", kobaltJar.toFile().absolutePath, "--dev",
+        val args = arrayListOf(findJava(), "-jar", kobaltJar.toFile().absolutePath, "--dev",
                 "--server", "--port", port.toString())
         val pb = ProcessBuilder(args)
         pb.directory(File(directory))
         pb.inheritIO()
         pb.environment().put("JAVA_HOME", ProjectJdkTable.getInstance().allJdks[0].homePath)
+        val tempFile = createTempFile("kobalt")
+        pb.redirectOutput(tempFile)
         logInfo("Launching " + args.joinToString(" "))
+        logInfo("Server output in: $tempFile")
         val process = pb.start()
         val errorCode = process.waitFor()
         if (errorCode == 0) {
@@ -357,13 +403,9 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
-    private fun logError(s: String, e: Throwable? = null) {
-        LOG.error(s, e)
-    }
-
-    private fun logInfo(s: String) {
-        LOG.info(s)
-    }
+    private fun logError(s: String, e: Throwable? = null) = LOG.error(s, e)
+    private fun logWarn(s: String) = LOG.warn(s)
+    private fun logInfo(s: String) = LOG.info(s)
 
     private fun findPort() : Int {
         if (Constants.DEV_MODE) return 1234
