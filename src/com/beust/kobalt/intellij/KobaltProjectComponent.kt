@@ -20,9 +20,7 @@ import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.util.StatusBarProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
-import com.intellij.openapi.roots.DependencyScope
-import com.intellij.openapi.roots.ModuleRootManager
-import com.intellij.openapi.roots.OrderRootType
+import com.intellij.openapi.roots.*
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
@@ -101,7 +99,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     }
 
     private val KOBALT_JAR = "kobalt.jar"
-    private val BUILD_MODULE_NAME = "BuildFile"
+    private val BUILD_MODULE_NAME = "Build.kt"
     private val BUILD_IML_NAME = BUILD_MODULE_NAME + ".iml"
 
     /**
@@ -112,28 +110,44 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         val libraryTable = registrar.getLibraryTable(project)
 
         ModuleManager.getInstance(project).let { moduleManager ->
-            // Does the module already exist ?
-            if (moduleManager.modules.any { it.name == BUILD_MODULE_NAME }) return
+            // Delete the module if it already exists
+            moduleManager.findModuleByName(BUILD_MODULE_NAME)?.let {
+                runWriteAction {
+                    with(moduleManager.modifiableModel) {
+                        disposeModule(it)
+                        commit()
+                    }
+                }
+            }
 
-            // No, create it
+            // Create the module
             runWriteAction {
                 val module = moduleManager.newModule(project.baseDir.path + "/kobalt/$BUILD_IML_NAME",
                         StdModuleTypes.JAVA.id)
-                ModuleRootManager.getInstance(module).modifiableModel.let { moduleModel ->
+                ModuleRootManager.getInstance(module).modifiableModel.let { modifiableModel ->
+                    //
+                    // Add the root content entry
+                    //
                     val kobaltDir = VirtualFileManager.getInstance().findFileByUrl(project.baseDir.url)
                             ?.findChild("kobalt")
                     if (kobaltDir != null) {
                         // Setting the content root to the "kobalt" directory will automatically add "src"
                         // as a source folder
-                        moduleModel.addContentEntry(kobaltDir)
+                        modifiableModel.addContentEntry(kobaltDir)
 
+                        val sdk = ProjectRootManager.getInstance(project).projectSdk
+                        modifiableModel.addContentEntry(sdk!!.homeDirectory!!)
+
+                        //
                         // Add kobalt.jar
+                        //
                         val kobaltDependency = DependencyData("", "compile", kobaltJar.toFile().absolutePath)
                         val kobaltLibrary = createLibrary(libraryTable, arrayListOf(kobaltDependency), KOBALT_JAR)
-                        addLibrary(kobaltLibrary, module, "compile")
+                        addLibrary(kobaltLibrary, module, "compile", modifiableModel)
+                        modifiableModel.commit()
                     } else {
                         logWarn("Couldn't find kobalt/src, autocomplete disabled")
-                        moduleModel.dispose()
+                        modifiableModel.dispose()
                     }
                 }
             }
@@ -298,7 +312,9 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
                 if (scopedDependencies.size > 0) {
                     val libraryName = "kobalt (${toScope(scope)})"
                     val library = createLibrary(libraryTable, scopedDependencies, libraryName)
-                    addLibrary(library, module, scope)
+                    val modifiableModel = ModuleRootManager.getInstance(module).modifiableModel
+                    addLibrary(library, module, scope, modifiableModel)
+                    modifiableModel.commit()
                 }
             }
         }
@@ -337,24 +353,17 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         }
     }
 
-    private fun addLibrary(library: Library?, module: Module, scope: String) {
+    private fun addLibrary(library: Library?, module: Module, scope: String, modifiableModel: ModifiableRootModel) {
         if (library != null) {
             // Add the library to the module
-            val moduleRootManager = ModuleRootManager.getInstance(module)
-            moduleRootManager.modifiableModel.let { moduleModel ->
-                val existing = moduleModel.findLibraryOrderEntry(library)
-                if (existing == null) {
-                    moduleModel.addLibraryEntry(library)
-                }
-                moduleModel.commit()
+            val existing = modifiableModel.findLibraryOrderEntry(library)
+            if (existing == null) {
+                modifiableModel.addLibraryEntry(library)
             }
 
             // Update the scope for the library
-            moduleRootManager.modifiableModel.let { moduleModel ->
-                moduleModel.findLibraryOrderEntry(library)?.let {
-                    it.scope = toScope(scope)
-                }
-                moduleModel.commit()
+            modifiableModel.findLibraryOrderEntry(library)?.let {
+                it.scope = toScope(scope)
             }
         } else {
             error("Couldn't create library for scope $scope")
