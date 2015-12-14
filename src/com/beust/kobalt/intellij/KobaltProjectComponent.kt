@@ -278,7 +278,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     }
 
     private fun addToDependencies(project: Project, dependencies: List<DependencyData>) {
-        val modules = ModuleManager.getInstance(project).modules.filter { it.name != BUILD_MODULE_NAME }
+        val modules = ModuleManager.getInstance(project).modules.toList() //.filter { it.name != BUILD_MODULE_NAME }
         val registrar = LibraryTablesRegistrar.getInstance()
         val libraryTable = registrar.getLibraryTable(project)
 
