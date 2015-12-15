@@ -6,14 +6,6 @@ import com.intellij.openapi.project.Project
 import java.nio.file.Path
 import java.nio.file.Paths
 
-/**
- * Invoked from the "Sync build file" action: launch a kobalt --server in the background, connect to it
- * and send it a getDependencies() command for the current project. When the answer is received, update
- * the project's libraries and dependencies with that information.
- *
- * @author Cedric Beust <cedric@beust.com>
- * @since 10 23, 2015
- */
 class KobaltProjectComponent(val project: Project) : ProjectComponent {
     companion object {
         val LOG = Logger.getInstance(KobaltProjectComponent::class.java)
@@ -23,7 +15,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         val BUILD_IML_NAME = BUILD_MODULE_NAME + ".iml"
     }
 
-    private val kobaltJar: Path by lazy {
+    internal val kobaltJar: Path by lazy {
         findKobaltJar(KobaltApplicationComponent.version)
     }
 

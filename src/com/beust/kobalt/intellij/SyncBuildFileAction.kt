@@ -23,6 +23,14 @@ import java.net.ConnectException
 import java.net.Socket
 import java.nio.file.Path
 
+/**
+ * Invoked from the "Sync build file" action: launch a kobalt --server in the background, connect to it
+ * and send it a getDependencies() command for the current project. When the answer is received, update
+ * the project's libraries and dependencies with that information.
+ *
+ * @author Cedric Beust <cedric@beust.com>
+ * @since 10 23, 2015
+ */
 public class SyncBuildFileAction : AnAction("Sync build file") {
     companion object {
         val LOG = Logger.getInstance(SyncBuildFileAction::class.java)
