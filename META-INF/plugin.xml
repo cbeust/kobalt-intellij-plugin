@@ -1,7 +1,6 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.30</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,9 +8,9 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h1>1.30</h1>
+        <h1>1.31</h1>
         <ul>
-            <li>Don't create the Build.kt module if there is no kobalt/src Built.kt.
+            <li>Handle dynamic plug-ins better in Build.kt.
         </ul>
         <h1>1.29</h1>
         <ul>
