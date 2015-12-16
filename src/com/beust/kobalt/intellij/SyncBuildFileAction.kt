@@ -16,8 +16,6 @@ import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.util.StatusBarProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
-import com.intellij.psi.search.FilenameIndex
-import com.intellij.psi.search.GlobalSearchScope
 import java.io.*
 import java.net.ConnectException
 import java.net.Socket
@@ -117,7 +115,7 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
                 socket = Socket("localhost", port)
                 connected = true
             } catch(ex: ConnectException) {
-                LOG.info("Server not started yet, sleeping a bit")
+                LOG.warn("Server not started yet, sleeping a bit")
                 Thread.sleep(2000)
                 attempts++
             }
@@ -131,10 +129,11 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
         if (connected) {
             val outgoing = PrintWriter(socket!!.outputStream, true)
             ApplicationManager.getApplication().runReadAction {
-                val buildFiles = FilenameIndex.getFilesByName(project, "Build.kt", GlobalSearchScope.allScope(project))
-                buildFiles.forEach {
-                    val buildFile = it.viewProvider.virtualFile.canonicalPath
-                    val command: String = "{ \"name\":\"getDependencies\", \"buildFile\": \"$buildFile\"}"
+                val buildFile = project.baseDir.findFileByRelativePath(Constants.BUILD_FILE)
+                if (buildFile == null) {
+                    LOG.warn("Couldn't find ${Constants.BUILD_FILE}, aborting")
+                } else {
+                    val command: String = "{ \"name\":\"getDependencies\", \"buildFile\": \"${buildFile.canonicalPath}\"}"
 
                     outgoing.println(command)
 
@@ -195,8 +194,8 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
         pb.environment().put("JAVA_HOME", ProjectJdkTable.getInstance().allJdks[0].homePath)
         val tempFile = createTempFile("kobalt")
         pb.redirectOutput(tempFile)
-        LOG.info("Launching " + args.joinToString(" "))
-        LOG.info("Server output in: $tempFile")
+        LOG.warn("Launching " + args.joinToString(" "))
+        LOG.warn("Server output in: $tempFile")
         val process = pb.start()
         val errorCode = process.waitFor()
         if (errorCode == 0) {

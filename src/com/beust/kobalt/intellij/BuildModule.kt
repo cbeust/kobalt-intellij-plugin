@@ -1,6 +1,7 @@
 package com.beust.kobalt.intellij
 
 import com.intellij.openapi.application.runWriteAction
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.project.Project
@@ -14,11 +15,15 @@ import java.nio.file.Path
  * Add a module "Build.kt" that enables auto completion of the build file.
  */
 class BuildModule {
+    companion object {
+        val LOG = Logger.getInstance(BuildModule::class.java)
+    }
+
     fun run(project: Project, kobaltJar: Path) = maybeAddBuildModule(project, kobaltJar)
 
     private fun maybeAddBuildModule(project: Project, kobaltJar: Path) {
         val buildFile = VirtualFileManager.getInstance().findFileByUrl(project.baseDir.url)
-                ?.findChild("kobalt")?.findChild("src")?.findChild("Build.kt")
+                ?.findFileByRelativePath("kobalt/src/Build.kt")
         if (buildFile != null) {
             addBuildModule(kobaltJar, project)
         } else {
@@ -38,6 +43,7 @@ class BuildModule {
             moduleManager.findModuleByName(KobaltProjectComponent.BUILD_MODULE_NAME)?.let {
                 runWriteAction {
                     with(moduleManager.modifiableModel) {
+                        LOG.warn("Deleting " + KobaltProjectComponent.BUILD_MODULE_NAME)
                         disposeModule(it)
                         commit()
                     }
@@ -46,8 +52,8 @@ class BuildModule {
 
             // Create the module
             runWriteAction {
-                val module = moduleManager.newModule(project.baseDir.path + "/kobalt/${KobaltProjectComponent.BUILD_IML_NAME}",
-                        StdModuleTypes.JAVA.id)
+                val module = moduleManager.newModule(project.baseDir.path
+                        + "/kobalt/${KobaltProjectComponent.BUILD_IML_NAME}", StdModuleTypes.JAVA.id)
                 ModuleRootManager.getInstance(module).modifiableModel.let { modifiableModel ->
                     //
                     // Add the root content entry

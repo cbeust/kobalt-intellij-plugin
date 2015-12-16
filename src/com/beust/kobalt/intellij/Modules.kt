@@ -6,9 +6,11 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.OrderRootType
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
@@ -48,58 +50,63 @@ class Modules {
                                 + ".iml",
                                 StdModuleTypes.JAVA.id)
                         ModuleRootManager.getInstance(module).modifiableModel.let { modifiableModel ->
+                            LOG.warn("0 Existing roots: " + modifiableModel.contentRoots.firstOrNull()?.canonicalPath)
+
+                            modifiableModel.contentEntries.forEach {
+                                modifiableModel.removeContentEntry(it)
+                            }
+
                             val registrar = LibraryTablesRegistrar.getInstance()
                             val libraryTable = registrar.getLibraryTable(project)
+
                             //
                             // Libraries
                             //
-                            kp.dependencies.forEach { dd ->
-                                LOG.warn("Adding library " + dd.id)
-                                val library = createLibrary(libraryTable, dd, dd.id)
-                                libraryMap.put(dd.id, library!!)
-                                modifiableModel.addLibraryEntry(library)
-
-                                val entry = modifiableModel.findLibraryOrderEntry(library)
-                                if (entry != null) {
-                                    entry.scope = toScope(dd.scope)
+                            fun initLibrary(dependencies: List<DependencyData>, name: String, scope: DependencyScope) {
+                                val library = createLibrary(libraryTable, dependencies, name)
+                                if (library != null) {
+                                    modifiableModel.findLibraryOrderEntry(library)?.let {
+                                        modifiableModel.removeOrderEntry(it)
+                                    }
+                                    modifiableModel.addLibraryEntry(library)
+                                    modifiableModel.findLibraryOrderEntry(library)?.scope = scope
                                 }
                             }
+                            initLibrary(kp.compileDependencies, "${module.name} (Compile)", DependencyScope.COMPILE)
+                            initLibrary(kp.testDependencies, "${module.name} (Test)", DependencyScope.TEST)
 
                             //
                             // Content roots and source dirs
                             //
                             val fullUrl = project.baseDir.url + "/" + kp.directory
-                            LOG.warn("URL: " + project.baseDir.url + " FULL URL: $fullUrl")
                             val contentRoot = VirtualFileManager.getInstance().findFileByUrl(fullUrl)
-                            LOG.warn("srcDir: $contentRoot")
+                            LOG.warn("Existing roots: " + modifiableModel.contentRoots.firstOrNull()?.canonicalPath)
                             if (contentRoot != null) {
+                                LOG.warn("Found contentRoot: $contentRoot")
                                 val contentEntry = modifiableModel.addContentEntry(contentRoot)
-                                LOG.warn("ADDED CONTENT ROOT $contentRoot")
-
                                 fun addSourceDir(dir: String, isTest: Boolean) {
                                     val srcDir = contentRoot.findFileByRelativePath(dir.replace("\\", "/"))
                                     if (srcDir != null) {
-                                        LOG.warn("FOUND PROJECT SRC: $srcDir")
                                         contentEntry.addSourceFolder(srcDir, isTest)
                                     }
 
                                 }
                                 kp.sourceDirs.forEach { addSourceDir(it, false) }
                                 kp.testDirs.forEach { addSourceDir(it, true) }
-
-//                                val srcDir = contentRoot.findChild("src")?.findChild("main")?.findChild("java")
-//                                LOG.warn("SRC DIR: $srcDir")
-//                                if (srcDir != null) {
-//                                    contentEntry.addSourceFolder(srcDir, false)
-//                                }
                             }
 
                             //
                             // SDK
                             //
-//                            ProjectRootManager.getInstance(project).projectSdk?.let {
-//                                modifiableModel.addContentEntry(it.homeDirectory!!)
-//                            }
+                            LOG.warn("ALL JDK's: " + ProjectJdkTable.getInstance().allJdks)
+                            LOG.warn("Project sdk: " + ProjectRootManager.getInstance(project).projectSdk?.name)
+                            if (ProjectRootManager.getInstance(project).projectSdk == null &&
+                                    ProjectJdkTable.getInstance().allJdks.size > 0) {
+                                LOG.warn("Setting SDK to " + ProjectJdkTable.getInstance().allJdks[0].name)
+                                ProjectRootManager.getInstance(project).projectSdk =
+                                    ProjectJdkTable.getInstance().allJdks[0]
+                            }
+                            ProjectRootManager.getInstance(project).projectSdk = ProjectJdkTable.getInstance().allJdks[0]
 
                             modifiableModel.commit()
                         }
@@ -110,15 +117,7 @@ class Modules {
             }
         }
 
-        private fun toScope(scope: String) =
-                when (scope) {
-                    "provided" -> DependencyScope.PROVIDED
-                    "runtime" -> DependencyScope.RUNTIME
-                    "testCompile" -> DependencyScope.TEST
-                    else -> DependencyScope.COMPILE
-                }
-
-        private fun createLibrary(libraryTable: LibraryTable, dependency: DependencyData,
+        fun createLibrary(libraryTable: LibraryTable, dependencies: List<DependencyData>,
                 libraryName: String): Library? {
             var result: Library? = null
             libraryTable.modifiableModel.let { ltModel ->
@@ -131,13 +130,13 @@ class Modules {
                 // Create the library
                 result = ltModel.createLibrary(libraryName)
                 result!!.modifiableModel.let { libModel ->
-//                    dependencies.forEach { dependency ->
+                    dependencies.forEach { dependency ->
                         val location = dependency.path
                         val url = VirtualFileManager.constructUrl(JarFileSystem.PROTOCOL, location) +
                                 JarFileSystem.JAR_SEPARATOR
                         libModel.addRoot(url, OrderRootType.CLASSES)
 
-//                    }
+                    }
                     libModel.commit()
                 }
                 ltModel.commit()
