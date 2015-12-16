@@ -74,8 +74,7 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
     }
 
     private fun findPort() : Int {
-        if (Constants.DEV_MODE) return 1234
-        else for (i in 1234..65000) {
+        for (i in 1234..65000) {
             if (isPortAvailable(i)) return i
         }
         throw IllegalArgumentException("Couldn't find any port available, something is very wrong")
@@ -161,9 +160,7 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
 
                                     LOG.info("Read GetDependencyData, project count: ${dd.projects.size}")
 
-                                    dd.projects.forEach { kobaltProject ->
-                                        Dependencies.addToDependencies(project, kobaltProject.dependencies)
-                                    }
+                                    Modules.configureModules(project, dd.projects)
                                     line = ins.readLine()
                                 } else {
                                     error("Did not receive a \"data\" field")
@@ -190,8 +187,8 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
 
     private fun launchServer(port: Int, directory: String, kobaltJar: Path) {
         LOG.info("Kobalt jar: $kobaltJar")
-        val args = arrayListOf(findJava(), "-jar", kobaltJar.toFile().absolutePath, "--dev",
-                "--server", "--port", port.toString())
+        val args = listOf(findJava(), "-jar", kobaltJar.toFile().absolutePath,
+                "--dev", "--server", "--port", port.toString())
         val pb = ProcessBuilder(args)
         pb.directory(File(directory))
         pb.inheritIO()

@@ -21,7 +21,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
 
     private fun findKobaltJar(version: String) =
         if (Constants.DEV_MODE) {
-            Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/classes")
+            Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-$version.jar")
         } else {
             Paths.get(System.getProperty("user.home"),
                     ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
