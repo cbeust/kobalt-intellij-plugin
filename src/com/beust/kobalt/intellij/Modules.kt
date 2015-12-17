@@ -1,5 +1,6 @@
 package com.beust.kobalt.intellij
 
+import com.google.gson.GsonBuilder
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.diagnostic.Logger
@@ -7,10 +8,7 @@ import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
-import com.intellij.openapi.roots.DependencyScope
-import com.intellij.openapi.roots.ModuleRootManager
-import com.intellij.openapi.roots.OrderRootType
-import com.intellij.openapi.roots.ProjectRootManager
+import com.intellij.openapi.roots.*
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
@@ -31,6 +29,9 @@ class Modules {
         }
 
         private fun configureModule(project: Project, kp: ProjectData) {
+            if (Constants.DEV_MODE) {
+                LOG.warn("Configuring modules with\n " + println(GsonBuilder().setPrettyPrinting().create().toJson(kp)))
+            }
             ModuleManager.getInstance(project).let { moduleManager ->
                 // Delete the module if it already exists
                 LOG.warn("Creating module " + kp.directory)
@@ -83,6 +84,19 @@ class Modules {
                         }
                         kp.sourceDirs.forEach { addSourceDir(it, false) }
                         kp.testDirs.forEach { addSourceDir(it, true) }
+                    }
+
+                    //
+                    // Dependent modules
+                    //
+                    modifiableModel.orderEntries.filter { it is ModuleOrderEntry }.forEach {
+                        modifiableModel.removeOrderEntry(it)
+                    }
+                    kp.dependentProjects.forEach {
+                        val dependentModule = moduleManager.findModuleByName(it)
+                        if (dependentModule != null) {
+                            modifiableModel.addModuleOrderEntry(dependentModule)
+                        }
                     }
 
                     //
