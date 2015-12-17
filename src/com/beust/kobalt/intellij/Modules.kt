@@ -23,97 +23,83 @@ class Modules {
 
 
         fun configureModules(project: Project, projects: List<ProjectData>) = projects.forEach {
-            configureModule(project, it)
+            ApplicationManager.getApplication().invokeLater {
+                runWriteAction {
+                    configureModule(project, it)
+                }
+            }
         }
 
         private fun configureModule(project: Project, kp: ProjectData) {
             ModuleManager.getInstance(project).let { moduleManager ->
                 // Delete the module if it already exists
-                moduleManager.findModuleByName(kp.name)?.let {
-                    ApplicationManager.getApplication().invokeLater {
-                        runWriteAction {
-                            with(moduleManager.modifiableModel) {
-                                disposeModule(it)
-                                commit()
-                            }
-                        }
-                    }
-                }
-
-                // Create the libraries
-                val libraryMap = hashMapOf<String, Library>()
-                ApplicationManager.getApplication().invokeLater {
-                    runWriteAction {
-                        LOG.warn("Creating module " + kp.directory)
-                        val moduleDir = project.basePath + "/" + kp.directory + "/"
-                        val module = moduleManager.newModule(moduleDir + kp.name
+                LOG.warn("Creating module " + kp.directory)
+                val moduleDir = project.basePath + "/" + kp.directory + "/"
+                val module = moduleManager.findModuleByName(kp.name) ?:
+                        moduleManager.newModule(moduleDir + kp.name
                                 + ".iml",
                                 StdModuleTypes.JAVA.id)
-                        ModuleRootManager.getInstance(module).modifiableModel.let { modifiableModel ->
-                            LOG.warn("0 Existing roots: " + modifiableModel.contentRoots.firstOrNull()?.canonicalPath)
+                ModuleRootManager.getInstance(module).modifiableModel.let { modifiableModel ->
+                    LOG.warn("0 Existing roots: " + modifiableModel.contentRoots.firstOrNull()?.canonicalPath)
 
-                            modifiableModel.contentEntries.forEach {
-                                modifiableModel.removeContentEntry(it)
+                    modifiableModel.contentEntries.forEach {
+                        modifiableModel.removeContentEntry(it)
+                    }
+
+                    val registrar = LibraryTablesRegistrar.getInstance()
+                    val libraryTable = registrar.getLibraryTable(project)
+
+                    //
+                    // Libraries
+                    //
+                    fun initLibrary(dependencies: List<DependencyData>, name: String, scope: DependencyScope) {
+                        val library = createLibrary(libraryTable, dependencies, name)
+                        if (library != null) {
+                            modifiableModel.findLibraryOrderEntry(library)?.let {
+                                modifiableModel.removeOrderEntry(it)
                             }
-
-                            val registrar = LibraryTablesRegistrar.getInstance()
-                            val libraryTable = registrar.getLibraryTable(project)
-
-                            //
-                            // Libraries
-                            //
-                            fun initLibrary(dependencies: List<DependencyData>, name: String, scope: DependencyScope) {
-                                val library = createLibrary(libraryTable, dependencies, name)
-                                if (library != null) {
-                                    modifiableModel.findLibraryOrderEntry(library)?.let {
-                                        modifiableModel.removeOrderEntry(it)
-                                    }
-                                    modifiableModel.addLibraryEntry(library)
-                                    modifiableModel.findLibraryOrderEntry(library)?.scope = scope
-                                }
-                            }
-                            initLibrary(kp.compileDependencies, "${module.name} (Compile)", DependencyScope.COMPILE)
-                            initLibrary(kp.testDependencies, "${module.name} (Test)", DependencyScope.TEST)
-
-                            //
-                            // Content roots and source dirs
-                            //
-                            val fullUrl = project.baseDir.url + "/" + kp.directory
-                            val contentRoot = VirtualFileManager.getInstance().findFileByUrl(fullUrl)
-                            LOG.warn("Existing roots: " + modifiableModel.contentRoots.firstOrNull()?.canonicalPath)
-                            if (contentRoot != null) {
-                                LOG.warn("Found contentRoot: $contentRoot")
-                                val contentEntry = modifiableModel.addContentEntry(contentRoot)
-                                fun addSourceDir(dir: String, isTest: Boolean) {
-                                    val srcDir = contentRoot.findFileByRelativePath(dir.replace("\\", "/"))
-                                    if (srcDir != null) {
-                                        contentEntry.addSourceFolder(srcDir, isTest)
-                                    }
-
-                                }
-                                kp.sourceDirs.forEach { addSourceDir(it, false) }
-                                kp.testDirs.forEach { addSourceDir(it, true) }
-                            }
-
-                            //
-                            // SDK
-                            //
-                            LOG.warn("ALL JDK's: " + ProjectJdkTable.getInstance().allJdks)
-                            LOG.warn("Project sdk: " + ProjectRootManager.getInstance(project).projectSdk?.name)
-                            if (ProjectRootManager.getInstance(project).projectSdk == null &&
-                                    ProjectJdkTable.getInstance().allJdks.size > 0) {
-                                LOG.warn("Setting SDK to " + ProjectJdkTable.getInstance().allJdks[0].name)
-                                ProjectRootManager.getInstance(project).projectSdk =
-                                    ProjectJdkTable.getInstance().allJdks[0]
-                            }
-                            ProjectRootManager.getInstance(project).projectSdk = ProjectJdkTable.getInstance().allJdks[0]
-
-                            modifiableModel.commit()
+                            modifiableModel.addLibraryEntry(library)
+                            modifiableModel.findLibraryOrderEntry(library)?.scope = scope
                         }
                     }
-                }
+                    initLibrary(kp.compileDependencies, "${module.name} (Compile)", DependencyScope.COMPILE)
+                    initLibrary(kp.testDependencies, "${module.name} (Test)", DependencyScope.TEST)
 
-                // Add src and dependencies to the module
+                    //
+                    // Content roots and source dirs
+                    //
+                    val fullUrl = project.baseDir.url + "/" + kp.directory
+                    val contentRoot = VirtualFileManager.getInstance().findFileByUrl(fullUrl)
+                    LOG.warn("Existing roots: " + modifiableModel.contentRoots.firstOrNull()?.canonicalPath)
+                    if (contentRoot != null) {
+                        LOG.warn("Found contentRoot: $contentRoot")
+                        val contentEntry = modifiableModel.addContentEntry(contentRoot)
+                        fun addSourceDir(dir: String, isTest: Boolean) {
+                            val srcDir = contentRoot.findFileByRelativePath(dir.replace("\\", "/"))
+                            if (srcDir != null) {
+                                contentEntry.addSourceFolder(srcDir, isTest)
+                            }
+
+                        }
+                        kp.sourceDirs.forEach { addSourceDir(it, false) }
+                        kp.testDirs.forEach { addSourceDir(it, true) }
+                    }
+
+                    //
+                    // SDK
+                    //
+                    LOG.warn("ALL JDK's: " + ProjectJdkTable.getInstance().allJdks)
+                    LOG.warn("Project sdk: " + ProjectRootManager.getInstance(project).projectSdk?.name)
+                    if (ProjectRootManager.getInstance(project).projectSdk == null &&
+                            ProjectJdkTable.getInstance().allJdks.size > 0) {
+                        LOG.warn("Setting SDK to " + ProjectJdkTable.getInstance().allJdks[0].name)
+                        ProjectRootManager.getInstance(project).projectSdk =
+                            ProjectJdkTable.getInstance().allJdks[0]
+                    }
+                    ProjectRootManager.getInstance(project).projectSdk = ProjectJdkTable.getInstance().allJdks[0]
+
+                    modifiableModel.commit()
+                }
             }
         }
 
