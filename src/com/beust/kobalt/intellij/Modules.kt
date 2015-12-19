@@ -7,8 +7,10 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.projectRoots.ProjectJdkTable
-import com.intellij.openapi.roots.*
+import com.intellij.openapi.roots.DependencyScope
+import com.intellij.openapi.roots.ModuleOrderEntry
+import com.intellij.openapi.roots.ModuleRootManager
+import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
@@ -102,15 +104,7 @@ class Modules {
                     //
                     // SDK
                     //
-                    LOG.warn("ALL JDK's: " + ProjectJdkTable.getInstance().allJdks)
-                    LOG.warn("Project sdk: " + ProjectRootManager.getInstance(project).projectSdk?.name)
-                    if (ProjectRootManager.getInstance(project).projectSdk == null &&
-                            ProjectJdkTable.getInstance().allJdks.size > 0) {
-                        LOG.warn("Setting SDK to " + ProjectJdkTable.getInstance().allJdks[0].name)
-                        ProjectRootManager.getInstance(project).projectSdk =
-                            ProjectJdkTable.getInstance().allJdks[0]
-                    }
-                    ProjectRootManager.getInstance(project).projectSdk = ProjectJdkTable.getInstance().allJdks[0]
+                    modifiableModel.inheritSdk()
 
                     modifiableModel.commit()
                 }
