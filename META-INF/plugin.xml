@@ -110,4 +110,11 @@
             <implementation-class>com.beust.kobalt.intellij.KobaltProjectComponent</implementation-class>
         </component>
     </project-components>
+
+<!--
+    <extensions defaultExtensionNs="com.intellij">
+        <projectImportProvider implementation="com.beust.kobalt.intellij.KobaltProjectImportProvider"/>
+        <projectImportBuilder implementation="com.beust.kobalt.intellij.KobaltProjectImportBuilder"/>
+    </extensions>
+-->
 </idea-plugin>
