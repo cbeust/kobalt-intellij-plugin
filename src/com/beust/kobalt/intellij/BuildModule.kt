@@ -74,7 +74,7 @@ class BuildModule {
                         val kobaltDependency = DependencyData("", "compile", kobaltJar.toFile().absolutePath)
                         val kobaltLibrary = Dependencies.createLibrary(libraryTable,
                                 arrayListOf(kobaltDependency), KobaltProjectComponent.KOBALT_JAR)
-                        Dependencies.addLibrary(kobaltLibrary, module, "compile", modifiableModel)
+                        Dependencies.addLibrary(kobaltLibrary, "compile", modifiableModel)
                         modifiableModel.commit()
                     } else {
                         KobaltProjectComponent.LOG.warn("Couldn't find kobalt/src, autocomplete disabled")
