@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.35</version>
+    <version>1.36</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -97,6 +97,11 @@
                     text="_Sync build file" description="Sync the build file">
                 <keyboard-shortcut first-keystroke="control alt K" keymap="$default"/>
             </action>
+<!--
+            <action id="kobalt.EnableBuildCompletion" class="com.beust.kobalt.intellij.EnableBuildCompletionAction"
+                    text="Enable autocompletion for Build.kt" description="Enable autocompletion">
+            </action>
+-->
         </group>
     </actions>
 
@@ -111,10 +116,9 @@
         </component>
     </project-components>
 
-<!--
     <extensions defaultExtensionNs="com.intellij">
         <projectImportProvider implementation="com.beust.kobalt.intellij.KobaltProjectImportProvider"/>
         <projectImportBuilder implementation="com.beust.kobalt.intellij.KobaltProjectImportBuilder"/>
     </extensions>
--->
+
 </idea-plugin>

@@ -47,7 +47,8 @@ public class KobaltApplicationComponent : ApplicationComponent {
                                 }
                             }
                         } catch(ex: IOException) {
-                            DistributionDownloader.warn("Couldn't load the release URL: ${DistributionDownloader.RELEASE_URL}")
+                            DistributionDownloader.warn(
+                                    "Couldn't load the release URL: ${DistributionDownloader.RELEASE_URL}")
                         }
                         result
                     }

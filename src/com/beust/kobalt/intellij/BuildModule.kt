@@ -6,7 +6,6 @@ import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
-import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
 import com.intellij.openapi.vfs.VirtualFileManager
 import java.nio.file.Path
@@ -65,8 +64,8 @@ class BuildModule {
                         // as a source folder
                         modifiableModel.addContentEntry(kobaltDir)
 
-                        val sdk = ProjectRootManager.getInstance(project).projectSdk
-                        modifiableModel.addContentEntry(sdk!!.homeDirectory!!)
+//                        val sdk = ProjectRootManager.getInstance(project).projectSdk
+//                        modifiableModel.addContentEntry(sdk!!.homeDirectory!!)
 
                         //
                         // Add kobalt.jar
