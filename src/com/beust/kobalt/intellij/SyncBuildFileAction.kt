@@ -186,7 +186,9 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
 
     private fun launchServer(port: Int, directory: String, kobaltJar: Path) {
         LOG.info("Kobalt jar: $kobaltJar")
-        val args = listOf(findJava(), "-jar", kobaltJar.toFile().absolutePath,
+        val args = listOf(findJava(),
+                "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n",
+                "-jar", kobaltJar.toFile().absolutePath,
                 "--dev", "--server", "--port", port.toString())
         val pb = ProcessBuilder(args)
         pb.directory(File(directory))
