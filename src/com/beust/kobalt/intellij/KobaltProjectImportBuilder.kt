@@ -61,6 +61,9 @@ class KobaltProjectImportBuilder(dataManager: ProjectDataManager, topic: Topic<K
 //KobaltExternalProjectSettings(),
 //true
 
+// AbstractExternalProjectSettingsControl
+//class ImportFromKobaltControl : AbstractExternalProjectSettingsControl<KobaltExternalProjectSettings>()
+
 class ImportFromKobaltControl(topic: Topic<KobaltListener>, project: Project)
 : AbstractImportFromExternalSystemControl<
         KobaltExternalProjectSettings,
