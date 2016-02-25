@@ -7,14 +7,12 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.DependencyScope
-import com.intellij.openapi.roots.ModuleOrderEntry
-import com.intellij.openapi.roots.ModuleRootManager
-import com.intellij.openapi.roots.OrderRootType
+import com.intellij.openapi.roots.*
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
 import com.intellij.openapi.vfs.JarFileSystem
+import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFileManager
 
 class Modules {
@@ -42,6 +40,7 @@ class Modules {
                         moduleManager.newModule(moduleDir + kp.name
                                 + ".iml",
                                 StdModuleTypes.JAVA.id)
+//                val prm = ProjectRootManager.getInstance(project)
                 ModuleRootManager.getInstance(module).modifiableModel.let { modifiableModel ->
                     LOG.warn("0 Existing roots: " + modifiableModel.contentRoots.firstOrNull()?.canonicalPath)
 
@@ -51,6 +50,14 @@ class Modules {
 
                     val registrar = LibraryTablesRegistrar.getInstance()
                     val libraryTable = registrar.getLibraryTable(project)
+
+                    //
+                    // Output directory
+                    //
+                    val cpe = CompilerProjectExtension.getInstance(project)
+                    if (cpe?.compilerOutputUrl.isNullOrEmpty()) {
+                        cpe?.compilerOutputUrl = VfsUtilCore.pathToUrl(project.basePath + "/" + "out")
+                    }
 
                     //
                     // Libraries
