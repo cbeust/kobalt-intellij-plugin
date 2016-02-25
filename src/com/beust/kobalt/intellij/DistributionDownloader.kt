@@ -24,7 +24,7 @@ class KFiles {
         /** Where all the .zip files are extracted */
         val distributionsDir = homeDir(KOBALT_DOT_DIR, "wrapper", "dist")
         fun homeDir(vararg dirs: String) : String = System.getProperty("user.home") +
-                File.separator + dirs.toArrayList().joinToString(File.separator)
+                File.separator + dirs.toMutableList().joinToString(File.separator)
 
         fun saveFile(file: File, text: String) {
             file.absoluteFile.parentFile.mkdirs()
