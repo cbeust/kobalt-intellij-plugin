@@ -24,7 +24,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
             Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-$version.jar")
         } else {
             Paths.get(System.getProperty("user.home"),
-                    ".kobalt/wrapper/dist/$version/kobalt/wrapper/kobalt-$version.jar")
+                    ".kobalt/wrapper/dist/kobalt-$version/kobalt/wrapper/kobalt-$version.jar")
         }
 
     override fun projectOpened() = BuildModule().run(project, kobaltJar)

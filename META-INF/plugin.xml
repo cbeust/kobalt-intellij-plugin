@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.38</version>
+    <version>1.39</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.39</h1>
+        <ul>
+            <li>Update to the new zip format
+        </ul>
         <h1>1.38</h1>
         <ul>
             <li>Update to Kotlin 1.0.0
