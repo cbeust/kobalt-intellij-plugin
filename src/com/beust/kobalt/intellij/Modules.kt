@@ -14,6 +14,7 @@ import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
 import com.intellij.openapi.vfs.JarFileSystem
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFileManager
+import org.jetbrains.jps.model.java.JavaResourceRootType
 
 class Modules {
     companion object {
@@ -84,15 +85,28 @@ class Modules {
                     if (contentRoot != null) {
                         LOG.warn("Found contentRoot: $contentRoot")
                         val contentEntry = modifiableModel.addContentEntry(contentRoot)
-                        fun addSourceDir(dir: String, isTest: Boolean) {
+                        fun addSourceDir(dir: String, isTest: Boolean, isResource: Boolean) {
                             val srcDir = contentRoot.findFileByRelativePath(dir.replace("\\", "/"))
                             if (srcDir != null) {
-                                contentEntry.addSourceFolder(srcDir, isTest)
+                                if (isResource) {
+                                    if (isTest) {
+                                        contentEntry.addSourceFolder(srcDir, JavaResourceRootType.TEST_RESOURCE,
+                                                JavaResourceRootType.RESOURCE.createDefaultProperties())
+                                    } else {
+                                        contentEntry.addSourceFolder(srcDir, JavaResourceRootType.RESOURCE,
+                                                JavaResourceRootType.RESOURCE.createDefaultProperties())
+
+                                    }
+                                } else {
+                                    contentEntry.addSourceFolder(srcDir, isTest)
+                                }
                             }
 
                         }
-                        kp.sourceDirs.forEach { addSourceDir(it, false) }
-                        kp.testDirs.forEach { addSourceDir(it, true) }
+                        kp.sourceDirs.forEach { addSourceDir(it, false, false) }
+                        kp.testDirs.forEach { addSourceDir(it, true, false) }
+                        kp.sourceResourceDirs.forEach { addSourceDir(it, false, true) }
+                        kp.testResourceDirs.forEach { addSourceDir(it, true, true) }
                     }
 
                     //
