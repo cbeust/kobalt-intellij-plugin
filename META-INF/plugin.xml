@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.39</version>
+    <version>1.41</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,14 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.41</h1>
+        <ul>
+            <li>Was downloading a new distribution in the wrong directory
+        </ul>
+        <h1>1.40</h1>
+        <ul>
+            <li>Configure resource directories correctly
+        </ul>
         <h1>1.39</h1>
         <ul>
             <li>Update to the new zip format
