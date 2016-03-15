@@ -3,6 +3,8 @@ package com.beust.kobalt.intellij
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.intellij.execution.ExecutionException
+import com.intellij.execution.util.ExecutionErrorDialog
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
@@ -16,6 +18,7 @@ import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.util.ProgressWindow
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
+import com.intellij.openapi.ui.DialogBuilder
 import java.io.*
 import java.net.ConnectException
 import java.net.Socket
@@ -97,7 +100,7 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
         //
         // Display the notification
         //
-        val notificationText = "Synchronizing Kobalt build file..."
+        val notificationText = "Synchronizing the Kobalt build file..."
         progress.text = notificationText
         progress.fraction = 0.25
         val group = NotificationGroup.logOnlyGroup("Kobalt")
@@ -150,8 +153,21 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
                         } else {
                             val error = jo.get("error")?.asString
                             if (error != null) {
-                                error("Could not build: $error")
                                 done = true
+                                ExecutionErrorDialog.show(ExecutionException(error), "Error while building", project)
+//                                ApplicationManager.getApplication().invokeLater {
+//                                    with(DialogWrapper(project, true)) {
+//
+//                                    }
+
+//                                with(DialogBuilder(project)) {
+//                                    setTitle("Error while building")
+//                                    dialogWrapper.setSize(600, 200)
+////                                        setErrorText(error)
+//                                    addOkAction()
+//                                    show()
+//                                }
+                                error("Could not build: $error")
                             } else {
                                 val data = jo.get("data")
                                 if (data != null) {
@@ -173,7 +189,11 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
 
             outgoing.println(QUIT_COMMAND)
         } else {
-            LOG.error("Couldn't connect to server on port $port")
+            with(DialogBuilder(project)) {
+                setTitle("Couldn't connect to server on port $port")
+                setErrorText("Couldn't connect to server on port $port")
+                show()
+            }
         }
 
         progress.fraction = 1.0
