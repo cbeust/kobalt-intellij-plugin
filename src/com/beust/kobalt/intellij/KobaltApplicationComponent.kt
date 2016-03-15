@@ -3,11 +3,8 @@ package com.beust.kobalt.intellij
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ApplicationComponent
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.progress.util.StatusBarProgress
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -66,24 +63,7 @@ public class KobaltApplicationComponent : ApplicationComponent {
         }
     }
 
-    override fun initComponent() {
-        if (! Constants.DEV_MODE) {
-            var progress = StatusBarProgress().apply {
-                start()
-                text = "Downloading Kobalt $version"
-            }
-
-            ApplicationManager.getApplication().executeOnPooledThread {
-                ProgressManager.getInstance().runProcess({
-                    DistributionDownloader().install(version, progress)
-                }, progress)
-            }
-        } else {
-            LOG.info("DEV_MODE is on, not downloading anything")
-        }
-    }
-
-    override fun disposeComponent() {
-    }
+    override fun initComponent() {}
+    override fun disposeComponent() {}
 
 }

@@ -1,7 +1,7 @@
 package com.beust.kobalt.intellij
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.util.ProgressIndicatorBase
+import com.intellij.openapi.progress.ProgressIndicator
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -52,18 +52,20 @@ public class DistributionDownloader {
      *
      * @return the path to the Kobalt jar file
      */
-    fun install(version: String, progress: ProgressIndicatorBase) : Path {
+    fun install(version: String, progress: ProgressIndicator, progressText: String) : Path {
         val fileName = "$FILE_NAME-$version.zip"
         File(KFiles.distributionsDir).mkdirs()
         val localZipFile = Paths.get(KFiles.distributionsDir, fileName)
         val zipOutputDir = KFiles.distributionsDir
-        val kobaltJarFile = Paths.get(zipOutputDir, "kobalt/wrapper/$FILE_NAME-$version.jar")
+        val kobaltJarFile = Paths.get(zipOutputDir, "kobalt-$version/kobalt/wrapper/$FILE_NAME-$version.jar")
         if (!Files.exists(localZipFile) || !Files.exists(kobaltJarFile)) {
+            progress.start()
+
             //
             // Either the .zip or the .jar is missing, downloading it
             //
             log(1, "Downloading $fileName")
-            download(version, fileName, localZipFile.toFile(), progress)
+            download(version, fileName, localZipFile.toFile(), progress, progressText)
 
             //
             // Extract all the zip files
@@ -94,7 +96,7 @@ public class DistributionDownloader {
         return kobaltJarFile
     }
 
-    private fun download(version: String, fn: String, file: File, progress: ProgressIndicatorBase) {
+    private fun download(version: String, fn: String, file: File, progress: ProgressIndicator, progressText: String) {
         var fileUrl = "http://beust.com/kobalt/kobalt-$version.zip"
 
         var done = false
@@ -152,6 +154,7 @@ public class DistributionDownloader {
                 if (bytesRead > 0) {
                     val fraction = bytesSoFar / contentLength
                     progress.fraction = fraction
+                    progress.text = progressText
                     log.info("\rDownloading $url $fraction%")
                 }
                 bytesRead = inputStream.read(buffer)
