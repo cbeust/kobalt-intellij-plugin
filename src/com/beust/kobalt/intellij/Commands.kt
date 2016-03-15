@@ -13,5 +13,5 @@ class ProjectData(val name: String, val directory: String,
         val sourceDirs: Set<String>, val testDirs: Set<String>,
         val sourceResourceDirs: Set<String>, val testResourceDirs: Set<String>)
 
-class GetDependenciesData(val projects: List<ProjectData>)
+class GetDependenciesData(val projects: List<ProjectData>, val errorMessage: String?)
 

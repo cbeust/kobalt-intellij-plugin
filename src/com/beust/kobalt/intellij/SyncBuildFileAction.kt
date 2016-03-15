@@ -153,21 +153,10 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
                         } else {
                             val error = jo.get("error")?.asString
                             if (error != null) {
+                                ApplicationManager.getApplication().invokeLater {
+                                    ExecutionErrorDialog.show(ExecutionException(error), "Error while building", project)
+                                }
                                 done = true
-                                ExecutionErrorDialog.show(ExecutionException(error), "Error while building", project)
-//                                ApplicationManager.getApplication().invokeLater {
-//                                    with(DialogWrapper(project, true)) {
-//
-//                                    }
-
-//                                with(DialogBuilder(project)) {
-//                                    setTitle("Error while building")
-//                                    dialogWrapper.setSize(600, 200)
-////                                        setErrorText(error)
-//                                    addOkAction()
-//                                    show()
-//                                }
-                                error("Could not build: $error")
                             } else {
                                 val data = jo.get("data")
                                 if (data != null) {
