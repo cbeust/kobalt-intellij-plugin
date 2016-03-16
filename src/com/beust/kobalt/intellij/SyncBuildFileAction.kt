@@ -3,8 +3,6 @@ package com.beust.kobalt.intellij
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.intellij.execution.ExecutionException
-import com.intellij.execution.util.ExecutionErrorDialog
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
@@ -18,7 +16,6 @@ import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.util.StatusBarProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
-import com.intellij.openapi.ui.DialogBuilder
 import java.io.*
 import java.net.ConnectException
 import java.net.Socket
@@ -55,7 +52,7 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
             //            if (! Constants.DEV_MODE) {
             runProcessWithProgressAsynchronously(
                     toBackgroundTask(project, "Kobalt: Launch server", {
-                        launchServer(port, project.basePath!!, component.kobaltJar)
+                        launchServer(project, port, project.basePath!!, component.kobaltJar)
                     }), EmptyProgressIndicator())
             //            }
 
@@ -153,9 +150,7 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
                         } else {
                             val error = jo.get("error")?.asString
                             if (error != null) {
-                                ApplicationManager.getApplication().invokeLater {
-                                    ExecutionErrorDialog.show(ExecutionException(error), "Error while building", project)
-                                }
+                                Dialogs.error(project, "Error while building", error)
                                 done = true
                             } else {
                                 val data = jo.get("data")
@@ -178,11 +173,7 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
 
             outgoing.println(QUIT_COMMAND)
         } else {
-            with(DialogBuilder(project)) {
-                setTitle("Couldn't connect to server on port $port")
-                setErrorText("Couldn't connect to server on port $port")
-                show()
-            }
+            Dialogs.error(project, "Error launching the server", "Couldn't connect to server on port $port")
         }
 
         progress.fraction = 1.0
@@ -194,26 +185,30 @@ public class SyncBuildFileAction : AnAction("Sync build file") {
     }
 
 
-    private fun launchServer(port: Int, directory: String, kobaltJar: Path) {
+    private fun launchServer(project: Project, port: Int, directory: String, kobaltJar: Path) {
         LOG.info("Kobalt jar: $kobaltJar")
-        val args = listOf(findJava(),
-                "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n",
-                "-jar", kobaltJar.toFile().absolutePath,
-                "--dev", "--server", "--port", port.toString())
-        val pb = ProcessBuilder(args)
-        pb.directory(File(directory))
-        pb.inheritIO()
-        pb.environment().put("JAVA_HOME", ProjectJdkTable.getInstance().allJdks[0].homePath)
-        val tempFile = createTempFile("kobalt")
-        pb.redirectOutput(tempFile)
-        LOG.warn("Launching " + args.joinToString(" "))
-        LOG.warn("Server output in: $tempFile")
-        val process = pb.start()
-        val errorCode = process.waitFor()
-        if (errorCode == 0) {
-            LOG.info("Server exiting")
+        if (! kobaltJar.toFile().exists()) {
+            Dialogs.error(project, "Can't find the jar file", kobaltJar.toFile().absolutePath + " can't be found")
         } else {
-            LOG.info("Server exiting with error")
+            val args = listOf(findJava(),
+                    //                "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n",
+                    "-jar", kobaltJar.toFile().absolutePath,
+                    "--dev", "--server", "--port", port.toString())
+            val pb = ProcessBuilder(args)
+            pb.directory(File(directory))
+            pb.inheritIO()
+            pb.environment().put("JAVA_HOME", ProjectJdkTable.getInstance().allJdks[0].homePath)
+            val tempFile = createTempFile("kobalt")
+            pb.redirectOutput(tempFile)
+            LOG.warn("Launching " + args.joinToString(" "))
+            LOG.warn("Server output in: $tempFile")
+            val process = pb.start()
+            val errorCode = process.waitFor()
+            if (errorCode == 0) {
+                LOG.info("Server exiting")
+            } else {
+                LOG.info("Server exiting with error")
+            }
         }
     }
 
