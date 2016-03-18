@@ -1,12 +1,7 @@
 package com.beust.kobalt.intellij;
 
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.progress.Task
-import com.intellij.openapi.progress.util.StatusBarProgress
 import com.intellij.openapi.project.Project
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -36,28 +31,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
 
     override fun getComponentName() = "kobalt.ProjectComponent"
 
-    override fun initComponent() {
-        if (! Constants.DEV_MODE) {
-            val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
-            ApplicationManager.getApplication().invokeLater {
-                val progress = StatusBarProgress().apply {
-                    text = progressText
-                }
-
-                ProgressManager.getInstance().runProcessWithProgressAsynchronously(
-                        object : Task.Backgroundable(project, "Downloading") {
-                            override fun run(progress: ProgressIndicator) {
-                                DistributionDownloader().install(KobaltApplicationComponent.version, progress,
-                                        progressText)
-                            }
-
-                        }, progress)
-            }
-        } else {
-            KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
-        }
-    }
-
+    override fun initComponent() {}
     override fun disposeComponent() {}
     override fun projectClosed() {}
 
