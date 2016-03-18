@@ -59,8 +59,6 @@ public class DistributionDownloader {
         val zipOutputDir = KFiles.distributionsDir
         val kobaltJarFile = Paths.get(zipOutputDir, "kobalt-$version/kobalt/wrapper/$FILE_NAME-$version.jar")
         if (!Files.exists(localZipFile) || !Files.exists(kobaltJarFile)) {
-            progress.start()
-
             //
             // Either the .zip or the .jar is missing, downloading it
             //
