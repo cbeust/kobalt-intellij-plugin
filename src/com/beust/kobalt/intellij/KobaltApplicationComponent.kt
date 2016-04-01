@@ -22,7 +22,7 @@ import java.util.concurrent.*
  * @author Cedric Beust <cedric@beust.com>
  * @since 10 23, 2015
  */
-public class KobaltApplicationComponent : ApplicationComponent {
+class KobaltApplicationComponent : ApplicationComponent {
     override fun getComponentName() = "kobalt.ApplicationComponent"
 
     companion object {

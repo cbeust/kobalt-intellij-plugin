@@ -37,7 +37,7 @@ class KFiles {
 /**
  * Download and install a new wrapper if requested.
  */
-public class DistributionDownloader {
+class DistributionDownloader {
     companion object {
         private val log = Logger.getInstance(DistributionDownloader::class.java)
         private fun log(level: Int, s: String) = log.info(s)

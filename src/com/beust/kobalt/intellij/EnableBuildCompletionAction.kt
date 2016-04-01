@@ -11,7 +11,7 @@ import com.intellij.openapi.diagnostic.Logger
  * @author Cedric Beust <cedric@beust.com>
  * @since 1/29, 2015
  */
-public class EnableBuildCompletionAction : AnAction("Enable Build autocompletion") {
+class EnableBuildCompletionAction : AnAction("Enable Build autocompletion") {
     companion object {
         val LOG = Logger.getInstance(EnableBuildCompletionAction::class.java)
     }
