@@ -29,7 +29,7 @@ import java.nio.file.Path
  * @author Cedric Beust <cedric@beust.com>
  * @since 10 23, 2015
  */
-public class SyncBuildFileAction : AnAction("Sync build file") {
+class SyncBuildFileAction : AnAction("Sync build file") {
     companion object {
         val LOG = Logger.getInstance(SyncBuildFileAction::class.java)
     }

@@ -11,7 +11,7 @@ import com.intellij.psi.tree.java.IKeywordElementType
 import com.intellij.util.ProcessingContext
 import org.jetbrains.annotations.NotNull
 
-public class SimpleCompletionContributor : CompletionContributor() {
+class SimpleCompletionContributor : CompletionContributor() {
     init {
         val provider = object: CompletionProvider<CompletionParameters>() {
             override fun addCompletions(@NotNull parameters: CompletionParameters,
