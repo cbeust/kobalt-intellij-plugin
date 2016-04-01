@@ -125,8 +125,9 @@
 -->
 
     <actions>
-        <group id="kobalt.MainMenu" text="_Kobalt" description="Kobalt">
-            <add-to-group group-id="MainMenu" relative-to-action="HelpMenu" anchor="before"/>
+        <group id="kobalt.ToolsMenu" class="com.beust.kobalt.intellij.KobaltToolsGroup" popup="true"
+               text="_Kobalt" description="Kobalt">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
             <action id="kobalt.SyncBuildFile" class="com.beust.kobalt.intellij.SyncBuildFileAction"
                     text="_Sync build file" description="Sync the build file">
                 <keyboard-shortcut first-keystroke="control alt K" keymap="$default"/>
