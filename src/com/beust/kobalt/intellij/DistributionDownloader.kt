@@ -1,7 +1,7 @@
 package com.beust.kobalt.intellij
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.util.ProgressIndicatorBase
+import com.intellij.openapi.progress.ProgressIndicator
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -24,7 +24,7 @@ class KFiles {
         /** Where all the .zip files are extracted */
         val distributionsDir = homeDir(KOBALT_DOT_DIR, "wrapper", "dist")
         fun homeDir(vararg dirs: String) : String = System.getProperty("user.home") +
-                File.separator + dirs.toArrayList().joinToString(File.separator)
+                File.separator + dirs.toMutableList().joinToString(File.separator)
 
         fun saveFile(file: File, text: String) {
             file.absoluteFile.parentFile.mkdirs()
@@ -37,19 +37,13 @@ class KFiles {
 /**
  * Download and install a new wrapper if requested.
  */
-public class DistributionDownloader {
+class DistributionDownloader {
     companion object {
         private val log = Logger.getInstance(DistributionDownloader::class.java)
-        private fun log(level: Int, s: String) {
-            log.info(s)
-        }
+        private fun log(level: Int, s: String) = log.info(s)
+        fun warn(s: String) = log.warn(s)
+        const val RELEASE_URL = "https://api.github.com/repos/cbeust/kobalt/releases"
     }
-
-    // kobalt.properties
-    private val WRAPPER_DIR = KFiles.KOBALT_DIR + "/wrapper"
-
-    private val KOBALT_WRAPPER_PROPERTIES = "kobalt-wrapper.properties"
-    private val PROPERTY_VERSION = "kobalt.version"
 
     val FILE_NAME = "kobalt"
 
@@ -58,18 +52,18 @@ public class DistributionDownloader {
      *
      * @return the path to the Kobalt jar file
      */
-    fun install(version: String, progress: ProgressIndicatorBase) : Path {
+    fun install(version: String, progress: ProgressIndicator, progressText: String) : Path {
         val fileName = "$FILE_NAME-$version.zip"
         File(KFiles.distributionsDir).mkdirs()
         val localZipFile = Paths.get(KFiles.distributionsDir, fileName)
-        val zipOutputDir = KFiles.distributionsDir + "/" + version
-        val kobaltJarFile = Paths.get(zipOutputDir, "kobalt/wrapper/$FILE_NAME-$version.jar")
+        val zipOutputDir = KFiles.distributionsDir
+        val kobaltJarFile = Paths.get(zipOutputDir, "kobalt-$version/kobalt/wrapper/$FILE_NAME-$version.jar")
         if (!Files.exists(localZipFile) || !Files.exists(kobaltJarFile)) {
             //
             // Either the .zip or the .jar is missing, downloading it
             //
             log(1, "Downloading $fileName")
-            download(fileName, localZipFile.toFile(), progress)
+            download(version, fileName, localZipFile.toFile(), progress, progressText)
 
             //
             // Extract all the zip files
@@ -100,8 +94,7 @@ public class DistributionDownloader {
         return kobaltJarFile
     }
 
-    private fun download(fn: String, file: File, progress: ProgressIndicatorBase) {
-        val version = Constants.MIN_KOBALT_VERSION
+    private fun download(version: String, fn: String, file: File, progress: ProgressIndicator, progressText: String) {
         var fileUrl = "http://beust.com/kobalt/kobalt-$version.zip"
 
         var done = false
@@ -159,6 +152,7 @@ public class DistributionDownloader {
                 if (bytesRead > 0) {
                     val fraction = bytesSoFar / contentLength
                     progress.fraction = fraction
+                    progress.text = progressText
                     log.info("\rDownloading $url $fraction%")
                 }
                 bytesRead = inputStream.read(buffer)

@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.17</version>
+    <version>1.49</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,81 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.48</h1>
+        <ul>
+            <li>Moved the Kobalt menu under "Tools"
+        </ul>
+        <h1>1.47</h1>
+        <ul>
+            <li>Fix the "Progress already started" exception.
+        </ul>
+        <h1>1.44</h1>
+        <ul>
+            <li>Move sync back to the background
+        </ul>
+        <h1>1.43</h1>
+        <ul>
+            <li>Update to 0.680 to receive build errors
+        </ul>
+        <h1>1.42</h1>
+        <ul>
+            <li>Better progress indicators
+        </ul>
+        <h1>1.41</h1>
+        <ul>
+            <li>Was downloading a new distribution in the wrong directory
+        </ul>
+        <h1>1.40</h1>
+        <ul>
+            <li>Configure resource directories correctly
+        </ul>
+        <h1>1.39</h1>
+        <ul>
+            <li>Update to the new zip format
+        </ul>
+        <h1>1.38</h1>
+        <ul>
+            <li>Update to Kotlin 1.0.0
+            <li>Fix the output directory
+            <li>Launch the server in remote debug mode
+        </ul>
+        <h1>1.35</h1>
+        <ul>
+            <li>Make each module inherit the project SDK.
+        </ul>
+        <h1>1.32</h1>
+        <ul>
+            <li>New organization of modules.
+        </ul>
+        <h1>1.31</h1>
+        <ul>
+            <li>Handle dynamic plug-ins better in Build.kt.
+        </ul>
+        <h1>1.29</h1>
+        <ul>
+            <li>Automatically enables autocompletion in kobalt/src/Build.kt.
+        </ul>
+        <h1>1.27</h1>
+        <ul>
+            <li>Server log is now captured in a temporary file.
+            <li>Launching java with absolute path.
+        </ul>
+        <h1>1.26</h1>
+        <ul>
+            <li>Dependencies were no longer being set.
+        </ul>
+        <h1>1.23</h1>
+        <ul>
+            <li>Automatically loads the latest version of Kobalt on start up.
+        </ul>
+        <h1>1.20</h1>
+        <ul>
+            <li>Updated Kotlin 1.0.0-beta-2423.
+        </ul>
+        <h1>1.19</h1>
+        <ul>
+            <li>Update to 0.264.
+        </ul>
         <h1>1.17</h1>
         <ul>
             <li>Updated to the new distribution URL.
@@ -54,12 +129,18 @@
 -->
 
     <actions>
-        <group id="kobalt.MainMenu" text="_Kobalt" description="Kobalt">
-            <add-to-group group-id="MainMenu" relative-to-action="HelpMenu" anchor="before"/>
+        <group id="kobalt.ToolsMenu" class="com.beust.kobalt.intellij.KobaltToolsGroup" popup="true"
+               text="_Kobalt" description="Kobalt">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
             <action id="kobalt.SyncBuildFile" class="com.beust.kobalt.intellij.SyncBuildFileAction"
                     text="_Sync build file" description="Sync the build file">
                 <keyboard-shortcut first-keystroke="control alt K" keymap="$default"/>
             </action>
+<!--
+            <action id="kobalt.EnableBuildCompletion" class="com.beust.kobalt.intellij.EnableBuildCompletionAction"
+                    text="Enable autocompletion for Build.kt" description="Enable autocompletion">
+            </action>
+-->
         </group>
     </actions>
 
@@ -73,4 +154,10 @@
             <implementation-class>com.beust.kobalt.intellij.KobaltProjectComponent</implementation-class>
         </component>
     </project-components>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectImportProvider implementation="com.beust.kobalt.intellij.KobaltProjectImportProvider"/>
+        <projectImportBuilder implementation="com.beust.kobalt.intellij.KobaltProjectImportBuilder"/>
+    </extensions>
+
 </idea-plugin>
