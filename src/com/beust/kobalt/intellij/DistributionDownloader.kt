@@ -69,7 +69,7 @@ class DistributionDownloader {
         }
 
 
-        if (Files.exists(localZipFile) && Files.exists(kobaltJarFile)) {
+        if (Files.exists(localZipFile)) {
             //
             // Extract all the zip files
             //
