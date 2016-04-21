@@ -93,7 +93,7 @@ class DistributionDownloader {
             }
             log(2, "$localZipFile extracted")
         } else {
-            log(1, "Something went wrong, $localZipFile and $kobaltJarFile should exist but can't be found")
+            log(1, "Something went wrong: $localZipFile should exist but can't be found")
         }
 
         return kobaltJarFile
