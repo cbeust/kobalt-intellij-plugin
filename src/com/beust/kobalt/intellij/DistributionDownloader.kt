@@ -64,7 +64,12 @@ class DistributionDownloader {
             //
             log(1, "Downloading $fileName")
             download(version, fileName, localZipFile.toFile(), progress, progressText)
+        } else {
+            log(1, "$localZipFile already present, no need to download it")
+        }
 
+
+        if (Files.exists(localZipFile) && Files.exists(kobaltJarFile)) {
             //
             // Extract all the zip files
             //
@@ -88,7 +93,7 @@ class DistributionDownloader {
             }
             log(2, "$localZipFile extracted")
         } else {
-            log(1, "$localZipFile already present, no need to download it")
+            log(1, "Something went wrong, $localZipFile and $kobaltJarFile should exist but can't be found")
         }
 
         return kobaltJarFile
