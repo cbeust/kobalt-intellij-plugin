@@ -11,7 +11,7 @@
     <change-notes><![CDATA[
         <h1>1.51</h1>
         <ul>
-            <li>Did not exact the .zip file if it was found even though the jar file was not present.
+            <li>Did not extract the .zip file if it was found even though the jar file was not present.
         </ul>
         <h1>1.50</h1>
         <ul>
