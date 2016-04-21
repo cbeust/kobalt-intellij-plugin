@@ -60,7 +60,7 @@ class KobaltApplicationComponent : ApplicationComponent {
 
         val version: String by lazy {
             try {
-                latestKobaltVersion.get(2, TimeUnit.SECONDS)
+                latestKobaltVersion.get(20, TimeUnit.SECONDS)
             } catch(ex: TimeoutException) {
                 Constants.MIN_KOBALT_VERSION
             }
