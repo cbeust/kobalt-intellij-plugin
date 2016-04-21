@@ -21,9 +21,9 @@ class SyncBuildFileAction : AnAction("Sync build file") {
     override fun actionPerformed(event: AnActionEvent) {
         event.project?.let { project ->
             project.getComponent(KobaltProjectComponent::class.java)?.let {
-                DependenciesProcessor().run(it, project) { progectsData ->
-                    Modules.configureModules(project, progectsData)
-                    KobaltToolWindowComponent.getInstance(project).update(progectsData)
+                DependenciesProcessor().run(it, project) { projectsData ->
+                    Modules.configureModules(project, projectsData)
+                    KobaltToolWindowComponent.getInstance(project).update(projectsData)
                 }
             }
         }
