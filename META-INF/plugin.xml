@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.49</version>
+    <version>1.53</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,9 +9,25 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.53</h1>
+        <ul>
+            <li>Increase the time out to download the latest zip.
+        </ul>
+        <h1>1.52</h1>
+        <ul>
+            <li>Minor bug in the unzipping logic.
+        </ul>
+        <h1>1.51</h1>
+        <ul>
+            <li>Did not extract the .zip file if it was found even though the jar file was not present.
+        </ul>
+        <h1>1.50</h1>
+        <ul>
+            <li>Dependent projects were no longer being added.
+        </ul>
         <h1>1.48</h1>
         <ul>
-            <li>Moved the Kobalt menu under "Tools"
+            <li>Moved the Kobalt menu under "Tools".
         </ul>
         <h1>1.47</h1>
         <ul>
