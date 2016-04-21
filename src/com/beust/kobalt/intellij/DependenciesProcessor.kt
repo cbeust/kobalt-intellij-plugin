@@ -1,39 +1,38 @@
 package com.beust.kobalt.intellij
 
-import com.beust.kobalt.intellij.toolWindow.KobaltToolWindowComponent
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import com.intellij.notification.NotificationGroup
+import com.intellij.notification.NotificationType
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.EmptyProgressIndicator
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
+import com.intellij.openapi.progress.util.StatusBarProgress
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.projectRoots.ProjectJdkTable
+import java.io.*
+import java.net.ConnectException
+import java.net.Socket
+import java.nio.file.Path
 
 /**
- * Invoked from the "Sync build file" action: launch a kobalt --server in the background, connect to it
- * and send it a getDependencies() command for the current project. When the answer is received, update
- * the project's libraries and dependencies with that information.
- *
- * @author Cedric Beust <cedric@beust.com>
- * @since 10 23, 2015
+ * @author Dmitry Zhuravlev
+ *         Date: 18.04.16
  */
-class SyncBuildFileAction : AnAction("Sync build file") {
+class DependenciesProcessor() {
+
     companion object {
-        val LOG = Logger.getInstance(SyncBuildFileAction::class.java)
+        val LOG = Logger.getInstance(DependenciesProcessor::class.java)
     }
 
-    override fun actionPerformed(event: AnActionEvent) {
-        event.project?.let { project ->
-            project.getComponent(KobaltProjectComponent::class.java)?.let {
-                DependenciesProcessor().run(it, project) { progectsData ->
-                    Modules.configureModules(project, progectsData)
-                    KobaltToolWindowComponent.getInstance(project).update(progectsData)
-                }
-            }
-        }
-    }
 
-    //code below moved to DependenciesProcessor
+    lateinit var progress: ProgressIndicator
 
-    /*lateinit var progress: ProgressIndicator
-
-    fun run(component: KobaltProjectComponent, project: Project) {
+    fun run(component: KobaltProjectComponent, project: Project, process: (List<ProjectData>) -> Unit) {
         KobaltProjectComponent.LOG.info("Syncing build file for project $project")
 
         with(ProgressManager.getInstance()) {
@@ -48,28 +47,28 @@ class SyncBuildFileAction : AnAction("Sync build file") {
             progress = StatusBarProgress()
             runProcessWithProgressAsynchronously(
                     toBackgroundTask(project, "Kobalt: Get dependencies", {
-                        sendGetDependencies(port, project)
+                        sendGetDependencies(port, project, process)
                     }), progress)
         }
     }
 
     private fun toBackgroundTask(project: Project, title: String, function: Function0<Unit>): Task.Backgroundable {
-        return object: Task.Backgroundable(project, title) {
+        return object : Task.Backgroundable(project, title) {
             override fun run(p0: ProgressIndicator) {
                 function.invoke()
             }
         }
     }
 
-    private fun findPort() : Int {
+    private fun findPort(): Int {
         for (i in 1234..65000) {
             if (isPortAvailable(i)) return i
         }
         throw IllegalArgumentException("Couldn't find any port available, something is very wrong")
     }
 
-    private fun isPortAvailable(port: Int) : Boolean {
-        var s : Socket? = null
+    private fun isPortAvailable(port: Int): Boolean {
+        var s: Socket? = null
         try {
             s = Socket("localhost", port)
             return false
@@ -80,7 +79,7 @@ class SyncBuildFileAction : AnAction("Sync build file") {
         }
     }
 
-    private fun sendGetDependencies(port: Int, project: Project) {
+    private fun sendGetDependencies(port: Int, project: Project, calback: (List<ProjectData>) -> Unit) {
         LOG.info("sendGetDependencies")
 
         //
@@ -100,7 +99,7 @@ class SyncBuildFileAction : AnAction("Sync build file") {
         var attempts = 0
         var connected = false
         var socket: Socket? = null
-        while (attempts < 5 && ! connected) {
+        while (attempts < 5 && !connected) {
             try {
                 socket = Socket("localhost", port)
                 connected = true
@@ -148,8 +147,7 @@ class SyncBuildFileAction : AnAction("Sync build file") {
                                     val dd = Gson().fromJson(dataString, GetDependenciesData::class.java)
 
                                     LOG.info("Read GetDependencyData, project count: ${dd.projects.size}")
-
-                                    Modules.configureModules(project, dd.projects)
+                                    calback(dd.projects)
                                     line = ins.readLine()
                                 } else {
                                     error("Did not receive a \"data\" field")
@@ -176,7 +174,7 @@ class SyncBuildFileAction : AnAction("Sync build file") {
 
     private fun launchServer(project: Project, port: Int, directory: String, kobaltJar: Path) {
         LOG.info("Kobalt jar: $kobaltJar")
-        if (! kobaltJar.toFile().exists()) {
+        if (!kobaltJar.toFile().exists()) {
             Dialogs.error(project, "Can't find the jar file", kobaltJar.toFile().absolutePath + " can't be found")
         } else {
             val args = listOf(findJava(),
@@ -203,10 +201,9 @@ class SyncBuildFileAction : AnAction("Sync build file") {
 
     private val QUIT_COMMAND = "{ \"name\" : \"quit\" }"
 
-    private fun findJava() : String {
+    private fun findJava(): String {
         val javaHome = System.getProperty("java.home")
         val result = if (javaHome != null) "$javaHome/bin/java" else "java"
         return result
     }
-*/
 }
