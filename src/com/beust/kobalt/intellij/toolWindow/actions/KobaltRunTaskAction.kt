@@ -3,6 +3,7 @@ package com.beust.kobalt.intellij.toolWindow.actions
 import com.beust.kobalt.intellij.execution.KobaltTaskConfigurationType
 import com.beust.kobalt.intellij.toolWindow.KobaltDataKeys
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.fileEditor.FileDocumentManager
 
 /**
  * @author Dmitry Zhuravlev
@@ -14,6 +15,7 @@ class KobaltRunTaskAction : KobaltAction("Run task") {
             KobaltDataKeys.KOBALT_TASKS.getData(e.dataContext)?.isNotEmpty() ?: false
 
     override fun actionPerformed(event: AnActionEvent) {
+        FileDocumentManager.getInstance().saveAllDocuments()
         val tasks = KobaltDataKeys.KOBALT_TASKS.getData(event.dataContext) ?: return
         KobaltTaskConfigurationType.runConfiguration(event.project!!, tasks)
     }
