@@ -3,7 +3,9 @@ package com.beust.kobalt.intellij
 import com.beust.kobalt.intellij.toolWindow.KobaltToolWindowComponent
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.fileEditor.FileDocumentManager
 
 /**
  * Invoked from the "Sync build file" action: launch a kobalt --server in the background, connect to it
@@ -19,11 +21,13 @@ class SyncBuildFileAction : AnAction("Sync build file") {
     }
 
     override fun actionPerformed(event: AnActionEvent) {
+        FileDocumentManager.getInstance().saveAllDocuments()
         event.project?.let { project ->
             project.getComponent(KobaltProjectComponent::class.java)?.let {
                 DependenciesProcessor().run(it, project) { projectsData ->
                     Modules.configureModules(project, projectsData)
                     KobaltToolWindowComponent.getInstance(project).update(projectsData)
+                    ApplicationManager.getApplication().invokeLater { BuildModule().run(project, it.kobaltJar) }
                 }
             }
         }
