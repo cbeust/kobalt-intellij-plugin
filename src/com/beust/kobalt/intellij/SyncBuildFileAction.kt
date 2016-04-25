@@ -1,7 +1,7 @@
 package com.beust.kobalt.intellij
 
 import com.beust.kobalt.intellij.toolWindow.KobaltToolWindowComponent
-import com.intellij.openapi.actionSystem.AnAction
+import com.beust.kobalt.intellij.toolWindow.actions.KobaltAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
@@ -15,10 +15,13 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
  * @author Cedric Beust <cedric@beust.com>
  * @since 10 23, 2015
  */
-class SyncBuildFileAction : AnAction("Sync build file") {
+class SyncBuildFileAction : KobaltAction("Sync build file") {
     companion object {
         val LOG = Logger.getInstance(SyncBuildFileAction::class.java)
     }
+
+    override fun isAvailable(e: AnActionEvent) = BuildUtils.buildFileExist(e.project)
+
 
     override fun actionPerformed(event: AnActionEvent) {
         FileDocumentManager.getInstance().saveAllDocuments()

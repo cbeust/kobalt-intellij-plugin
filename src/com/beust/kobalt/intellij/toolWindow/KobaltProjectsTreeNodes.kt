@@ -1,8 +1,10 @@
 package com.beust.kobalt.intellij.toolWindow
 
 import com.beust.kobalt.intellij.toolWindow.actions.KobaltActionUtil
+import com.intellij.ide.projectView.PresentationData
 import com.intellij.ui.treeStructure.CachingSimpleNode
 import com.intellij.ui.treeStructure.SimpleTree
+import icons.ExternalSystemIcons
 import java.awt.event.InputEvent
 
 /**
@@ -27,19 +29,24 @@ sealed class BaseNode(var displayName: String, var parent: BaseNode?) : CachingS
         }
     }
 
-    class TaskNode(displayName: String, parent: BaseNode, override val actionId: String? = "kobalt.RunTask") : BaseNode(displayName, parent)
+    class TaskNode(displayName: String, parent: BaseNode, override val actionId: String? = "kobalt.RunTask") : BaseNode(displayName, parent){
+        override fun update(presentation: PresentationData?) {
+            super.update(presentation)
+            presentation?.setIcon(ExternalSystemIcons.Task)
+        }
+    }
 
     class RootNode : BaseNode("", null) {
         override val actionId = null
 
-        val projectNodes = mutableListOf<ProjectNode>()
+        val projectNodes = mutableListOf<ModuleNode>()
 
-        fun add(node: ProjectNode) {
+        fun add(node: ModuleNode) {
             node.parent = this
             projectNodes.add(node)
         }
 
-        fun remove(node: ProjectNode) {
+        fun remove(node: ModuleNode) {
             node.parent = this
             projectNodes.remove(node)
         }
@@ -49,7 +56,12 @@ sealed class BaseNode(var displayName: String, var parent: BaseNode?) : CachingS
         override fun doBuildChildren() = projectNodes
     }
 
-    class ProjectNode(displayName: String, parent: BaseNode) : BaseNode(displayName, parent) {
+    class ModuleNode(displayName: String, parent: BaseNode) : BaseNode(displayName, parent) {
+
+        override fun update(presentation: PresentationData?) {
+            super.update(presentation)
+            presentation?.setIcon(ExternalSystemIcons.TaskGroup)
+        }
 
         override val actionId = null
 

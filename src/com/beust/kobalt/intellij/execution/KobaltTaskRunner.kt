@@ -1,7 +1,6 @@
 package com.beust.kobalt.intellij.execution
 
 import com.intellij.execution.configurations.RunProfile
-import com.intellij.execution.executors.DefaultRunExecutor
 import com.intellij.execution.impl.DefaultJavaProgramRunner
 
 /**
@@ -10,9 +9,11 @@ import com.intellij.execution.impl.DefaultJavaProgramRunner
  */
 class KobaltTaskRunner : DefaultJavaProgramRunner() {
     companion object{
-        const val EXECUTOR_NAME ="Run task"
+        const val RUNNER_ID ="RUN_KOBALT_TASK_RUNNER"
     }
 
+    override fun getRunnerId() = RUNNER_ID
+
     override fun canRun(executorId: String, profile: RunProfile) =
-            DefaultRunExecutor.EXECUTOR_ID == executorId && profile.name == EXECUTOR_NAME
+            RUNNER_ID == executorId && profile.name == KobaltTaskRunConfiguration.CONFIGURATION_NAME
 }

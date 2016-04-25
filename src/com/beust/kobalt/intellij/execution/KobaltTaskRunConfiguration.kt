@@ -18,7 +18,11 @@ import com.intellij.openapi.roots.ProjectRootManager
  */
 class KobaltTaskRunConfiguration(project: Project, var tasks: List<String> = emptyList()) : LocatableConfigurationBase(project,
         findConfigurationType<KobaltTaskConfigurationType>(KobaltTaskConfigurationType::class.java).configurationFactory,
-        "TODO NAME") {
+        CONFIGURATION_NAME) {
+
+    companion object{
+        const val CONFIGURATION_NAME = "KOBALT_TASK_RUN_CONFIGURATION"
+    }
 
     val kobaltComponent = project.getComponent(KobaltProjectComponent::class.java)
 

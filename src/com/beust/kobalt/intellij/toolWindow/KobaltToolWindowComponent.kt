@@ -1,5 +1,6 @@
 package com.beust.kobalt.intellij.toolWindow
 
+import com.beust.kobalt.intellij.BuildUtils
 import com.beust.kobalt.intellij.DependenciesProcessor
 import com.beust.kobalt.intellij.KobaltProjectComponent
 import com.beust.kobalt.intellij.ProjectData
@@ -8,8 +9,10 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.components.*
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.startup.StartupManager
 import com.intellij.openapi.util.InvalidDataException
 import com.intellij.openapi.util.WriteExternalException
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.treeStructure.SimpleTree
 import com.intellij.util.DisposeAwareRunnable
 import org.jdom.Element
@@ -46,9 +49,10 @@ class KobaltToolWindowComponent(project: Project) : AbstractProjectComponent(pro
     override fun initComponent() {
         initTree()
         ApplicationManager.getApplication().invokeLater(DisposeAwareRunnable.create({
-            val dependencyProcessor = DependenciesProcessor()
-            projectStructure = KobaltProjectsStructure(myProject, tree)
             myProject.getComponent(KobaltProjectComponent::class.java)?.let { kobaltComponent ->
+                if(!BuildUtils.buildFileExist(myProject)) return@let
+                val dependencyProcessor = DependenciesProcessor()
+                projectStructure = KobaltProjectsStructure(myProject, tree)
                 dependencyProcessor.run(kobaltComponent, myProject) { projectsData ->
                     projectStructure.update(projectsData)
                     isInitialized = true
@@ -57,6 +61,18 @@ class KobaltToolWindowComponent(project: Project) : AbstractProjectComponent(pro
             }
 
         }, myProject), ModalityState.defaultModalityState())
+    }
+
+    override fun projectOpened() {
+        StartupManager.getInstance(myProject).runWhenProjectIsInitialized {
+            hideToolWindowIfNeeded()
+        }
+    }
+
+    private fun hideToolWindowIfNeeded() {
+        if(!BuildUtils.buildFileExist(myProject)) {
+            ToolWindowManager.getInstance(myProject)?.getToolWindow("Kobalt Build")?.setAvailable(false, null)
+        }
     }
 
     fun update(projectData: List<ProjectData>) {
