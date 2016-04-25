@@ -1,7 +1,7 @@
 package com.beust.kobalt.intellij.toolWindow
 
 import com.beust.kobalt.intellij.ProjectData
-import com.beust.kobalt.intellij.toolWindow.BaseNode.ProjectNode
+import com.beust.kobalt.intellij.toolWindow.BaseNode.ModuleNode
 import com.beust.kobalt.intellij.toolWindow.BaseNode.RootNode
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -39,7 +39,7 @@ class KobaltProjectsStructure(val project: Project, tree: SimpleTree) : SimpleTr
             rootNode.cleanUpCache()
             rootNode.removeAllChildren()
         }
-        projectData.map { ProjectNode(it.name, rootNode) }.forEach { node ->
+        projectData.map { ModuleNode(it.name, rootNode) }.forEach { node ->
             rootNode.add(node)
 
         }
