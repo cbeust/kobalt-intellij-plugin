@@ -1,5 +1,6 @@
 package com.beust.kobalt.intellij.toolWindow
 
+import com.beust.kobalt.intellij.Modules
 import com.beust.kobalt.intellij.toolWindow.actions.KobaltActionUtil
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ui.treeStructure.CachingSimpleNode
@@ -43,6 +44,7 @@ sealed class BaseNode(var displayName: String, var parent: BaseNode?) : CachingS
 
         fun add(node: ModuleNode) {
             node.parent = this
+            val taskNames = Modules.taskNames
             projectNodes.add(node)
         }
 
