@@ -22,7 +22,6 @@ class SyncBuildFileAction : KobaltAction("Sync build file") {
 
     override fun isAvailable(e: AnActionEvent) = BuildUtils.buildFileExist(e.project)
 
-
     override fun actionPerformed(event: AnActionEvent) {
         FileDocumentManager.getInstance().saveAllDocuments()
         event.project?.let { project ->
@@ -30,7 +29,8 @@ class SyncBuildFileAction : KobaltAction("Sync build file") {
                 DependenciesProcessor().run(it, project) { projectsData ->
                     Modules.configureModules(project, projectsData)
                     KobaltToolWindowComponent.getInstance(project).update(projectsData)
-                    ApplicationManager.getApplication().invokeLater { BuildModule().run(project, it.kobaltJar) }
+                    ApplicationManager.getApplication().invokeLater { BuildModule().run(project,
+                            KobaltApplicationComponent.kobaltJar) }
                 }
             }
         }
