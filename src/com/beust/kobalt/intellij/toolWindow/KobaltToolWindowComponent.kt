@@ -1,5 +1,6 @@
 package com.beust.kobalt.intellij.toolWindow
 
+import com.beust.kobalt.intellij.BuildUtils
 import com.beust.kobalt.intellij.DependenciesProcessor
 import com.beust.kobalt.intellij.KobaltProjectComponent
 import com.beust.kobalt.intellij.ProjectData
@@ -46,9 +47,10 @@ class KobaltToolWindowComponent(project: Project) : AbstractProjectComponent(pro
     override fun initComponent() {
         initTree()
         ApplicationManager.getApplication().invokeLater(DisposeAwareRunnable.create({
-            val dependencyProcessor = DependenciesProcessor()
-            projectStructure = KobaltProjectsStructure(myProject, tree)
             myProject.getComponent(KobaltProjectComponent::class.java)?.let { kobaltComponent ->
+                if(!BuildUtils.buildFileExist(myProject)) return@let
+                val dependencyProcessor = DependenciesProcessor()
+                projectStructure = KobaltProjectsStructure(myProject, tree)
                 dependencyProcessor.run(kobaltComponent, myProject) { projectsData ->
                     projectStructure.update(projectsData)
                     isInitialized = true
