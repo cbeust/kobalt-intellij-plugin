@@ -1,7 +1,10 @@
 package com.beust.kobalt.intellij
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
+import com.intellij.openapi.progress.util.StatusBarProgress
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import java.io.File
@@ -10,7 +13,7 @@ import java.io.IOException
 import java.net.Socket
 import java.util.*
 
-class ProcessUtil {
+class ServerUtil {
     companion object {
         fun toBackgroundTask(project: Project?, title: String, function: Function0<Unit>): Task.Backgroundable {
             return object : Task.Backgroundable(project, title) {
@@ -60,6 +63,8 @@ class ProcessUtil {
         }
 
         fun launchServer() {
+            maybeDownloadAndInstallKobaltJar()
+
             val port = findAvailablePort()
             val kobaltJar = KobaltApplicationComponent.kobaltJar
             KobaltApplicationComponent.LOG.info("Kobalt jar: $kobaltJar")
@@ -93,6 +98,28 @@ class ProcessUtil {
 //                } else {
 //                    DependenciesProcessor.LOG.info("Server exiting with error")
 //                }
+            }
+        }
+
+        fun maybeDownloadAndInstallKobaltJar() {
+            if (! Constants.DEV_MODE) {
+                val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
+                ApplicationManager.getApplication().invokeLater {
+                    val progress = StatusBarProgress().apply {
+                        text = progressText
+                    }
+
+                    ProgressManager.getInstance().runProcessWithProgressAsynchronously(
+                            object : Task.Backgroundable(null, "Downloading") {
+                                override fun run(progress: ProgressIndicator) {
+                                    DistributionDownloader().install(KobaltApplicationComponent.version, progress,
+                                            progressText)
+                                }
+
+                            }, progress)
+                }
+            } else {
+                KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
             }
         }
 

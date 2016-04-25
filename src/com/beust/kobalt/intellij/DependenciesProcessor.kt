@@ -35,7 +35,7 @@ class DependenciesProcessor() {
         with(ProgressManager.getInstance()) {
             progress = StatusBarProgress()
             runProcessWithProgressAsynchronously(
-                    ProcessUtil.toBackgroundTask(project, "Kobalt: Get dependencies", {
+                    ServerUtil.toBackgroundTask(project, "Kobalt: Get dependencies", {
                         sendGetDependencies(project, process)
                     }), progress)
         }
@@ -65,7 +65,7 @@ class DependenciesProcessor() {
         while (attempts < 5 && !connected) {
             var error = false
             try {
-                port = ProcessUtil.findServerPort()
+                port = ServerUtil.findServerPort()
                 if (port != null) {
                     socket = Socket("localhost", port)
                     connected = true
@@ -77,10 +77,10 @@ class DependenciesProcessor() {
                 error = true
             }
             if (error) {
-                ProcessUtil.launchServer()
+                ServerUtil.launchServer()
                 Thread.sleep(500)
                 attempts++
-                port = ProcessUtil.findServerPort()
+                port = ServerUtil.findServerPort()
             }
         }
 
