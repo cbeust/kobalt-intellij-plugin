@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.54</version>
+    <version>1.55</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,9 +9,16 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.55</h1>
+        <ul>
+            <li>More robust server process management.
+            <li>Always call BuildModule.run (Dmitry Zhuravlev).
+            <li>Always save all documents before a build (Dmitry Zhuravlev).
+            <li>Don't sync the project if no Build.kt was found (Dmitry Zhuravlev).
+        </ul>
         <h1>1.54</h1>
         <ul>
-            <li>New Kobalt tool window (from Dmitry Zhuravlev).
+            <li>New Kobalt tool window (Dmitry Zhuravlev).
         </ul>
         <h1>1.53</h1>
         <ul>
