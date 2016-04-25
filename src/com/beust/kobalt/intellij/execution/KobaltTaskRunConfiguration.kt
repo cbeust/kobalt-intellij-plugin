@@ -1,5 +1,6 @@
 package com.beust.kobalt.intellij.execution
 
+import com.beust.kobalt.intellij.KobaltApplicationComponent
 import com.beust.kobalt.intellij.KobaltProjectComponent
 import com.intellij.execution.Executor
 import com.intellij.execution.configurations.ConfigurationTypeUtil.findConfigurationType
@@ -39,7 +40,7 @@ class KobaltTaskRunConfiguration(project: Project, var tasks: List<String> = emp
         configureByProject(project, JavaParameters.JDK_ONLY, ProjectRootManager.getInstance(project).projectSdk);
         workingDirectory = project.basePath
         mainClass = "com.beust.kobalt.wrapper.Main"
-        classPath.add(kobaltComponent.kobaltJar.toFile())
+        classPath.add(KobaltApplicationComponent.kobaltJar.toFile())
         for (task in tasks)
             programParametersList.add(task)
     }

@@ -7,7 +7,7 @@ import com.intellij.openapi.project.Project
 
 class Dialogs {
     companion object {
-        fun error(project: Project, title: String, error: String) {
+        fun error(project: Project?, title: String, error: String) {
             ApplicationManager.getApplication().invokeLater {
                 ExecutionErrorDialog.show(ExecutionException(error), title, project)
             }

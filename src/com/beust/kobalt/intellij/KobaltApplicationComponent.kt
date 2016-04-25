@@ -14,6 +14,8 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.net.URL
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.concurrent.*
 
 /**
@@ -27,6 +29,18 @@ class KobaltApplicationComponent : ApplicationComponent {
 
     companion object {
         val LOG = Logger.getInstance(KobaltApplicationComponent::class.java)
+
+        internal val kobaltJar: Path by lazy {
+            findKobaltJar(KobaltApplicationComponent.version)
+        }
+
+        private fun findKobaltJar(version: String) =
+            if (Constants.DEV_MODE) {
+                Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-$version.jar")
+            } else {
+                Paths.get(System.getProperty("user.home"),
+                        ".kobalt/wrapper/dist/kobalt-$version/kobalt/wrapper/kobalt-$version.jar")
+            }
 
         val latestKobaltVersion: Future<String>
             get() {
@@ -69,6 +83,11 @@ class KobaltApplicationComponent : ApplicationComponent {
     }
 
     override fun initComponent() {
+        downloadAndInstallKobaltJar()
+        ProcessUtil.launchServer()
+    }
+
+    private fun downloadAndInstallKobaltJar() {
         if (! Constants.DEV_MODE) {
             val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
             ApplicationManager.getApplication().invokeLater {

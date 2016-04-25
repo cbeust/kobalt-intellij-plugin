@@ -7,17 +7,14 @@ import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.util.StatusBarProgress
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.projectRoots.ProjectJdkTable
-import java.io.*
-import java.net.ConnectException
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.PrintWriter
 import java.net.Socket
-import java.nio.file.Path
 
 /**
  * @author Dmitry Zhuravlev
@@ -36,50 +33,15 @@ class DependenciesProcessor() {
         KobaltProjectComponent.LOG.info("Syncing build file for project $project")
 
         with(ProgressManager.getInstance()) {
-            val port = findPort()
-            //            if (! Constants.DEV_MODE) {
-            runProcessWithProgressAsynchronously(
-                    toBackgroundTask(project, "Kobalt: Launch server", {
-                        launchServer(project, port, project.basePath!!, component.kobaltJar)
-                    }), EmptyProgressIndicator())
-            //            }
-
             progress = StatusBarProgress()
             runProcessWithProgressAsynchronously(
-                    toBackgroundTask(project, "Kobalt: Get dependencies", {
-                        sendGetDependencies(port, project, process)
+                    ProcessUtil.toBackgroundTask(project, "Kobalt: Get dependencies", {
+                        sendGetDependencies(project, process)
                     }), progress)
         }
     }
 
-    private fun toBackgroundTask(project: Project, title: String, function: Function0<Unit>): Task.Backgroundable {
-        return object : Task.Backgroundable(project, title) {
-            override fun run(p0: ProgressIndicator) {
-                function.invoke()
-            }
-        }
-    }
-
-    private fun findPort(): Int {
-        for (i in 1234..65000) {
-            if (isPortAvailable(i)) return i
-        }
-        throw IllegalArgumentException("Couldn't find any port available, something is very wrong")
-    }
-
-    private fun isPortAvailable(port: Int): Boolean {
-        var s: Socket? = null
-        try {
-            s = Socket("localhost", port)
-            return false
-        } catch(ex: IOException) {
-            return true
-        } finally {
-            s?.close()
-        }
-    }
-
-    private fun sendGetDependencies(port: Int, project: Project, calback: (List<ProjectData>) -> Unit) {
+    private fun sendGetDependencies(project: Project, calback: (List<ProjectData>) -> Unit) {
         LOG.info("sendGetDependencies")
 
         //
@@ -99,14 +61,26 @@ class DependenciesProcessor() {
         var attempts = 0
         var connected = false
         var socket: Socket? = null
+        var port: Int? = null
         while (attempts < 5 && !connected) {
+            var error = false
             try {
-                socket = Socket("localhost", port)
-                connected = true
-            } catch(ex: ConnectException) {
-                LOG.warn("Server not started yet, sleeping a bit")
-                Thread.sleep(2000)
+                port = ProcessUtil.findServerPort()
+                if (port != null) {
+                    socket = Socket("localhost", port)
+                    connected = true
+                } else {
+                    error = true
+                }
+            } catch(ex: Exception) {
+                LOG.warn("Server not started yet, sleeping a bit " + ex.message)
+                error = true
+            }
+            if (error) {
+                ProcessUtil.launchServer()
+                Thread.sleep(500)
                 attempts++
+                port = ProcessUtil.findServerPort()
             }
         }
 
@@ -127,7 +101,9 @@ class DependenciesProcessor() {
                     outgoing.println(command)
 
                     val ins = BufferedReader(InputStreamReader(socket!!.inputStream))
+                    LOG.info("Reading next line, ready: " + ins.ready())
                     var line = ins.readLine()
+                    LOG.info("... read line $line")
                     var done = false
                     while (!done && line != null) {
                         LOG.info("Received from server: " + line)
@@ -157,8 +133,6 @@ class DependenciesProcessor() {
                     }
                 }
             }
-
-            outgoing.println(QUIT_COMMAND)
         } else {
             Dialogs.error(project, "Error launching the server", "Couldn't connect to server on port $port")
         }
@@ -169,41 +143,5 @@ class DependenciesProcessor() {
         // All done, let the user know
         //
         group.createNotification(notificationText + " Done!", NotificationType.INFORMATION).notify(project)
-    }
-
-
-    private fun launchServer(project: Project, port: Int, directory: String, kobaltJar: Path) {
-        LOG.info("Kobalt jar: $kobaltJar")
-        if (!kobaltJar.toFile().exists()) {
-            Dialogs.error(project, "Can't find the jar file", kobaltJar.toFile().absolutePath + " can't be found")
-        } else {
-            val args = listOf(findJava(),
-                    //                "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n",
-                    "-jar", kobaltJar.toFile().absolutePath,
-                    "--dev", "--server", "--port", port.toString())
-            val pb = ProcessBuilder(args)
-            pb.directory(File(directory))
-            pb.inheritIO()
-            pb.environment().put("JAVA_HOME", ProjectJdkTable.getInstance().allJdks[0].homePath)
-            val tempFile = createTempFile("kobalt")
-            pb.redirectOutput(tempFile)
-            LOG.warn("Launching " + args.joinToString(" "))
-            LOG.warn("Server output in: $tempFile")
-            val process = pb.start()
-            val errorCode = process.waitFor()
-            if (errorCode == 0) {
-                LOG.info("Server exiting")
-            } else {
-                LOG.info("Server exiting with error")
-            }
-        }
-    }
-
-    private val QUIT_COMMAND = "{ \"name\" : \"quit\" }"
-
-    private fun findJava(): String {
-        val javaHome = System.getProperty("java.home")
-        val result = if (javaHome != null) "$javaHome/bin/java" else "java"
-        return result
     }
 }
