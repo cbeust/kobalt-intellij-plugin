@@ -151,9 +151,13 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!--<weigher key="completion" implementationClass="com.beust.kobalt.intellij.KobaltWeigher" />-->
-        <toolWindow anchor="right"  id="Kobalt Build"
-                    factoryClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowFactory"/>
-        <configurationType implementation="com.beust.kobalt.intellij.execution.KobaltTaskConfigurationType"/>
+        <!--<toolWindow anchor="right"  id="Kobalt Build"-->
+                    <!--factoryClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowFactory"/>-->
+        <!--<configurationType implementation="com.beust.kobalt.intellij.execution.KobaltTaskConfigurationType"/>-->
+        <toolWindow anchor="right" id="Kobalt Build"
+                    factoryClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowExternalFactory"
+                    conditionClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowFactoryCondition"/>
+        <configurationType implementation="com.beust.kobalt.intellij.execution.KobaltExternalTaskConfigurationType"/>
         <programRunner implementation="com.beust.kobalt.intellij.execution.KobaltTaskRunner"/>
     </extensions>
 
@@ -179,6 +183,7 @@
         <group id="kobalt.ToolWindowToolbar">
             <reference id="kobalt.SyncBuildFile"/>
             <reference id="kobalt.RunTask"/>
+            <add-to-group group-id="ExternalSystemView.ActionsToolbar.LeftPanel"/>
         </group>
     </actions>
 
@@ -198,9 +203,23 @@
         </component>
     </project-components>
 
+    <extensionPoints>
+    </extensionPoints>
+
     <extensions defaultExtensionNs="com.intellij">
         <projectImportProvider implementation="com.beust.kobalt.intellij.KobaltProjectImportProvider"/>
         <projectImportBuilder implementation="com.beust.kobalt.intellij.KobaltProjectImportBuilder"/>
+
+        <externalSystemExecutionConsoleManager implementation="com.beust.kobalt.intellij.execution.KobaltExecutionConsoleManager" order="last"/>
+        <externalSystemManager implementation="com.beust.kobalt.intellij.manager.KobaltManager"/>
+        <externalSystemConfigLocator implementation="com.beust.kobalt.intellij.settings.KobaltConfigLocator"/>
+        <applicationService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltSystemSettings"/>
+        <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltSettings"/>
+        <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltLocalSettings"/>
+        <stepsBeforeRunProvider implementation="com.beust.kobalt.intellij.execution.KobaltBeforeRunTaskProvider" />
+        <configurationProducer implementation="com.beust.kobalt.intellij.execution.KobaltRuntimeConfigurationProducer"/>
+        <library.presentationProvider implementation="com.beust.kobalt.intellij.config.KobaltLibraryPresentationProvider" order="last"/>
+
     </extensions>
 
 </idea-plugin>

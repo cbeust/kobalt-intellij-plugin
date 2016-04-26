@@ -1,7 +1,6 @@
 package com.beust.kobalt.intellij
 
 import com.intellij.ide.util.projectWizard.WizardContext
-import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.model.project.ProjectData
@@ -149,15 +148,3 @@ class KobaltExternalSystemSettings(topic: Topic<KobaltListener>, project: Projec
 
 }
 
-// /*file = StoragePathMacros.APP_CONFIG + "/kobalt.settings.xml")*/)
-//@State(name = "KobaltSystemSettings",
-//        storages = arrayOf(@Storage()))
-class KobaltSystemSettings : PersistentStateComponent<MyState> {
-    override fun loadState(state: MyState?) {
-        throw UnsupportedOperationException()
-    }
-
-    override fun getState(): MyState? {
-        throw UnsupportedOperationException()
-    }
-}
