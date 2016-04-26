@@ -40,7 +40,7 @@ class KobaltProjectsStructure(val project: Project, tree: SimpleTree) : SimpleTr
             rootNode.removeAllChildren()
         }
         projectData.map {
-            ModuleNode(it.name, rootNode, it.tasks)
+            ModuleNode(it.name, rootNode, it.tasks.sortedBy { a -> a.name })
         }.forEach { node ->
             rootNode.add(node)
         }
