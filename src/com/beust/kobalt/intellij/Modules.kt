@@ -19,7 +19,6 @@ import org.jetbrains.jps.model.java.JavaResourceRootType
 class Modules {
     companion object {
         val LOG = Logger.getInstance(Modules::class.java)
-        val taskNames = hashMapOf<String, Collection<String>>()
 
         fun configureModules(project: Project, projects: List<ProjectData>) = projects.forEach {
             ApplicationManager.getApplication().invokeLater {
@@ -33,7 +32,6 @@ class Modules {
             if (Constants.DEV_MODE) {
                 LOG.warn("Configuring modules with\n " + println(GsonBuilder().setPrettyPrinting().create().toJson(kp)))
             }
-            taskNames.put(project.name, kp.tasks)
             ModuleManager.getInstance(project).let { moduleManager ->
                 // Delete the module if it already exists
                 LOG.warn("Creating module " + kp.directory)

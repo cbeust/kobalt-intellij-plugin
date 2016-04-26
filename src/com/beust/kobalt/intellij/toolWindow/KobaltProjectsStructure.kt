@@ -39,9 +39,10 @@ class KobaltProjectsStructure(val project: Project, tree: SimpleTree) : SimpleTr
             rootNode.cleanUpCache()
             rootNode.removeAllChildren()
         }
-        projectData.map { ModuleNode(it.name, rootNode) }.forEach { node ->
+        projectData.map {
+            ModuleNode(it.name, rootNode, it.tasks)
+        }.forEach { node ->
             rootNode.add(node)
-
         }
         update(true)
     }
