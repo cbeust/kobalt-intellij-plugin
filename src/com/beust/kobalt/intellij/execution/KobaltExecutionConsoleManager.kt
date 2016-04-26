@@ -8,5 +8,5 @@ import com.intellij.openapi.externalSystem.service.execution.DefaultExternalSyst
  *         Date:  26.04.2016
  */
 class KobaltExecutionConsoleManager : DefaultExternalSystemExecutionConsoleManager() {
-    override fun getExternalSystemId() = Constants.SYSTEM_ID
+    override fun getExternalSystemId() = Constants.KOBALT_SYSTEM_ID
 }

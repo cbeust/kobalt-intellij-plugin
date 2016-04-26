@@ -67,7 +67,7 @@ class KobaltManager : ExternalSystemConfigurableAware, ExternalSystemUiAware, Ex
     override fun enhanceRemoteProcessing(parameters: SimpleJavaParameters) {
         //TODO
         parameters.vmParametersList.addProperty(
-                ExternalSystemConstants.EXTERNAL_SYSTEM_ID_KEY, Constants.SYSTEM_ID.id)
+                ExternalSystemConstants.EXTERNAL_SYSTEM_ID_KEY, Constants.KOBALT_SYSTEM_ID.id)
     }
 
     override fun getExecutionSettingsProvider(): Function<Pair<Project, String>, KobaltExecutionSettings> =
@@ -87,7 +87,7 @@ class KobaltManager : ExternalSystemConfigurableAware, ExternalSystemUiAware, Ex
         KobaltSettings.getInstance(project)
     }
 
-    override fun getSystemId() = Constants.SYSTEM_ID
+    override fun getSystemId() = Constants.KOBALT_SYSTEM_ID
 
     override fun getExternalProjectDescriptor() = FileChooserDescriptorFactory.createSingleFileDescriptor(Constants.BUILD_FILE_EXTENSIONS);
 }

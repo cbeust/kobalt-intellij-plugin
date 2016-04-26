@@ -7,4 +7,4 @@ import com.intellij.openapi.externalSystem.service.task.ui.AbstractExternalSyste
  * @author Dmitry Zhuravlev
  *         Date: 16.04.16
  */
-class KobaltToolWindowExternalFactory : AbstractExternalSystemToolWindowFactory(Constants.SYSTEM_ID)
+class KobaltToolWindowExternalFactory : AbstractExternalSystemToolWindowFactory(Constants.KOBALT_SYSTEM_ID)

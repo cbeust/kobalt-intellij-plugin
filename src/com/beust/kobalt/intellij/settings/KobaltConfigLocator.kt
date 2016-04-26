@@ -14,7 +14,7 @@ import java.io.File
  */
 class KobaltConfigLocator : ExternalSystemConfigLocator {
 
-    override fun getTargetExternalSystemId() = Constants.SYSTEM_ID
+    override fun getTargetExternalSystemId() = Constants.KOBALT_SYSTEM_ID
 
     override fun adjust(configPath: VirtualFile): VirtualFile? {
         if (!configPath.isDirectory) {

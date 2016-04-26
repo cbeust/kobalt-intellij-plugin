@@ -16,7 +16,7 @@ class KobaltModuleData(
          internalName: String,
          moduleFileDirectoryPath: String,
          externalConfigPath: String
-) : ModuleData(id, Constants.SYSTEM_ID, StdModuleTypes.JAVA.id, externalName, internalName, moduleFileDirectoryPath, externalConfigPath) {
+) : ModuleData(id, Constants.KOBALT_SYSTEM_ID, StdModuleTypes.JAVA.id, externalName, internalName, moduleFileDirectoryPath, externalConfigPath) {
 
     val KEY = Key.create<KobaltModuleData>(KobaltModuleData::class.java, ProjectKeys.MODULE.processingWeight + 1)
 

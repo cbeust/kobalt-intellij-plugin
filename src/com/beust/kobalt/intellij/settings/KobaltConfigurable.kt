@@ -8,7 +8,7 @@ import com.intellij.openapi.project.Project
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltConfigurable(project: Project) : AbstractExternalSystemConfigurable<KobaltProjectSettings, KobaltSettingsListener, KobaltSettings>(project, Constants.SYSTEM_ID) {
+class KobaltConfigurable(project: Project) : AbstractExternalSystemConfigurable<KobaltProjectSettings, KobaltSettingsListener, KobaltSettings>(project, Constants.KOBALT_SYSTEM_ID) {
     companion object{
         val HELP_TOPIC = "reference.settingsdialog.project.kobalt"
     }

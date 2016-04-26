@@ -7,4 +7,4 @@ import com.intellij.openapi.externalSystem.service.settings.AbstractExternalSyst
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltToolWindowFactoryCondition : AbstractExternalSystemToolWindowCondition(Constants.SYSTEM_ID)
+class KobaltToolWindowFactoryCondition : AbstractExternalSystemToolWindowCondition(Constants.KOBALT_SYSTEM_ID)
