@@ -7,7 +7,7 @@ import com.intellij.openapi.externalSystem.util.PaintAwarePanel
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltSystemSettingsControl : ExternalSystemSettingsControl<KobaltSettings> {
+class KobaltSystemSettingsControl(val settings: KobaltSettings) : ExternalSystemSettingsControl<KobaltSettings> {
     override fun isModified(): Boolean {
         //TODO
         return false

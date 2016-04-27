@@ -207,13 +207,16 @@
     </extensionPoints>
 
     <extensions defaultExtensionNs="com.intellij">
-        <projectImportProvider implementation="com.beust.kobalt.intellij.KobaltProjectImportProvider"/>
-        <projectImportBuilder implementation="com.beust.kobalt.intellij.KobaltProjectImportBuilder"/>
+        <postStartupActivity implementation="com.beust.kobalt.intellij.project.KobaltStartupActivity"/>
+
+        <projectImportProvider implementation="com.beust.kobalt.intellij.import.KobaltProjectImportProvider"/>
+        <projectImportBuilder implementation="com.beust.kobalt.intellij.import.KobaltProjectImportBuilder"/>
 
         <externalSystemExecutionConsoleManager implementation="com.beust.kobalt.intellij.execution.KobaltExecutionConsoleManager" order="last"/>
         <externalSystemManager implementation="com.beust.kobalt.intellij.manager.KobaltManager"/>
         <externalSystemConfigLocator implementation="com.beust.kobalt.intellij.settings.KobaltConfigLocator"/>
         <applicationService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltSystemSettings"/>
+        <projectService serviceImplementation="com.beust.kobalt.intellij.project.KobaltNotification"/>
         <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltSettings"/>
         <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltLocalSettings"/>
         <stepsBeforeRunProvider implementation="com.beust.kobalt.intellij.execution.KobaltBeforeRunTaskProvider" />

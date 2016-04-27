@@ -13,11 +13,11 @@ class KobaltConfigurable(project: Project) : AbstractExternalSystemConfigurable<
         val HELP_TOPIC = "reference.settingsdialog.project.kobalt"
     }
 
-    override fun createProjectSettingsControl(settings: KobaltProjectSettings) = KobaltProjectSettingsControl()
+    override fun createProjectSettingsControl(settings: KobaltProjectSettings) = KobaltProjectSettingsControl(settings)
 
     override fun newProjectSettings() = KobaltProjectSettings()
 
-    override fun createSystemSettingsControl(settings: KobaltSettings) = KobaltSystemSettingsControl()
+    override fun createSystemSettingsControl(settings: KobaltSettings) = KobaltSystemSettingsControl(settings)
 
     override fun getHelpTopic() = HELP_TOPIC
 

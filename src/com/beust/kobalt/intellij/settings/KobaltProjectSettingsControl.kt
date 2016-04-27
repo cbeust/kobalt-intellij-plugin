@@ -7,7 +7,7 @@ import com.intellij.openapi.externalSystem.util.PaintAwarePanel
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltProjectSettingsControl : AbstractExternalProjectSettingsControl<KobaltProjectSettings>(KobaltProjectSettings()) { //TODO build proper settings
+class KobaltProjectSettingsControl(val settings: KobaltProjectSettings) : AbstractExternalProjectSettingsControl<KobaltProjectSettings>(KobaltProjectSettings()) { //TODO build proper settings
 
     override fun applyExtraSettings(settings: KobaltProjectSettings) {
         //TODO
@@ -29,5 +29,9 @@ class KobaltProjectSettingsControl : AbstractExternalProjectSettingsControl<Koba
     override fun validate(p0: KobaltProjectSettings): Boolean {
         //TODO
         return true
+    }
+
+    fun update(linkedProjectPath: String?, isDefaultModuleCreation: Boolean) {
+       //TODO
     }
 }
