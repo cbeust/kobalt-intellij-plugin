@@ -14,6 +14,7 @@ import com.intellij.openapi.externalSystem.ExternalSystemUiAware
 import com.intellij.openapi.externalSystem.service.ui.DefaultExternalSystemUiAware
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.project.Project
@@ -55,7 +56,10 @@ class KobaltManager : ExternalSystemConfigurableAware, ExternalSystemUiAware, Ex
         val connection = project.messageBus.connect(project)
         connection.subscribe(KobaltSettings.getInstance(project).changesTopic, object : KobaltSettingsListenerAdapter() {
             override fun onKobaltHomeChange(oldPath: String?, newPath: String?, linkedProjectPath: String) {
-                super.onKobaltHomeChange(oldPath, newPath, linkedProjectPath) //TODO
+                ensureProjectsRefresh()
+            }
+            private fun ensureProjectsRefresh() {
+                ExternalSystemUtil.refreshProjects(project, Constants.KOBALT_SYSTEM_ID, true)
             }
         })
         //TODO

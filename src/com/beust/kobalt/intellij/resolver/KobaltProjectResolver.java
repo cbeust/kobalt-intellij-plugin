@@ -2,6 +2,7 @@ package com.beust.kobalt.intellij.resolver;
 
 import com.beust.kobalt.intellij.Constants;
 import com.beust.kobalt.intellij.settings.KobaltExecutionSettings;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.externalSystem.model.DataNode;
 import com.intellij.openapi.externalSystem.model.ExternalSystemException;
 import com.intellij.openapi.externalSystem.model.ProjectKeys;
@@ -17,11 +18,12 @@ import org.jetbrains.annotations.Nullable;
  *         Date: 26.04.16
  */
 public class KobaltProjectResolver implements ExternalSystemProjectResolver<KobaltExecutionSettings> {
+    private static final Logger LOG = Logger.getInstance("#" + KobaltProjectResolver.class.getName());
     @Nullable
     @Override
     public DataNode<ProjectData> resolveProjectInfo(@NotNull ExternalSystemTaskId id, @NotNull String projectPath, boolean isPreviewMode, @Nullable KobaltExecutionSettings settings, @NotNull ExternalSystemTaskNotificationListener listener) throws ExternalSystemException, IllegalArgumentException, IllegalStateException {
         //TODO
-        System.out.println("Project resolved");
+        LOG.info("Project resolved");
         return new DataNode<>(ProjectKeys.PROJECT, new ProjectData(Constants.KOBALT_SYSTEM_ID,"TODO external name","TODO ide project path path","TODO linked external path"), null);
     }
 

@@ -22,11 +22,11 @@ import java.util.Set;
 public class KobaltSettings extends AbstractExternalSystemSettings<KobaltSettings, KobaltProjectSettings, KobaltSettingsListener>
         implements PersistentStateComponent<KobaltSettings.KobaltSettingsState> {
 
-    private final KobaltSystemSettings systemSettings;
+//    private final KobaltSystemSettings systemSettings;
 
     public KobaltSettings(@NotNull Project project) {
         super(KobaltSettingsListener.Companion.getTOPIC(), project);
-        systemSettings = KobaltSystemSettings.Companion.getInstance();
+//        systemSettings = KobaltSystemSettings.Companion.getInstance();
     }
 
     @NotNull

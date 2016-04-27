@@ -14,14 +14,14 @@ import com.intellij.openapi.externalSystem.service.project.ExternalSystemProject
  *         Date:  26.04.2016
  */
 //TODO IDEA external API cannot call Kotlin code for some reason. Temporary use java implementation of KobaltProjectResolver
-class KobaltProjectResolverKotlin : ExternalSystemProjectResolver<KobaltExecutionSettings> {
+class KobaltProjectResolverDelegate : ExternalSystemProjectResolver<KobaltExecutionSettings> {
     override fun resolveProjectInfo(id: ExternalSystemTaskId, projectPath: String, isPreviewMode: Boolean, settings: KobaltExecutionSettings?, listener: ExternalSystemTaskNotificationListener): DataNode<ProjectData>? {
        //TODO
         println("Project resolved")
         return DataNode(ProjectKeys.PROJECT, ProjectData(Constants.KOBALT_SYSTEM_ID,"TODO external name","TODO ide project path path","TODO linked external path"), null)
     }
 
-    override fun cancelTask(p0: ExternalSystemTaskId, p1: ExternalSystemTaskNotificationListener): Boolean {
+    override fun cancelTask(taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
         return true //TODO
     }
 }

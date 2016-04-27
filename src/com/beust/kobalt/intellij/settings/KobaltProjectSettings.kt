@@ -8,7 +8,7 @@ import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
  */
 class KobaltProjectSettings(var kobaltHome: String? = null) : ExternalProjectSettings() {
     override fun clone() = KobaltProjectSettings().apply {
-        copyTo(this)
+        this@KobaltProjectSettings.copyTo(this)
         this@apply.kobaltHome = this@KobaltProjectSettings.kobaltHome
     }
 }

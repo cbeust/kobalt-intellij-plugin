@@ -154,7 +154,7 @@
         <!--<toolWindow anchor="right"  id="Kobalt Build"-->
                     <!--factoryClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowFactory"/>-->
         <!--<configurationType implementation="com.beust.kobalt.intellij.execution.KobaltTaskConfigurationType"/>-->
-        <toolWindow anchor="right" id="Kobalt Build"
+        <toolWindow anchor="right" id="Kobalt"
                     factoryClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowExternalFactory"
                     conditionClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowFactoryCondition"/>
         <configurationType implementation="com.beust.kobalt.intellij.execution.KobaltExternalTaskConfigurationType"/>
@@ -181,7 +181,6 @@
         </group>
 
         <group id="kobalt.ToolWindowToolbar">
-            <reference id="kobalt.SyncBuildFile"/>
             <reference id="kobalt.RunTask"/>
             <add-to-group group-id="ExternalSystemView.ActionsToolbar.LeftPanel"/>
         </group>

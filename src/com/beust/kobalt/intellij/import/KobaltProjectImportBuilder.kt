@@ -23,20 +23,20 @@ class KobaltProjectImportBuilder(dataManager: ProjectDataManager)
 
     override fun getIcon() = null //TODO
 
-    override fun getName() = "Gradle"
+    override fun getName() = "Kobalt"
 
     override fun doPrepare(context: WizardContext) {
         var pathToUse = fileToImport
         val file = LocalFileSystem.getInstance().refreshAndFindFileByPath(pathToUse)
-        if (file != null && !file.isDirectory && file.parent != null) {
-            pathToUse = file.parent.path
+        if (file != null && !file.isDirectory) {
+            pathToUse = file.parent?.parent?.parent?.path   //we should remove "/kobalt/src/Build.kt" to get project root
         }
 
-        val importFromGradleControl = getControl(context.project)
-        importFromGradleControl.setLinkedProjectPath(pathToUse)
+        val importFromKobaltControl = getControl(context.project)
+        importFromKobaltControl.setLinkedProjectPath(pathToUse)
         /*val sdkPair = ExternalSystemJdkUtil.getAvailableJdk(context.project)
         if (sdkPair != null && ExternalSystemJdkUtil.USE_INTERNAL_JAVA != sdkPair.first) {
-            importFromGradleControl.projectSettings.setKobaltJvm(sdkPair.first)
+            importFromKobaltControl.projectSettings.setKobaltJvm(sdkPair.first)
         }*/
     }
 

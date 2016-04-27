@@ -8,8 +8,6 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.progress.util.StatusBarProgress
 import com.intellij.openapi.project.Project
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -32,13 +30,15 @@ class DependenciesProcessor() {
     fun run(component: KobaltProjectComponent, project: Project, process: (List<ProjectData>) -> Unit) {
         KobaltProjectComponent.LOG.info("Syncing build file for project $project")
 
-        with(ProgressManager.getInstance()) {
+        //FIXME temporary turn off
+
+     /*   with(ProgressManager.getInstance()) {
             progress = StatusBarProgress()
             runProcessWithProgressAsynchronously(
                     ServerUtil.toBackgroundTask(project, "Kobalt: Get dependencies", {
                         sendGetDependencies(project, process)
                     }), progress)
-        }
+        }*/
     }
 
     private fun sendGetDependencies(project: Project, calback: (List<ProjectData>) -> Unit) {

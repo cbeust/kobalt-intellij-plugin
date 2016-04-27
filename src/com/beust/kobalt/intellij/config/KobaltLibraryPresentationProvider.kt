@@ -2,6 +2,7 @@ package com.beust.kobalt.intellij.config
 
 import com.beust.kobalt.intellij.Constants
 import com.beust.kobalt.intellij.KobaltApplicationComponent
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.roots.libraries.LibraryKind
 import com.intellij.openapi.roots.libraries.LibraryPresentationProvider
 import com.intellij.openapi.vfs.VfsUtilCore
@@ -21,6 +22,9 @@ class KobaltLibraryPresentationProvider() : LibraryPresentationProvider<KobaltLi
         val version = properties.version
         return  "Kobalt library" + if (version != null) " of version " + version else ":"
     }
+
+
+    override fun getIcon() = AllIcons.Modules.Merge
 
     override fun detect(classesRoots: MutableList<VirtualFile>): KobaltLibraryProperties? {
         val libraryFiles = VfsUtilCore.toVirtualFileArray(classesRoots)

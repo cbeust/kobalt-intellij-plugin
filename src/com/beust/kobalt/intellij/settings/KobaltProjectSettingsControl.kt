@@ -1,5 +1,6 @@
 package com.beust.kobalt.intellij.settings
 
+import com.beust.kobalt.intellij.settings.ui.ProjectSettingsUIBuilder
 import com.intellij.openapi.externalSystem.service.settings.AbstractExternalProjectSettingsControl
 import com.intellij.openapi.externalSystem.util.PaintAwarePanel
 
@@ -9,12 +10,14 @@ import com.intellij.openapi.externalSystem.util.PaintAwarePanel
  */
 class KobaltProjectSettingsControl(val settings: KobaltProjectSettings) : AbstractExternalProjectSettingsControl<KobaltProjectSettings>(KobaltProjectSettings()) { //TODO build proper settings
 
+    var uiBuilder = ProjectSettingsUIBuilder()
+
     override fun applyExtraSettings(settings: KobaltProjectSettings) {
         //TODO
     }
 
     override fun fillExtraControls(content: PaintAwarePanel, indentLevel: Int) {
-       //TODO
+        uiBuilder.createAndFillControls(content, indentLevel)
     }
 
     override fun isExtraSettingModified(): Boolean {
@@ -32,6 +35,16 @@ class KobaltProjectSettingsControl(val settings: KobaltProjectSettings) : Abstra
     }
 
     fun update(linkedProjectPath: String?, isDefaultModuleCreation: Boolean) {
-       //TODO
+         //TODO
+    }
+
+    override fun showUi(show: Boolean) {
+        super.showUi(show)
+        uiBuilder.showUi(show)
+    }
+
+    override fun disposeUIResources() {
+        super.disposeUIResources()
+        uiBuilder.disposeUIResources()
     }
 }
