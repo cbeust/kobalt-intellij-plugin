@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
  * @author Dmitry Zhuravlev
  *         Date: 26.04.16
  */
-public class KobaltProjectResolver implements ExternalSystemProjectResolver<KobaltExecutionSettings> {
+public class KobaltProjectResolver2 implements ExternalSystemProjectResolver<KobaltExecutionSettings> {
     @Nullable
     @Override
     public DataNode<ProjectData> resolveProjectInfo(@NotNull ExternalSystemTaskId id, @NotNull String projectPath, boolean isPreviewMode, @Nullable KobaltExecutionSettings settings, @NotNull ExternalSystemTaskNotificationListener listener) throws ExternalSystemException, IllegalArgumentException, IllegalStateException {
