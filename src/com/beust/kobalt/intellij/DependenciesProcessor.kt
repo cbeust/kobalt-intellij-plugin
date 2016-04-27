@@ -63,24 +63,21 @@ class DependenciesProcessor() {
         var socket: Socket? = null
         var port: Int? = null
         while (attempts < 5 && !connected) {
-            var error = false
             try {
                 port = ServerUtil.findServerPort()
                 if (port != null) {
                     socket = Socket("localhost", port)
                     connected = true
-                } else {
-                    error = true
                 }
             } catch(ex: Exception) {
-                LOG.warn("Server not started yet, sleeping a bit " + ex.message)
-                error = true
+                LOG.warn("Server is not running: " + ex.message)
             }
-            if (error) {
+            if (! connected) {
+                LOG.warn("Launching a new server")
                 ServerUtil.launchServer()
                 Thread.sleep(500)
                 attempts++
-                port = ServerUtil.findServerPort()
+                LOG.warn("New server launched, trying again")
             }
         }
 
@@ -133,15 +130,15 @@ class DependenciesProcessor() {
                     }
                 }
             }
+            //
+            // All done, let the user know
+            //
+            group.createNotification(notificationText + " Done!", NotificationType.INFORMATION).notify(project)
         } else {
             Dialogs.error(project, "Error launching the server", "Couldn't connect to server on port $port")
         }
 
         progress.fraction = 1.0
 
-        //
-        // All done, let the user know
-        //
-        group.createNotification(notificationText + " Done!", NotificationType.INFORMATION).notify(project)
     }
 }
