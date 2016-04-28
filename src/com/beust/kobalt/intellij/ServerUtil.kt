@@ -44,9 +44,6 @@ class ServerUtil {
 
         val SERVER_FILE = KFiles.homeDir(".kobalt", "kobaltServer.properties")
         val KEY_PORT = "port"
-        val KEY_PID = "pid"
-
-        fun serverFileExists() = File(SERVER_FILE).exists()
 
         fun findServerPort(): Int? {
             val file = File(SERVER_FILE)
@@ -78,7 +75,7 @@ class ServerUtil {
                         "-jar", kobaltJar.toFile().absolutePath,
                         "--log", "3",
                         "--force",
-                        "--dev", "--server", "--port", port.toString())
+                        "--dev", "--server")
                 val pb = ProcessBuilder(args)
                 //            pb.directory(File(directory))
                 pb.inheritIO()
