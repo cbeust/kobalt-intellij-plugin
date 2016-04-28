@@ -1,19 +1,20 @@
 package com.beust.kobalt.intellij
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.util.StatusBarProgress
 import com.intellij.openapi.project.Project
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.PrintWriter
+import okhttp3.OkHttpClient
+import retrofit2.Call
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import retrofit2.http.Query
+import java.io.InputStream
+import java.io.OutputStream
 import java.net.Socket
 
 /**
@@ -25,7 +26,6 @@ class DependenciesProcessor() {
     companion object {
         val LOG = Logger.getInstance(DependenciesProcessor::class.java)
     }
-
 
     lateinit var progress: ProgressIndicator
 
@@ -41,20 +41,41 @@ class DependenciesProcessor() {
         }
     }
 
-    private fun sendGetDependencies(project: Project, calback: (List<ProjectData>) -> Unit) {
-        LOG.info("sendGetDependencies")
+    interface Api {
+        @GET("/v0/getDependencies")
+        fun getDependencies(@Query("buildFile") buildFile: String) : Call<GetDependenciesData>
+    }
 
-        //
-        // Display the notification
-        //
-        val notificationText = "Synchronizing the Kobalt build file..."
-        progress.text = notificationText
-        progress.fraction = 0.25
-        val group = NotificationGroup.logOnlyGroup("Kobalt")
-        group.createNotification(notificationText, NotificationType.INFORMATION).notify(project)
+    private fun getDependencies(project: Project, serverInfo: ServerInfo,
+            callback: (List<ProjectData>) -> Unit) {
+        val service = Retrofit.Builder()
+                .client(OkHttpClient.Builder().build())
+                .baseUrl("http://localhost:${serverInfo.port}")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(Api::class.java)
+        val buildFile = project.baseDir.findFileByRelativePath(Constants.BUILD_FILE)
+        if (buildFile == null) {
+            LOG.warn("Couldn't find ${Constants.BUILD_FILE}, aborting")
+        } else {
+            val response = service.getDependencies(buildFile.canonicalPath!!).execute()
 
-        progress.fraction = 0.50
+            if (response.isSuccessful) {
+                val dd = response.body()
+                val projects = dd.projects
+                callback(projects)
+                LOG.info("Read GetDependencyData, project count: ${projects.size}")
 
+                callback(projects)
+            } else if (! response.isSuccessful) {
+                LOG.error("Couldn't call getDependencies() on the server: " + response.errorBody().toString())
+            }
+        }
+    }
+
+    class ServerInfo(val port: Int?, val connected: Boolean, val input: InputStream?, val output: OutputStream?)
+
+    private fun connectToServer(): ServerInfo {
         //
         // Connect to the server
         //
@@ -81,64 +102,45 @@ class DependenciesProcessor() {
             }
         }
 
+        if (connected) LOG.warn("Connected to server on port $port")
+        else LOG.warn("Couldn't connect to server")
+
+        return ServerInfo(port, connected, socket?.inputStream, socket?.outputStream)
+    }
+
+    private fun sendGetDependencies(project: Project, callback: (List<ProjectData>) -> Unit) {
+        LOG.info("sendGetDependencies")
+
+        //
+        // Display the notification
+        //
+        val notificationText = "Synchronizing the Kobalt build file..."
+        progress.text = notificationText
+        progress.fraction = 0.25
+        val group = NotificationGroup.logOnlyGroup("Kobalt")
+        group.createNotification(notificationText, NotificationType.INFORMATION).notify(project)
+
+        progress.fraction = 0.50
+
+        val serverInfo : ServerInfo = connectToServer()
+
         progress.fraction = 0.75
 
         //
         // Send the "getDependencies" command to the server
         //
-        if (connected) {
-            val outgoing = PrintWriter(socket!!.outputStream, true)
-            ApplicationManager.getApplication().runReadAction {
-                val buildFile = project.baseDir.findFileByRelativePath(Constants.BUILD_FILE)
-                if (buildFile == null) {
-                    LOG.warn("Couldn't find ${Constants.BUILD_FILE}, aborting")
-                } else {
-                    val command: String = "{ \"name\":\"getDependencies\", \"buildFile\": \"${buildFile.canonicalPath}\"}"
-
-                    outgoing.println(command)
-
-                    val ins = BufferedReader(InputStreamReader(socket!!.inputStream))
-                    LOG.info("Reading next line, ready: " + ins.ready())
-                    var line = ins.readLine()
-                    LOG.info("... read line $line")
-                    var done = false
-                    while (!done && line != null) {
-                        LOG.info("Received from server: " + line)
-                        val jo = JsonParser().parse(line) as JsonObject
-                        if (jo.has("name") && "quit" == jo.get("name").asString) {
-                            LOG.info("Quitting")
-                            done = true
-                        } else {
-                            val error = jo.get("error")?.asString
-                            if (error != null) {
-                                Dialogs.error(project, "Error while building", error)
-                                done = true
-                            } else {
-                                val data = jo.get("data")
-                                if (data != null) {
-                                    val dataString = data.asString
-                                    val dd = Gson().fromJson(dataString, GetDependenciesData::class.java)
-
-                                    LOG.info("Read GetDependencyData, project count: ${dd.projects.size}")
-                                    calback(dd.projects)
-                                    line = ins.readLine()
-                                } else {
-                                    error("Did not receive a \"data\" field")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            //
-            // All done, let the user know
-            //
-            group.createNotification(notificationText + " Done!", NotificationType.INFORMATION).notify(project)
+        if (serverInfo.connected) {
+            getDependencies(project, serverInfo, callback)
         } else {
-            Dialogs.error(project, "Error launching the server", "Couldn't connect to server on port $port")
+            Dialogs.error(project, "Error launching the server", "Couldn't connect to server on port" +
+                    " ${serverInfo.port}")
         }
 
         progress.fraction = 1.0
 
+        //
+        // All done, let the user know
+        //
+        group.createNotification(notificationText + " Done!", NotificationType.INFORMATION).notify(project)
     }
 }
