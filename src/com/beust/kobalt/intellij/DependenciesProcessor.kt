@@ -87,16 +87,20 @@ class DependenciesProcessor() {
             try {
                 port = ServerUtil.findServerPort()
                 if (port != null) {
+                    LOG.warn("Located server port from the file: $port")
                     socket = Socket("localhost", port)
                     connected = true
+                } else {
+                    LOG.warn("Couldn't find " + ServerUtil.SERVER_FILE)
                 }
+
             } catch(ex: Exception) {
                 LOG.warn("Server is not running: " + ex.message)
             }
             if (! connected) {
                 LOG.warn("Launching a new server")
                 ServerUtil.launchServer()
-                Thread.sleep(500)
+                Thread.sleep(3000)
                 attempts++
                 LOG.warn("New server launched, trying again")
             }
