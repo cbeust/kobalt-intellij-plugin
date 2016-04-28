@@ -16,6 +16,7 @@ import retrofit2.http.Query
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.Socket
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Dmitry Zhuravlev
@@ -49,7 +50,10 @@ class DependenciesProcessor() {
     private fun getDependencies(project: Project, serverInfo: ServerInfo,
             callback: (List<ProjectData>) -> Unit) {
         val service = Retrofit.Builder()
-                .client(OkHttpClient.Builder().build())
+                .client(OkHttpClient.Builder()
+                        .connectTimeout(3, TimeUnit.MINUTES)
+                        .readTimeout(3, TimeUnit.MINUTES)
+                        .build())
                 .baseUrl("http://localhost:${serverInfo.port}")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
