@@ -4,6 +4,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Files
@@ -52,7 +53,7 @@ class DistributionDownloader {
      *
      * @return the path to the Kobalt jar file
      */
-    fun install(version: String, progress: ProgressIndicator, progressText: String) : Path {
+    fun install(version: String, progress: ProgressIndicator?, progressText: String) : Path {
         val fileName = "$FILE_NAME-$version.zip"
         File(KFiles.distributionsDir).mkdirs()
         val localZipFile = Paths.get(KFiles.distributionsDir, fileName)
@@ -103,7 +104,7 @@ class DistributionDownloader {
         return kobaltJarFile
     }
 
-    private fun download(version: String, fn: String, file: File, progress: ProgressIndicator, progressText: String) {
+    private fun download(version: String, fn: String, file: File, progress: ProgressIndicator?, progressText: String) {
         var fileUrl = "http://beust.com/kobalt/kobalt-$version.zip"
 
         var done = false
@@ -160,8 +161,10 @@ class DistributionDownloader {
                 bytesSoFar += bytesRead.toLong()
                 if (bytesRead > 0) {
                     val fraction = bytesSoFar / contentLength
-                    progress.fraction = fraction
-                    progress.text = progressText
+                    if (progress != null) {
+                        progress.fraction = fraction
+                        progress.text = progressText
+                    }
                     log.info("\rDownloading $url $fraction%")
                 }
                 bytesRead = inputStream.read(buffer)

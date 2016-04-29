@@ -105,7 +105,6 @@ class DependenciesProcessor() {
             if (! connected) {
                 LOG.warn("Launching a new server")
                 ServerUtil.launchServer()
-                Thread.sleep(3000)
                 attempts++
                 LOG.warn("New server launched, trying again")
             }

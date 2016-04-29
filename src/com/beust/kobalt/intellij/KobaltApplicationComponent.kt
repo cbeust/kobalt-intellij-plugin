@@ -27,9 +27,42 @@ class KobaltApplicationComponent : ApplicationComponent {
 
     companion object {
         val LOG = Logger.getInstance(KobaltApplicationComponent::class.java)
+        val threadPool = Executors.newFixedThreadPool(2)
 
-        internal val kobaltJar: Path by lazy {
-            findKobaltJar(KobaltApplicationComponent.version)
+        class CompletedFuture<T>(val value: T) : Future<T> {
+            override fun get(timeout: Long, unit: TimeUnit?): T {
+                throw UnsupportedOperationException()
+            }
+
+            override fun isDone(): Boolean {
+                throw UnsupportedOperationException()
+            }
+
+            override fun cancel(mayInterruptIfRunning: Boolean): Boolean {
+                throw UnsupportedOperationException()
+            }
+
+            override fun isCancelled(): Boolean {
+                throw UnsupportedOperationException()
+            }
+
+            override fun get(): T {
+                return value
+            }
+        }
+
+        internal val kobaltJar: Future<Path> by lazy {
+            val path = findKobaltJar(KobaltApplicationComponent.version)
+            val result =
+                if (! Constants.DEV_MODE) {
+                    val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
+                    threadPool.submit(Callable {
+                        DistributionDownloader().install(KobaltApplicationComponent.version, null,
+                                progressText)})
+                } else {
+                    CompletedFuture(path)
+                }
+            result
         }
 
         private fun findKobaltJar(version: String) =
@@ -40,7 +73,7 @@ class KobaltApplicationComponent : ApplicationComponent {
                         ".kobalt/wrapper/dist/kobalt-$version/kobalt/wrapper/kobalt-$version.jar")
             }
 
-        val latestKobaltVersion: Future<String>
+        private val latestKobaltVersion: Future<String>
             get() {
                 val callable = Callable<String> {
                     if (Constants.DEV_MODE) Constants.DEV_VERSION

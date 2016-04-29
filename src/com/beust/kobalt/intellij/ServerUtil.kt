@@ -1,6 +1,7 @@
 package com.beust.kobalt.intellij
 
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
@@ -9,6 +10,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import java.io.File
 import java.io.FileInputStream
+import java.io.IOException
+import java.net.Socket
 import java.util.*
 
 class ServerUtil {
@@ -38,10 +41,35 @@ class ServerUtil {
             }
         }
 
+        val LOG = Logger.getInstance(DependenciesProcessor::class.java)
+
+        private fun waitForServerToStart() : Boolean {
+            var attempts = 0
+
+            while (attempts < 7) {
+                findServerPort()?.let { port ->
+                    try {
+                        Socket("localhost", port).use {
+                            LOG.warn("     Server is now running")
+                            return true
+                        }
+                    } catch(ex: IOException) {
+                        LOG.warn("    Couldn't connect to $port: $ex")
+                        // ignore
+                    }
+                }
+                LOG.warn("     Server is still starting, sleeping a bit")
+                Thread.sleep(1000)
+                attempts++
+            }
+            LOG.warn("     Couldn't start server after multiple attempts")
+            return false
+        }
+
         fun launchServer() {
             maybeDownloadAndInstallKobaltJar()
 
-            val kobaltJar = KobaltApplicationComponent.kobaltJar
+            val kobaltJar = KobaltApplicationComponent.kobaltJar.get()
             KobaltApplicationComponent.LOG.info("Kobalt jar: $kobaltJar")
             if (!kobaltJar.toFile().exists()) {
                 KobaltApplicationComponent.LOG.error("Can't find the jar file",
@@ -51,9 +79,18 @@ class ServerUtil {
                 val args = listOf(findJava(),
 //                "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n",
                         "-jar", kobaltJar.toFile().absolutePath,
-                        "--log", "3",
+                        "--log", "2",
                         "--force",
                         "--dev", "--server")
+//                KobaltApplicationComponent.threadPool.submit(Callable {
+//                    val cl = GeneralCommandLine(args)
+//                    LOG.warn("Launching " + args.joinToString(" "))
+//                    val output = ExecUtil.execAndGetOutput(cl)
+//                    LOG.warn("Server process exiting with code " + output.exitCode)
+//                    output.stderrLines.forEach { LOG.warn("    E: ")}
+//                    output.stdoutLines.forEach { LOG.warn("    O: ")}
+//                })
+
                 val pb = ProcessBuilder(args)
                 //            pb.directory(File(directory))
                 pb.inheritIO()
@@ -63,16 +100,18 @@ class ServerUtil {
                 } else {
                     createTempFile("kobalt")
                 }
+//                pb.redirectOutput(ProcessBuilder.Redirect.INHERIT)
                 pb.redirectOutput(tempFile)
                 DependenciesProcessor.LOG.warn("Launching " + args.joinToString(" "))
                 DependenciesProcessor.LOG.warn("Server output in: $tempFile")
                 val process = pb.start()
-//                val errorCode = process.waitFor()
-//                if (errorCode == 0) {
-//                    DependenciesProcessor.LOG.info("Server exiting")
-//                } else {
-//                    DependenciesProcessor.LOG.info("Server exiting with error")
-//                }
+                waitForServerToStart()
+////                val errorCode = process.waitFor()
+////                if (errorCode == 0) {
+////                    DependenciesProcessor.LOG.info("Server exiting")
+////                } else {
+////                    DependenciesProcessor.LOG.info("Server exiting with error")
+////                }
             }
         }
 

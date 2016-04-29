@@ -40,7 +40,7 @@ class KobaltTaskRunConfiguration(project: Project, var tasks: List<String> = emp
         configureByProject(project, JavaParameters.JDK_ONLY, ProjectRootManager.getInstance(project).projectSdk);
         workingDirectory = project.basePath
         mainClass = "com.beust.kobalt.wrapper.Main"
-        classPath.add(KobaltApplicationComponent.kobaltJar.toFile())
+        classPath.add(KobaltApplicationComponent.kobaltJar.get().toFile())
         for (task in tasks)
             programParametersList.add(task)
     }

@@ -30,7 +30,7 @@ class SyncBuildFileAction : KobaltAction("Sync build file") {
                     Modules.configureModules(project, projectsData)
                     KobaltToolWindowComponent.getInstance(project).update(projectsData)
                     ApplicationManager.getApplication().invokeLater { BuildModule().run(project,
-                            KobaltApplicationComponent.kobaltJar) }
+                            KobaltApplicationComponent.kobaltJar.get()) }
                 }
             }
         }
