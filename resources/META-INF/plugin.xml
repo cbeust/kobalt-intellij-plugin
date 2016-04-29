@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.55</version>
+    <version>1.58</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,18 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.58</h1>
+        <ul>
+            <li>New server implementation.
+        </ul>
+        <h1>1.57</h1>
+        <ul>
+            <li>Sort the tasks alphabetically.
+        </ul>
+        <h1>1.56</h1>
+        <ul>
+            <li>Tasks are now properly sent by the server.
+        </ul>
         <h1>1.55</h1>
         <ul>
             <li>More robust server process management.

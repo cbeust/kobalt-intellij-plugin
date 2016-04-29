@@ -11,7 +11,10 @@ import java.io.InputStreamReader
 import java.net.URL
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.concurrent.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 /**
  * Our main application component, which just sees if our kobalt.jar file needs to be downloaded.
@@ -42,7 +45,7 @@ class KobaltApplicationComponent : ApplicationComponent {
                 val callable = Callable<String> {
                     if (Constants.DEV_MODE) Constants.DEV_VERSION
                     else {
-                        var result = "0"
+                        var result = Constants.MIN_KOBALT_VERSION
                         try {
                             val ins = URL(DistributionDownloader.RELEASE_URL).openConnection().inputStream
                             @Suppress("UNCHECKED_CAST")
@@ -70,7 +73,7 @@ class KobaltApplicationComponent : ApplicationComponent {
         val version: String by lazy {
             try {
                 latestKobaltVersion.get(20, TimeUnit.SECONDS)
-            } catch(ex: TimeoutException) {
+            } catch(ex: Exception) {
                 Constants.MIN_KOBALT_VERSION
             }
 

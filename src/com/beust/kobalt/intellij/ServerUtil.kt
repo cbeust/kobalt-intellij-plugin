@@ -9,8 +9,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import java.io.File
 import java.io.FileInputStream
-import java.io.IOException
-import java.net.Socket
 import java.util.*
 
 class ServerUtil {
@@ -23,30 +21,8 @@ class ServerUtil {
             }
         }
 
-        fun findAvailablePort(): Int {
-            for (i in 1234..65000) {
-                if (isPortAvailable(i)) return i
-            }
-            throw IllegalArgumentException("Couldn't find any port available, something is very wrong")
-        }
-
-        private fun isPortAvailable(port: Int): Boolean {
-            var s: Socket? = null
-            try {
-                s = Socket("localhost", port)
-                return false
-            } catch(ex: IOException) {
-                return true
-            } finally {
-                s?.close()
-            }
-        }
-
         val SERVER_FILE = KFiles.homeDir(".kobalt", "kobaltServer.properties")
         val KEY_PORT = "port"
-        val KEY_PID = "pid"
-
-        fun serverFileExists() = File(SERVER_FILE).exists()
 
         fun findServerPort(): Int? {
             val file = File(SERVER_FILE)
@@ -65,7 +41,6 @@ class ServerUtil {
         fun launchServer() {
             maybeDownloadAndInstallKobaltJar()
 
-            val port = findAvailablePort()
             val kobaltJar = KobaltApplicationComponent.kobaltJar
             KobaltApplicationComponent.LOG.info("Kobalt jar: $kobaltJar")
             if (!kobaltJar.toFile().exists()) {
@@ -78,7 +53,7 @@ class ServerUtil {
                         "-jar", kobaltJar.toFile().absolutePath,
                         "--log", "3",
                         "--force",
-                        "--dev", "--server", "--port", port.toString())
+                        "--dev", "--server")
                 val pb = ProcessBuilder(args)
                 //            pb.directory(File(directory))
                 pb.inheritIO()

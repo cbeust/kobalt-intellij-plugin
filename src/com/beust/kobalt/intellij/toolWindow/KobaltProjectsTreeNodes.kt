@@ -1,6 +1,6 @@
 package com.beust.kobalt.intellij.toolWindow
 
-import com.beust.kobalt.intellij.Modules
+import com.beust.kobalt.intellij.TaskData
 import com.beust.kobalt.intellij.toolWindow.actions.KobaltActionUtil
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ui.treeStructure.CachingSimpleNode
@@ -30,7 +30,8 @@ sealed class BaseNode(var displayName: String, var parent: BaseNode?) : CachingS
         }
     }
 
-    class TaskNode(displayName: String, parent: BaseNode, override val actionId: String? = "kobalt.RunTask") : BaseNode(displayName, parent){
+    class TaskNode(displayName: String, parent: BaseNode, override val actionId: String? = "kobalt.RunTask")
+            : BaseNode(displayName, parent){
         override fun update(presentation: PresentationData?) {
             super.update(presentation)
             presentation?.setIcon(ExternalSystemIcons.Task)
@@ -44,7 +45,6 @@ sealed class BaseNode(var displayName: String, var parent: BaseNode?) : CachingS
 
         fun add(node: ModuleNode) {
             node.parent = this
-            val taskNames = Modules.taskNames
             projectNodes.add(node)
         }
 
@@ -58,7 +58,8 @@ sealed class BaseNode(var displayName: String, var parent: BaseNode?) : CachingS
         override fun doBuildChildren() = projectNodes
     }
 
-    class ModuleNode(displayName: String, parent: BaseNode) : BaseNode(displayName, parent) {
+    class ModuleNode(displayName: String, parent: BaseNode, val children: Collection<TaskData>)
+            : BaseNode(displayName, parent) {
 
         override fun update(presentation: PresentationData?) {
             super.update(presentation)
@@ -67,21 +68,12 @@ sealed class BaseNode(var displayName: String, var parent: BaseNode?) : CachingS
 
         override val actionId = null
 
-        val taskNodes = listOf(
-                TaskNode("clean", this), //TODO better get from server
-                TaskNode("compile", this),
-                TaskNode("compileTest", this),
-                TaskNode("doc", this),
-                TaskNode("test", this),
-                TaskNode("assemble", this),
-                TaskNode("install", this),
-                TaskNode("run", this),
-                TaskNode("generatePom", this),
-                TaskNode("uploadBintray", this),
-                TaskNode("uploadGithub", this)
-        )
+        /**
+         * TaskData also carries the description for this task, consider exposing it in the tree at some point too.
+         */
+        fun taskNodes(children: Collection<TaskData>) = children.map { TaskNode(it.name, this)}
 
-        override fun doBuildChildren() = taskNodes
+        override fun doBuildChildren() = taskNodes(children)
     }
 }
 

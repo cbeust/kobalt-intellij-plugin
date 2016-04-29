@@ -1,18 +1,20 @@
 package com.beust.kobalt.intellij
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.Project
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.PrintWriter
+import okhttp3.OkHttpClient
+import retrofit2.Call
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import retrofit2.http.Query
+import java.io.InputStream
+import java.io.OutputStream
 import java.net.Socket
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Dmitry Zhuravlev
@@ -23,7 +25,6 @@ class DependenciesProcessor() {
     companion object {
         val LOG = Logger.getInstance(DependenciesProcessor::class.java)
     }
-
 
     lateinit var progress: ProgressIndicator
 
@@ -41,7 +42,81 @@ class DependenciesProcessor() {
         }*/
     }
 
-    private fun sendGetDependencies(project: Project, calback: (List<ProjectData>) -> Unit) {
+    interface Api {
+        @GET("/v0/getDependencies")
+        fun getDependencies(@Query("buildFile") buildFile: String) : Call<GetDependenciesData>
+    }
+
+    private fun getDependencies(project: Project, serverInfo: ServerInfo,
+            callback: (List<ProjectData>) -> Unit) {
+        val service = Retrofit.Builder()
+                .client(OkHttpClient.Builder()
+                        .connectTimeout(3, TimeUnit.MINUTES)
+                        .readTimeout(3, TimeUnit.MINUTES)
+                        .build())
+                .baseUrl("http://localhost:${serverInfo.port}")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(Api::class.java)
+        val buildFile = project.baseDir.findFileByRelativePath(Constants.BUILD_FILE)
+        if (buildFile == null) {
+            LOG.warn("Couldn't find ${Constants.BUILD_FILE}, aborting")
+        } else {
+            val response = service.getDependencies(buildFile.canonicalPath!!).execute()
+
+            if (response.isSuccessful) {
+                val dd = response.body()
+                val projects = dd.projects
+                callback(projects)
+                LOG.info("Read GetDependencyData, project count: ${projects.size}")
+
+                callback(projects)
+            } else if (! response.isSuccessful) {
+                LOG.error("Couldn't call getDependencies() on the server: " + response.errorBody().toString())
+            }
+        }
+    }
+
+    class ServerInfo(val port: Int?, val connected: Boolean, val input: InputStream?, val output: OutputStream?)
+
+    private fun connectToServer(): ServerInfo {
+        //
+        // Connect to the server
+        //
+        var attempts = 0
+        var connected = false
+        var socket: Socket? = null
+        var port: Int? = null
+        while (attempts < 5 && !connected) {
+            try {
+                port = ServerUtil.findServerPort()
+                if (port != null) {
+                    LOG.warn("Located server port from the file: $port")
+                    socket = Socket("localhost", port)
+                    connected = true
+                } else {
+                    LOG.warn("Couldn't find " + ServerUtil.SERVER_FILE)
+                }
+
+            } catch(ex: Exception) {
+                LOG.warn("Server is not running: " + ex.message)
+            }
+            if (! connected) {
+                LOG.warn("Launching a new server")
+                ServerUtil.launchServer()
+                Thread.sleep(3000)
+                attempts++
+                LOG.warn("New server launched, trying again")
+            }
+        }
+
+        if (connected) LOG.warn("Connected to server on port $port")
+        else LOG.warn("Couldn't connect to server")
+
+        return ServerInfo(port, connected, socket?.inputStream, socket?.outputStream)
+    }
+
+    private fun sendGetDependencies(project: Project, callback: (List<ProjectData>) -> Unit) {
         LOG.info("sendGetDependencies")
 
         //
@@ -55,86 +130,18 @@ class DependenciesProcessor() {
 
         progress.fraction = 0.50
 
-        //
-        // Connect to the server
-        //
-        var attempts = 0
-        var connected = false
-        var socket: Socket? = null
-        var port: Int? = null
-        while (attempts < 5 && !connected) {
-            var error = false
-            try {
-                port = ServerUtil.findServerPort()
-                if (port != null) {
-                    socket = Socket("localhost", port)
-                    connected = true
-                } else {
-                    error = true
-                }
-            } catch(ex: Exception) {
-                LOG.warn("Server not started yet, sleeping a bit " + ex.message)
-                error = true
-            }
-            if (error) {
-                ServerUtil.launchServer()
-                Thread.sleep(500)
-                attempts++
-                port = ServerUtil.findServerPort()
-            }
-        }
+        val serverInfo : ServerInfo = connectToServer()
 
         progress.fraction = 0.75
 
         //
         // Send the "getDependencies" command to the server
         //
-        if (connected) {
-            val outgoing = PrintWriter(socket!!.outputStream, true)
-            ApplicationManager.getApplication().runReadAction {
-                val buildFile = project.baseDir.findFileByRelativePath(Constants.BUILD_FILE)
-                if (buildFile == null) {
-                    LOG.warn("Couldn't find ${Constants.BUILD_FILE}, aborting")
-                } else {
-                    val command: String = "{ \"name\":\"getDependencies\", \"buildFile\": \"${buildFile.canonicalPath}\"}"
-
-                    outgoing.println(command)
-
-                    val ins = BufferedReader(InputStreamReader(socket!!.inputStream))
-                    LOG.info("Reading next line, ready: " + ins.ready())
-                    var line = ins.readLine()
-                    LOG.info("... read line $line")
-                    var done = false
-                    while (!done && line != null) {
-                        LOG.info("Received from server: " + line)
-                        val jo = JsonParser().parse(line) as JsonObject
-                        if (jo.has("name") && "quit" == jo.get("name").asString) {
-                            LOG.info("Quitting")
-                            done = true
-                        } else {
-                            val error = jo.get("error")?.asString
-                            if (error != null) {
-                                Dialogs.error(project, "Error while building", error)
-                                done = true
-                            } else {
-                                val data = jo.get("data")
-                                if (data != null) {
-                                    val dataString = data.asString
-                                    val dd = Gson().fromJson(dataString, GetDependenciesData::class.java)
-
-                                    LOG.info("Read GetDependencyData, project count: ${dd.projects.size}")
-                                    calback(dd.projects)
-                                    line = ins.readLine()
-                                } else {
-                                    error("Did not receive a \"data\" field")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        if (serverInfo.connected) {
+            getDependencies(project, serverInfo, callback)
         } else {
-            Dialogs.error(project, "Error launching the server", "Couldn't connect to server on port $port")
+            Dialogs.error(project, "Error launching the server", "Couldn't connect to server on port" +
+                    " ${serverInfo.port}")
         }
 
         progress.fraction = 1.0
