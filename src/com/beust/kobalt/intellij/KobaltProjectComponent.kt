@@ -13,7 +13,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
         val BUILD_IML_NAME = BUILD_MODULE_NAME + ".iml"
     }
 
-    override fun projectOpened() {} //BuildModule().run(project, KobaltApplicationComponent.kobaltJar)
+    override fun projectOpened() = BuildModule().run(project, KobaltApplicationComponent.kobaltJar.get())
 
     override fun getComponentName() = "kobalt.ProjectComponent"
 

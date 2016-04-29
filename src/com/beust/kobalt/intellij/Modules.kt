@@ -20,6 +20,11 @@ class Modules {
     companion object {
         val LOG = Logger.getInstance(Modules::class.java)
 
+        fun lm(s: String) {
+            LOG.warn("    $s")
+        }
+
+
         fun configureModules(project: Project, projects: List<ProjectData>) = projects.forEach {
             ApplicationManager.getApplication().invokeLater {
                 runWriteAction {
@@ -30,11 +35,12 @@ class Modules {
 
         private fun configureModule(project: Project, kp: ProjectData) {
             if (Constants.DEV_MODE) {
-                LOG.warn("Configuring modules with\n " + println(GsonBuilder().setPrettyPrinting().create().toJson(kp)))
+                lm("[DEV_MODE] Configuring modules with JSON projectData:\n "
+                        + GsonBuilder().setPrettyPrinting().create().toJson(kp))
             }
             ModuleManager.getInstance(project).let { moduleManager ->
                 // Delete the module if it already exists
-                LOG.warn("Creating module " + kp.directory)
+                lm("Creating module " + kp.directory)
                 val moduleDir = project.basePath + "/" + kp.directory + "/"
                 val module = moduleManager.findModuleByName(kp.name) ?:
                         moduleManager.newModule(moduleDir + kp.name
@@ -42,7 +48,7 @@ class Modules {
                                 StdModuleTypes.JAVA.id)
 //                val prm = ProjectRootManager.getInstance(project)
                 ModuleRootManager.getInstance(module).modifiableModel.let { modifiableModel ->
-                    LOG.warn("0 Existing roots: " + modifiableModel.contentRoots.firstOrNull()?.canonicalPath)
+                    lm("0 Existing roots: " + modifiableModel.contentRoots.firstOrNull()?.canonicalPath)
 
                     modifiableModel.contentEntries.forEach {
                         modifiableModel.removeContentEntry(it)
@@ -80,9 +86,9 @@ class Modules {
                     //
                     val fullUrl = project.baseDir.url + "/" + kp.directory
                     val contentRoot = VirtualFileManager.getInstance().findFileByUrl(fullUrl)
-                    LOG.warn("Existing roots: " + modifiableModel.contentRoots.firstOrNull()?.canonicalPath)
+                    lm("Existing roots: " + modifiableModel.contentRoots.firstOrNull()?.canonicalPath)
                     if (contentRoot != null) {
-                        LOG.warn("Found contentRoot: $contentRoot")
+                        lm("Found contentRoot: $contentRoot")
                         val contentEntry = modifiableModel.addContentEntry(contentRoot)
                         fun addSourceDir(dir: String, isTest: Boolean, isResource: Boolean) {
                             val srcDir = contentRoot.findFileByRelativePath(dir.replace("\\", "/"))

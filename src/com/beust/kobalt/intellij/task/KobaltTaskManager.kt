@@ -42,7 +42,7 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
         val parameters = SimpleJavaParameters().apply {
             workingDirectory = projectPath
             mainClass = "com.beust.kobalt.wrapper.Main"
-            classPath.add(KobaltApplicationComponent.kobaltJar.toFile())
+            classPath.add(KobaltApplicationComponent.kobaltJar.get().toFile())
             programParametersList.addAll(taskNames)
 
         }

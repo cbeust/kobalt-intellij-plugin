@@ -5,6 +5,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.util.io.FileUtil
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Files
@@ -54,7 +55,7 @@ class DistributionDownloader {
      *
      * @return the path to the Kobalt jar file
      */
-    fun install(version: String, progress: ProgressIndicator, progressText: String) : Path {
+    fun install(version: String, progress: ProgressIndicator?, progressText: String) : Path {
         val fileName = "$FILE_NAME-$version.zip"
         File(KFiles.distributionsDir).mkdirs()
         val localZipFile = Paths.get(KFiles.distributionsDir, fileName)
@@ -87,10 +88,14 @@ class DistributionDownloader {
                 } else {
                     val dest = Paths.get(zipOutputDir, entryFile.path)
                     log(2, "  Writing ${entry.name} to $dest")
-                    Files.createDirectories(dest.parent)
-                    Files.copy(zipFile.getInputStream(entry),
-                            dest,
-                            java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                    try {
+                        Files.createDirectories(dest.parent)
+                        Files.copy(zipFile.getInputStream(entry),
+                                dest,
+                                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                    } catch(ex: IOException) {
+                        log.error("Error while copying $entry to $dest: ${ex.message}", ex)
+                    }
                 }
             }
             log(2, "$localZipFile extracted")
@@ -101,7 +106,7 @@ class DistributionDownloader {
         return kobaltJarFile
     }
 
-    private fun download(version: String, fn: String, file: File, progress: ProgressIndicator, progressText: String) {
+    private fun download(version: String, fn: String, file: File, progress: ProgressIndicator?, progressText: String) {
         var fileUrl = "http://beust.com/kobalt/kobalt-$version.zip"
 
         var done = false
@@ -158,8 +163,10 @@ class DistributionDownloader {
                 bytesSoFar += bytesRead.toLong()
                 if (bytesRead > 0) {
                     val fraction = bytesSoFar / contentLength
-                    progress.fraction = fraction
-                    progress.text = progressText
+                    if (progress != null) {
+                        progress.fraction = fraction
+                        progress.text = progressText
+                    }
                     log.info("\rDownloading $url $fraction%")
                 }
                 bytesRead = inputStream.read(buffer)

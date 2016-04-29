@@ -11,10 +11,7 @@ import java.io.InputStreamReader
 import java.net.URL
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 
 /**
  * Our main application component, which just sees if our kobalt.jar file needs to be downloaded.
@@ -27,9 +24,42 @@ class KobaltApplicationComponent : ApplicationComponent {
 
     companion object {
         val LOG = Logger.getInstance(KobaltApplicationComponent::class.java)
+        lateinit var threadPool : ExecutorService
 
-        internal val kobaltJar: Path by lazy {
-            findKobaltJar(KobaltApplicationComponent.version)
+        class CompletedFuture<T>(val value: T) : Future<T> {
+            override fun get(timeout: Long, unit: TimeUnit?): T {
+                throw UnsupportedOperationException()
+            }
+
+            override fun isDone(): Boolean {
+                throw UnsupportedOperationException()
+            }
+
+            override fun cancel(mayInterruptIfRunning: Boolean): Boolean {
+                throw UnsupportedOperationException()
+            }
+
+            override fun isCancelled(): Boolean {
+                throw UnsupportedOperationException()
+            }
+
+            override fun get(): T {
+                return value
+            }
+        }
+
+        internal val kobaltJar: Future<Path> by lazy {
+            val path = findKobaltJar(KobaltApplicationComponent.version)
+            val result =
+                if (! Constants.DEV_MODE) {
+                    val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
+                    threadPool.submit(Callable {
+                        DistributionDownloader().install(KobaltApplicationComponent.version, null,
+                                progressText)})
+                } else {
+                    CompletedFuture(path)
+                }
+            result
         }
 
         private fun findKobaltJar(version: String) =
@@ -40,7 +70,7 @@ class KobaltApplicationComponent : ApplicationComponent {
                         ".kobalt/wrapper/dist/kobalt-$version/kobalt/wrapper/kobalt-$version.jar")
             }
 
-        val latestKobaltVersion: Future<String>
+        private val latestKobaltVersion: Future<String>
             get() {
                 val callable = Callable<String> {
                     if (Constants.DEV_MODE) Constants.DEV_VERSION
@@ -81,9 +111,12 @@ class KobaltApplicationComponent : ApplicationComponent {
     }
 
     override fun initComponent() {
+        threadPool = Executors.newFixedThreadPool(2)
         ServerUtil.maybeDownloadAndInstallKobaltJar()
     }
 
-    override fun disposeComponent() {}
+    override fun disposeComponent() {
+        threadPool.shutdown()
+    }
 
 }

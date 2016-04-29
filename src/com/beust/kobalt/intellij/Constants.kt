@@ -5,10 +5,9 @@ import org.jetbrains.annotations.NonNls
 
 class Constants {
     companion object {
+        val MIN_KOBALT_VERSION = "0.752"
 
         @JvmField @NonNls val KOBALT_SYSTEM_ID = ProjectSystemId("KOBALT")
-
-        val MIN_KOBALT_VERSION = "0.751"
 
         /** If true, will launch kobalt found in ~/kotlin/kobalt/libs/kobalt-$DEV_VERSION.jar */
         val DEV_MODE = false
