@@ -163,10 +163,10 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!--<weigher key="completion" implementationClass="com.beust.kobalt.intellij.KobaltWeigher" />-->
-        <toolWindow anchor="right"  id="Kobalt Build"
-                    factoryClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowFactory"/>
-        <configurationType implementation="com.beust.kobalt.intellij.execution.KobaltTaskConfigurationType"/>
-        <programRunner implementation="com.beust.kobalt.intellij.execution.KobaltTaskRunner"/>
+        <toolWindow anchor="right" id="Kobalt"
+                    factoryClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowExternalFactory"
+                    conditionClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowFactoryCondition"/>
+        <configurationType implementation="com.beust.kobalt.intellij.execution.KobaltExternalTaskConfigurationType"/>
     </extensions>
 
     <actions>
@@ -174,13 +174,10 @@
                 text="_Sync build file" description="Sync the build file" icon="AllIcons.Actions.Refresh">
             <keyboard-shortcut first-keystroke="control alt K" keymap="$default"/>
         </action>
-        <action id="kobalt.RunTask" class="com.beust.kobalt.intellij.toolWindow.actions.KobaltRunTaskAction"
-                text="_Run task" description="Execute selected tasks" icon="AllIcons.Actions.Execute">
-        </action>
         <group id="kobalt.ToolsMenu" class="com.beust.kobalt.intellij.KobaltToolsGroup" popup="true"
                text="_Kobalt" description="Kobalt">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
-            <reference id="kobalt.SyncBuildFile"/>
+            <!--<reference id="kobalt.SyncBuildFile"/>-->
 <!--
             <action id="kobalt.EnableBuildCompletion" class="com.beust.kobalt.intellij.EnableBuildCompletionAction"
                     text="Enable autocompletion for Build.kt" description="Enable autocompletion">
@@ -188,10 +185,10 @@
 -->
         </group>
 
-        <group id="kobalt.ToolWindowToolbar">
-            <reference id="kobalt.SyncBuildFile"/>
+        <!--<group id="kobalt.ToolWindowToolbar">
             <reference id="kobalt.RunTask"/>
-        </group>
+            <add-to-group group-id="ExternalSystemView.ActionsToolbar.LeftPanel"/>
+        </group>-->
     </actions>
 
 
@@ -205,14 +202,27 @@
         <component>
             <implementation-class>com.beust.kobalt.intellij.KobaltProjectComponent</implementation-class>
         </component>
-        <component>
-            <implementation-class>com.beust.kobalt.intellij.toolWindow.KobaltToolWindowComponent</implementation-class>
-        </component>
     </project-components>
 
+    <extensionPoints>
+    </extensionPoints>
+
     <extensions defaultExtensionNs="com.intellij">
-        <projectImportProvider implementation="com.beust.kobalt.intellij.KobaltProjectImportProvider"/>
-        <projectImportBuilder implementation="com.beust.kobalt.intellij.KobaltProjectImportBuilder"/>
+        <postStartupActivity implementation="com.beust.kobalt.intellij.project.KobaltStartupActivity"/>
+
+        <projectImportProvider implementation="com.beust.kobalt.intellij.import.KobaltProjectImportProvider"/>
+        <projectImportBuilder implementation="com.beust.kobalt.intellij.import.KobaltProjectImportBuilder"/>
+
+        <externalSystemExecutionConsoleManager implementation="com.beust.kobalt.intellij.execution.KobaltExecutionConsoleManager" order="last"/>
+        <externalSystemManager implementation="com.beust.kobalt.intellij.manager.KobaltManager"/>
+        <externalSystemConfigLocator implementation="com.beust.kobalt.intellij.settings.KobaltConfigLocator"/>
+        <projectService serviceImplementation="com.beust.kobalt.intellij.project.KobaltNotification"/>
+        <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltSettings"/>
+        <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltLocalSettings"/>
+        <stepsBeforeRunProvider implementation="com.beust.kobalt.intellij.execution.KobaltBeforeRunTaskProvider" />
+        <configurationProducer implementation="com.beust.kobalt.intellij.execution.KobaltRuntimeConfigurationProducer"/>
+        <library.presentationProvider implementation="com.beust.kobalt.intellij.config.KobaltLibraryPresentationProvider" order="last"/>
+
     </extensions>
 
 </idea-plugin>

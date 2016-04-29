@@ -13,7 +13,9 @@ import java.io.FileInputStream
 import java.io.IOException
 import java.net.Socket
 import java.util.*
+import java.util.concurrent.Executors
 
+//TODO stop server should be implemented
 class ServerUtil {
     companion object {
         fun toBackgroundTask(project: Project?, title: String, function: Function0<Unit>): Task.Backgroundable {
@@ -115,6 +117,45 @@ class ServerUtil {
             }
         }
 
+        fun launchServerNew() {
+            maybeDownloadAndInstallKobaltJarNew()
+            //TODO refactor
+            KobaltApplicationComponent.threadPool = Executors.newFixedThreadPool(2)
+            val kobaltJar = KobaltApplicationComponent.kobaltJar.get()
+            KobaltApplicationComponent.LOG.info("Kobalt jar: $kobaltJar")
+            if (!kobaltJar.toFile().exists()) {
+                KobaltApplicationComponent.LOG.error("Can't find the jar file",
+                        kobaltJar.toFile().absolutePath + " can't be found")
+                DependenciesProcessorNew.LOG.error(null, "Can't find the jar file", kobaltJar.toFile().absolutePath + " can't be found")
+            } else {
+                val args = listOf(findJava(),
+//                "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n",
+                        "-jar", kobaltJar.toFile().absolutePath,
+                        "--log", "3",
+                        "--force",
+                        "--dev", "--server")
+                val pb = ProcessBuilder(args)
+                //            pb.directory(File(directory))
+                pb.inheritIO()
+//                pb.environment().put("JAVA_HOME", ProjectJdkTable.getInstance().allJdks[0].homePath)
+                val tempFile = if (Constants.DEV_MODE) {
+                    File(KFiles.homeDir(".kobalt", "server.out"))
+                } else {
+                    createTempFile("kobalt")
+                }
+                pb.redirectOutput(tempFile)
+                DependenciesProcessorNew.LOG.warn("Launching " + args.joinToString(" "))
+                DependenciesProcessorNew.LOG.warn("Server output in: $tempFile")
+                val process = pb.start()
+//                val errorCode = process.waitFor()
+//                if (errorCode == 0) {
+//                    DependenciesProcessor.LOG.info("Server exiting")
+//                } else {
+//                    DependenciesProcessor.LOG.info("Server exiting with error")
+//                }
+            }
+        }
+
         fun maybeDownloadAndInstallKobaltJar() {
             if (! Constants.DEV_MODE) {
                 val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
@@ -132,6 +173,26 @@ class ServerUtil {
 
                             }, progress)
                 }
+            } else {
+                KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
+            }
+        }
+
+        fun maybeDownloadAndInstallKobaltJarNew() {
+            if (! Constants.DEV_MODE) {
+                val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
+                    val progress = StatusBarProgress().apply {
+                        text = progressText
+                    }
+
+//                    ProgressManager.getInstance().runProcessWithProgressAsynchronously(
+//                            object : Task.Backgroundable(null, "Downloading") {
+//                                override fun run(progress: ProgressIndicator) {
+                                    DistributionDownloader().install(KobaltApplicationComponent.version, progress,
+                                            progressText)
+//                                }
+//
+//                            }, progress)
             } else {
                 KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
             }
