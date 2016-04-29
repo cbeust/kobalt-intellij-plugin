@@ -92,8 +92,9 @@ class DependenciesProcessor() {
                 port = ServerUtil.findServerPort()
                 if (port != null) {
                     LOG.warn("Located server port from the file: $port")
-                    socket = Socket("localhost", port)
-                    connected = true
+                    Socket("localhost", port).use { socket ->
+                        connected = true
+                    }
                 } else {
                     LOG.warn("Couldn't find " + ServerUtil.SERVER_FILE)
                 }
