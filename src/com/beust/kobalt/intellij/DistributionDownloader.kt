@@ -85,10 +85,14 @@ class DistributionDownloader {
                 } else {
                     val dest = Paths.get(zipOutputDir, entryFile.path)
                     log(2, "  Writing ${entry.name} to $dest")
-                    Files.createDirectories(dest.parent)
-                    Files.copy(zipFile.getInputStream(entry),
-                            dest,
-                            java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                    try {
+                        Files.createDirectories(dest.parent)
+                        Files.copy(zipFile.getInputStream(entry),
+                                dest,
+                                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                    } catch(ex: IOException) {
+                        log.error("Error while copying $entry to $dest: ${ex.message}", ex)
+                    }
                 }
             }
             log(2, "$localZipFile extracted")
