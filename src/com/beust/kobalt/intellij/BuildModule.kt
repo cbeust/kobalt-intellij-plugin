@@ -42,7 +42,7 @@ class BuildModule {
             moduleManager.findModuleByName(KobaltProjectComponent.BUILD_MODULE_NAME)?.let {
                 runWriteAction {
                     with(moduleManager.modifiableModel) {
-                        LOG.warn("Deleting " + KobaltProjectComponent.BUILD_MODULE_NAME)
+                        Modules.lm("Deleting module " + KobaltProjectComponent.BUILD_MODULE_NAME)
                         disposeModule(it)
                         commit()
                     }
@@ -76,7 +76,7 @@ class BuildModule {
                         Dependencies.addLibrary(kobaltLibrary, "compile", modifiableModel)
                         modifiableModel.commit()
                     } else {
-                        KobaltProjectComponent.LOG.warn("Couldn't find kobalt/src, autocomplete disabled")
+                        Modules.lm("Couldn't find kobalt/src, autocomplete disabled")
                         modifiableModel.dispose()
                     }
                 }
