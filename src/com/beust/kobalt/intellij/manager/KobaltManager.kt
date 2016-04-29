@@ -23,6 +23,10 @@ import com.intellij.openapi.util.Pair
 import com.intellij.util.Function
 import com.intellij.util.PathUtil
 import com.intellij.util.containers.ContainerUtilRt
+import okhttp3.OkHttpClient
+import okio.Sink
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.net.URL
 
 /**
@@ -71,6 +75,10 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         val additionalClasspath = mutableListOf<String>()
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Unit::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(JsonParser::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Retrofit::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(OkHttpClient::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Sink::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(GsonConverterFactory::class.java))
         parameters.classPath.addAll(additionalClasspath)
         parameters.vmParametersList.addProperty(
                 ExternalSystemConstants.EXTERNAL_SYSTEM_ID_KEY, Constants.KOBALT_SYSTEM_ID.id)

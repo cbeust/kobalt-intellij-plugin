@@ -42,12 +42,12 @@ class KobaltStartupActivity : StartupActivity {
 
         val kobaltBuildFile = BuildUtils.buildFile(project)
         if (kobaltBuildFile != null && kobaltBuildFile.exists()) {
-            val message = """<a href=$IMPORT_EVENT_DESCRIPTION>Import Kobalt project</a>, this will also enable kobalt Tool Window.
+            val message = """<a href=$IMPORT_EVENT_DESCRIPTION>Import Kobalt project</a>, this will also enable Kobalt Tool Window.
                              <br>
                              Don't want to see the message for the project again: <a href=$DO_NOT_SHOW_EVENT_DESCRIPTION>press here</a>."""
 
             KobaltNotification.getInstance(project).showBalloon(
-                    "Unlinked Kobalt project?",
+                    "Detached Kobalt project found",
                     message, NotificationType.INFORMATION, object : NotificationListener.Adapter() {
                 override fun hyperlinkActivated(notification: Notification, e: HyperlinkEvent) {
                     notification.expire()

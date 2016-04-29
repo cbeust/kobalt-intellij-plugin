@@ -2,6 +2,7 @@ package com.beust.kobalt.intellij.resolver
 
 import com.beust.kobalt.intellij.Constants
 import com.beust.kobalt.intellij.Constants.Companion.KOBALT_SYSTEM_ID
+import com.beust.kobalt.intellij.DependenciesProcessorNew
 import com.beust.kobalt.intellij.settings.KobaltExecutionSettings
 import com.intellij.externalSystem.JavaProjectData
 import com.intellij.openapi.diagnostic.Logger
@@ -27,22 +28,26 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         private val LOG = Logger.getInstance("#" + KobaltProjectResolver::class.java.name)
     }
 
-    var serverMock = KobaltServerMock()  //FIXME only for testing purpose
+//    var dependenciesResolver = KobaltServerMock()  //FIXME only for testing purpose
+    var dependenciesResolver = DependenciesProcessorNew()
 
     override fun resolveProjectInfo(id: ExternalSystemTaskId, projectPath: String, isPreviewMode: Boolean, settings: KobaltExecutionSettings?, listener: ExternalSystemTaskNotificationListener): DataNode<ProjectData>? {
         val projectDataNode = DataNode(ProjectKeys.PROJECT, ProjectData(KOBALT_SYSTEM_ID, "Kobalt Project", projectPath, projectPath), null)
         projectDataNode.createChild(JavaProjectData.KEY, createJavaProjectData(projectPath))
-        val moduleDataMap = serverMock.mockData.map { serverData ->
-            serverData.name to buildKobaltModuleData(projectPath, serverData)
-        }.toMap()
+        dependenciesResolver.run(projectPath){projectsData->
+            val moduleDataMap = projectsData.map { serverData ->
+                serverData.name to buildKobaltModuleData(projectPath, serverData)
+            }.toMap()
 
-        val nodeMap = moduleDataMap.map {pair->
-            pair.key to buildProjectDataNodes(pair.value, projectDataNode)
-        }.toMap()
+            val nodeMap = moduleDataMap.map {pair->
+                pair.key to buildProjectDataNodes(pair.value, projectDataNode)
+            }.toMap()
 
-        serverMock.mockData.map { serverData ->
-            buildDependencyNodes(moduleDataMap, nodeMap, serverData)
+            projectsData.map { serverData ->
+                buildDependencyNodes(moduleDataMap, nodeMap, serverData)
+            }
         }
+
         return projectDataNode
     }
 
@@ -75,19 +80,21 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         populateContentRoot(contentRoot, ExternalSystemSourceType.TEST_RESOURCE, serverData.testResourceDirs)
 
         val compileLibraries = serverData.compileDependencies.map { serverCompileLibrary ->
-            val libraryData = LibraryData(KOBALT_SYSTEM_ID, serverCompileLibrary.id)
+            val libraryFile = File(serverCompileLibrary.path)
+            val libraryData = LibraryData(KOBALT_SYSTEM_ID, serverCompileLibrary.id,!libraryFile.exists())
             libraryData.addPath(LibraryPathType.BINARY, serverCompileLibrary.path)
             LibraryDependencyData(moduleData, libraryData, LibraryLevel.MODULE).apply { scope = DependencyScope.COMPILE }
         }
 
-        val testLibraries = serverData.testDependencies.map { serverLibrary ->
-            val libraryData = LibraryData(KOBALT_SYSTEM_ID, serverLibrary.id)
-            libraryData.addPath(LibraryPathType.BINARY, serverLibrary.path)
+        val testLibraries = serverData.testDependencies.map { serverTestLibrary ->
+            val libraryFile = File(serverTestLibrary.path)
+            val libraryData = LibraryData(KOBALT_SYSTEM_ID, serverTestLibrary.id, !libraryFile.exists())
+            libraryData.addPath(LibraryPathType.BINARY, serverTestLibrary.path)
             LibraryDependencyData(moduleData, libraryData, LibraryLevel.MODULE).apply { scope = DependencyScope.TEST }
         }
 
-        val tasksData = serverData.tasks.map { serverTaskDataName ->
-            TaskData(KOBALT_SYSTEM_ID, serverTaskDataName, projectPath, "Kobalt Task")
+        val tasksData = serverData.tasks.map { serverTaskData ->
+            TaskData(KOBALT_SYSTEM_ID, serverTaskData.name, projectPath, serverTaskData.description)
         }
         return KobaltModuleData(moduleData, tasksData, contentRoot, compileLibraries, testLibraries)
     }

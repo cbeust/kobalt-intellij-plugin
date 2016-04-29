@@ -2,6 +2,7 @@ package com.beust.kobalt.intellij.resolver
 
 import com.beust.kobalt.intellij.DependencyData
 import com.beust.kobalt.intellij.ProjectData
+import com.beust.kobalt.intellij.TaskData
 import java.io.File
 
 /**
@@ -9,6 +10,9 @@ import java.io.File
  * *         Date:  28.04.2016
  */
 class KobaltServerMock {
+
+    fun run(projectPath:String, callback: (List<ProjectData>) -> Unit) = callback.invoke(mockData)
+
     val mockData =
             listOf(ProjectData(
                     name = "module1",
@@ -20,11 +24,11 @@ class KobaltServerMock {
                     testDependencies = listOf(
                             DependencyData("org:junit:4.9", "test", System.getProperty("user.home") + File.separator + "libs${File.separator}junit-4.9.jar")
                     ),
-                    sourceDirs = setOf("main/src"),
-                    testDirs = setOf("test/src"),
+                    sourceDirs = setOf("src/main/java"),
+                    testDirs = setOf("src/test/java"),
                     sourceResourceDirs = setOf("main/resources"),
                     testResourceDirs = setOf("test/resources"),
-                    tasks = listOf("assemble", "compile")),
+                    tasks = listOf(TaskData("assemble","Assemble Module"), TaskData("compile","Compile Module"))),
 
                     ProjectData(
                             name = "module2",
@@ -36,11 +40,11 @@ class KobaltServerMock {
                             testDependencies = listOf(
                                     DependencyData("org:junit:4.9", "test", System.getProperty("user.home") + File.separator + "libs${File.separator}junit-4.9.jar")
                             ),
-                            sourceDirs = setOf("main/src"),
-                            testDirs = setOf("test/src"),
+                            sourceDirs = setOf("src/main/java"),
+                            testDirs = setOf("src/test/java"),
                             sourceResourceDirs = setOf("main/resources"),
                             testResourceDirs = setOf("test/resources"),
-                            tasks = listOf("assemble", "compile"))
+                            tasks = listOf(TaskData("assemble","Assemble Module"), TaskData("compile","Compile Module")))
             )
 
 

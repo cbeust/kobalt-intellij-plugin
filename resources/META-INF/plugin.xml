@@ -163,14 +163,10 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!--<weigher key="completion" implementationClass="com.beust.kobalt.intellij.KobaltWeigher" />-->
-        <!--<toolWindow anchor="right"  id="Kobalt Build"-->
-                    <!--factoryClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowFactory"/>-->
-        <!--<configurationType implementation="com.beust.kobalt.intellij.execution.KobaltTaskConfigurationType"/>-->
         <toolWindow anchor="right" id="Kobalt"
                     factoryClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowExternalFactory"
                     conditionClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowFactoryCondition"/>
         <configurationType implementation="com.beust.kobalt.intellij.execution.KobaltExternalTaskConfigurationType"/>
-        <programRunner implementation="com.beust.kobalt.intellij.execution.KobaltTaskRunner"/>
     </extensions>
 
     <actions>
@@ -178,13 +174,10 @@
                 text="_Sync build file" description="Sync the build file" icon="AllIcons.Actions.Refresh">
             <keyboard-shortcut first-keystroke="control alt K" keymap="$default"/>
         </action>
-        <action id="kobalt.RunTask" class="com.beust.kobalt.intellij.toolWindow.actions.KobaltRunTaskAction"
-                text="_Run task" description="Execute selected tasks" icon="AllIcons.Actions.Execute">
-        </action>
         <group id="kobalt.ToolsMenu" class="com.beust.kobalt.intellij.KobaltToolsGroup" popup="true"
                text="_Kobalt" description="Kobalt">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
-            <reference id="kobalt.SyncBuildFile"/>
+            <!--<reference id="kobalt.SyncBuildFile"/>-->
 <!--
             <action id="kobalt.EnableBuildCompletion" class="com.beust.kobalt.intellij.EnableBuildCompletionAction"
                     text="Enable autocompletion for Build.kt" description="Enable autocompletion">
@@ -192,10 +185,10 @@
 -->
         </group>
 
-        <group id="kobalt.ToolWindowToolbar">
+        <!--<group id="kobalt.ToolWindowToolbar">
             <reference id="kobalt.RunTask"/>
             <add-to-group group-id="ExternalSystemView.ActionsToolbar.LeftPanel"/>
-        </group>
+        </group>-->
     </actions>
 
 
@@ -208,9 +201,6 @@
     <project-components>
         <component>
             <implementation-class>com.beust.kobalt.intellij.KobaltProjectComponent</implementation-class>
-        </component>
-        <component>
-            <implementation-class>com.beust.kobalt.intellij.toolWindow.KobaltToolWindowComponent</implementation-class>
         </component>
     </project-components>
 
