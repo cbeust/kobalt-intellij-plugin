@@ -2,6 +2,7 @@ package com.beust.kobalt.intellij
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.util.io.FileUtil
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -23,7 +24,7 @@ class KFiles {
 
         /** Where all the .zip files are extracted */
         val distributionsDir = homeDir(KOBALT_DOT_DIR, "wrapper", "dist")
-        val kobaltHomeDir = homeDir(KOBALT_DOT_DIR, "wrapper", "dist", "kobalt-${KobaltApplicationComponent.version}")
+        val kobaltHomeDir = FileUtil.toSystemIndependentName(homeDir(KOBALT_DOT_DIR, "wrapper", "dist", "kobalt-${KobaltApplicationComponent.version}"))
         fun homeDir(vararg dirs: String) : String = System.getProperty("user.home") +
                 File.separator + dirs.toMutableList().joinToString(File.separator)
 

@@ -214,7 +214,6 @@
         <externalSystemExecutionConsoleManager implementation="com.beust.kobalt.intellij.execution.KobaltExecutionConsoleManager" order="last"/>
         <externalSystemManager implementation="com.beust.kobalt.intellij.manager.KobaltManager"/>
         <externalSystemConfigLocator implementation="com.beust.kobalt.intellij.settings.KobaltConfigLocator"/>
-        <applicationService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltSystemSettings"/>
         <projectService serviceImplementation="com.beust.kobalt.intellij.project.KobaltNotification"/>
         <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltSettings"/>
         <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltLocalSettings"/>

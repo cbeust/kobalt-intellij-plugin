@@ -10,7 +10,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.ExternalSystemAutoImportAware
 import com.intellij.openapi.externalSystem.ExternalSystemConfigurableAware
 import com.intellij.openapi.externalSystem.ExternalSystemManager
-import com.intellij.openapi.externalSystem.ExternalSystemUiAware
 import com.intellij.openapi.externalSystem.service.ui.DefaultExternalSystemUiAware
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
@@ -21,14 +20,14 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Pair
 import com.intellij.util.Function
+import com.intellij.util.PathUtil
 import java.net.URL
-import javax.swing.Icon
 
 /**
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltManager : ExternalSystemConfigurableAware, ExternalSystemUiAware, ExternalSystemAutoImportAware, StartupActivity, ExternalSystemManager<
+class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurableAware, ExternalSystemAutoImportAware, StartupActivity, ExternalSystemManager<
         KobaltProjectSettings,
         KobaltSettingsListener,
         KobaltSettings,
@@ -45,10 +44,6 @@ class KobaltManager : ExternalSystemConfigurableAware, ExternalSystemUiAware, Ex
 
     override fun getProjectRepresentationName(targetProjectPath: String, rootProjectPath: String?) =
             ExternalSystemApiUtil.getProjectRepresentationName(targetProjectPath, rootProjectPath);
-
-    override fun getProjectIcon(): Icon? = null //TODO
-
-    override fun getTaskIcon() = DefaultExternalSystemUiAware.INSTANCE.taskIcon;
 
     override fun getAffectedExternalProjectPath(changedFileOrDirPath: String, project: Project): String? = null //TODO
 
@@ -69,7 +64,11 @@ class KobaltManager : ExternalSystemConfigurableAware, ExternalSystemUiAware, Ex
     }
 
     override fun enhanceRemoteProcessing(parameters: SimpleJavaParameters) {
-        //TODO
+        // add Kotlin runtime. This is workaround because at the moment RemoteExternalSystemCommunicationManager have classpath without Kotlin and cannot call ProjectResolver
+        val pathToKotlinRuntime : String? = PathUtil.getJarPathForClass(Unit::class.java)
+        if(pathToKotlinRuntime!=null) {
+            parameters.classPath.addFirst(pathToKotlinRuntime)
+        }
         parameters.vmParametersList.addProperty(
                 ExternalSystemConstants.EXTERNAL_SYSTEM_ID_KEY, Constants.KOBALT_SYSTEM_ID.id)
     }
