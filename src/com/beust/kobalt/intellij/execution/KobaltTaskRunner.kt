@@ -7,6 +7,7 @@ import com.intellij.execution.impl.DefaultJavaProgramRunner
  * @author Dmitry Zhuravlev
  *         Date: 19.04.16
  */
+@Deprecated("Will be substituted by external system API")
 class KobaltTaskRunner : DefaultJavaProgramRunner() {
     companion object{
         const val RUNNER_ID ="RUN_KOBALT_TASK_RUNNER"

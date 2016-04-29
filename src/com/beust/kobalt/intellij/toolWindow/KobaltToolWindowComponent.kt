@@ -53,11 +53,11 @@ class KobaltToolWindowComponent(project: Project) : AbstractProjectComponent(pro
                 if(!BuildUtils.buildFileExist(myProject)) return@let
                 val dependencyProcessor = DependenciesProcessor()
                 projectStructure = KobaltProjectsStructure(myProject, tree)
-                dependencyProcessor.run(kobaltComponent, myProject) { projectsData ->
-                    projectStructure.update(projectsData)
-                    isInitialized = true
-                    readState()
-                }
+//                dependencyProcessor.run(kobaltComponent, myProject) { projectsData ->
+//                    projectStructure.update(projectsData)
+//                }
+                isInitialized = true
+                readState()
             }
 
         }, myProject), ModalityState.defaultModalityState())

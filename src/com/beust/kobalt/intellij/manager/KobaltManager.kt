@@ -5,6 +5,7 @@ import com.beust.kobalt.intellij.KFiles
 import com.beust.kobalt.intellij.resolver.KobaltProjectResolver
 import com.beust.kobalt.intellij.settings.*
 import com.beust.kobalt.intellij.task.KobaltTaskManager
+import com.google.gson.JsonParser
 import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.ExternalSystemAutoImportAware
@@ -21,6 +22,7 @@ import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Pair
 import com.intellij.util.Function
 import com.intellij.util.PathUtil
+import com.intellij.util.containers.ContainerUtilRt
 import java.net.URL
 
 /**
@@ -53,6 +55,7 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
             override fun onKobaltHomeChange(oldPath: String?, newPath: String?, linkedProjectPath: String) {
                 ensureProjectsRefresh()
             }
+
             private fun ensureProjectsRefresh() {
                 ExternalSystemUtil.refreshProjects(project, Constants.KOBALT_SYSTEM_ID, true)
             }
@@ -65,10 +68,10 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
 
     override fun enhanceRemoteProcessing(parameters: SimpleJavaParameters) {
         // add Kotlin runtime. This is workaround because at the moment RemoteExternalSystemCommunicationManager have classpath without Kotlin and cannot call ProjectResolver
-        val pathToKotlinRuntime : String? = PathUtil.getJarPathForClass(Unit::class.java)
-        if(pathToKotlinRuntime!=null) {
-            parameters.classPath.addFirst(pathToKotlinRuntime)
-        }
+        val additionalClasspath = mutableListOf<String>()
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Unit::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(JsonParser::class.java))
+        parameters.classPath.addAll(additionalClasspath)
         parameters.vmParametersList.addProperty(
                 ExternalSystemConstants.EXTERNAL_SYSTEM_ID_KEY, Constants.KOBALT_SYSTEM_ID.id)
     }

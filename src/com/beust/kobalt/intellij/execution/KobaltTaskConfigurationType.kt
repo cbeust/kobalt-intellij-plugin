@@ -14,6 +14,7 @@ import com.intellij.openapi.project.Project
  * @author Dmitry Zhuravlev
  *         Date: 19.04.16
  */
+@Deprecated("Will be substituted by external system API")
 class KobaltTaskConfigurationType : ConfigurationType {
 
     override fun getIcon() = AllIcons.Actions.Execute

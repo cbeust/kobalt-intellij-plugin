@@ -17,11 +17,12 @@ import com.intellij.openapi.roots.ProjectRootManager
  * @author Dmitry Zhuravlev
  *         Date: 19.04.16
  */
+@Deprecated("Will be substituted by external system API")
 class KobaltTaskRunConfiguration(project: Project, var tasks: List<String> = emptyList()) : LocatableConfigurationBase(project,
         findConfigurationType<KobaltTaskConfigurationType>(KobaltTaskConfigurationType::class.java).configurationFactory,
         CONFIGURATION_NAME) {
 
-    companion object{
+    companion object {
         const val CONFIGURATION_NAME = "KOBALT_TASK_RUN_CONFIGURATION"
     }
 
@@ -41,8 +42,7 @@ class KobaltTaskRunConfiguration(project: Project, var tasks: List<String> = emp
         workingDirectory = project.basePath
         mainClass = "com.beust.kobalt.wrapper.Main"
         classPath.add(KobaltApplicationComponent.kobaltJar.toFile())
-        for (task in tasks)
-            programParametersList.add(task)
+        programParametersList.addAll(tasks)
     }
 
 

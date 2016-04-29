@@ -24,7 +24,7 @@ class KobaltServerMock {
                     testDirs = setOf("test/src"),
                     sourceResourceDirs = setOf("main/resources"),
                     testResourceDirs = setOf("test/resources"),
-                    tasks = listOf("assemple", "compile")),
+                    tasks = listOf("assemble", "compile")),
 
                     ProjectData(
                             name = "module2",
@@ -40,7 +40,7 @@ class KobaltServerMock {
                             testDirs = setOf("test/src"),
                             sourceResourceDirs = setOf("main/resources"),
                             testResourceDirs = setOf("test/resources"),
-                            tasks = listOf("assemple", "compile"))
+                            tasks = listOf("assemble", "compile"))
             )
 
 
