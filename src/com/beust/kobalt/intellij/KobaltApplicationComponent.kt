@@ -11,7 +11,10 @@ import java.io.InputStreamReader
 import java.net.URL
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.concurrent.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 /**
  * Our main application component, which just sees if our kobalt.jar file needs to be downloaded.
@@ -24,7 +27,7 @@ class KobaltApplicationComponent : ApplicationComponent {
 
     companion object {
         val LOG = Logger.getInstance(KobaltApplicationComponent::class.java)
-        lateinit var threadPool : ExecutorService
+        val threadPool = Executors.newFixedThreadPool(2)
 
         class CompletedFuture<T>(val value: T) : Future<T> {
             override fun get(timeout: Long, unit: TimeUnit?): T {
@@ -111,7 +114,6 @@ class KobaltApplicationComponent : ApplicationComponent {
     }
 
     override fun initComponent() {
-        threadPool = Executors.newFixedThreadPool(2)
         ServerUtil.maybeDownloadAndInstallKobaltJar()
     }
 

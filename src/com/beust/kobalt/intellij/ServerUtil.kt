@@ -13,7 +13,6 @@ import java.io.FileInputStream
 import java.io.IOException
 import java.net.Socket
 import java.util.*
-import java.util.concurrent.Executors
 
 //TODO stop server should be implemented
 class ServerUtil {
@@ -120,7 +119,6 @@ class ServerUtil {
         fun launchServerNew() {
             maybeDownloadAndInstallKobaltJarNew()
             //TODO refactor
-            KobaltApplicationComponent.threadPool = Executors.newFixedThreadPool(2)
             val kobaltJar = KobaltApplicationComponent.kobaltJar.get()
             KobaltApplicationComponent.LOG.info("Kobalt jar: $kobaltJar")
             if (!kobaltJar.toFile().exists()) {

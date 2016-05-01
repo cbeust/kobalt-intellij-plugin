@@ -12,7 +12,6 @@ import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotifica
 import com.intellij.openapi.externalSystem.task.AbstractExternalSystemTaskManager
 import com.intellij.openapi.projectRoots.JdkUtil
 import com.intellij.openapi.util.Key
-import java.util.concurrent.Executors
 
 /**
  * @author Dmitry Zhuravlev
@@ -40,7 +39,6 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
     }
 
     private fun prepareTaskExecutionParameters(projectPath: String, taskNames: MutableList<String>): SimpleJavaParameters {
-        KobaltApplicationComponent.threadPool= Executors.newFixedThreadPool(2) //TODO FIXME quick fix
         val parameters = SimpleJavaParameters().apply {
             workingDirectory = projectPath
             mainClass = "com.beust.kobalt.wrapper.Main"
