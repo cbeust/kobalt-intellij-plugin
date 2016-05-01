@@ -23,6 +23,7 @@ import com.intellij.openapi.util.Pair
 import com.intellij.util.Function
 import com.intellij.util.PathUtil
 import com.intellij.util.containers.ContainerUtilRt
+import icons.KobaltIcons
 import okhttp3.OkHttpClient
 import okio.Sink
 import retrofit2.Retrofit
@@ -103,6 +104,8 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
 
     override fun getSystemId() = Constants.KOBALT_SYSTEM_ID
 
-    override fun getExternalProjectDescriptor() = FileChooserDescriptorFactory.createSingleFileDescriptor(Constants.BUILD_FILE_EXTENSIONS);
+    override fun getExternalProjectDescriptor() = FileChooserDescriptorFactory.createSingleFileDescriptor(Constants.BUILD_FILE_EXTENSIONS)
+
+    override fun getProjectIcon() = KobaltIcons.Kobalt
 }
 

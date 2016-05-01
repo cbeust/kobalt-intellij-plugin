@@ -163,7 +163,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!--<weigher key="completion" implementationClass="com.beust.kobalt.intellij.KobaltWeigher" />-->
-        <toolWindow anchor="right" id="Kobalt"
+        <toolWindow anchor="right" id="Kobalt" icon="KobaltIcons.KobaltToolWindow"
                     factoryClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowExternalFactory"
                     conditionClass="com.beust.kobalt.intellij.toolWindow.KobaltToolWindowFactoryCondition"/>
         <configurationType implementation="com.beust.kobalt.intellij.execution.KobaltExternalTaskConfigurationType"/>

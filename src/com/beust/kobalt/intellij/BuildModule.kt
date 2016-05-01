@@ -1,5 +1,6 @@
 package com.beust.kobalt.intellij
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.ModuleManager
@@ -7,6 +8,7 @@ import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFileManager
 import java.nio.file.Path
 
@@ -21,9 +23,7 @@ class BuildModule {
     fun run(project: Project, kobaltJar: Path) = maybeAddBuildModule(project, kobaltJar)
 
     private fun maybeAddBuildModule(project: Project, kobaltJar: Path) {
-        val buildFile = VirtualFileManager.getInstance().findFileByUrl(project.baseDir.url)
-                ?.findFileByRelativePath("kobalt/src/Build.kt")
-        if (buildFile != null) {
+        if (BuildUtils.buildFileExist(project)) {
             addBuildModule(kobaltJar, project)
         } else {
             KobaltProjectComponent.LOG.info("Couldn't find kobalt/src/Build.kt, not creating the Build.kt module")
@@ -73,6 +73,7 @@ class BuildModule {
                         val kobaltDependency = DependencyData("", "compile", kobaltJar.toFile().absolutePath)
                         val kobaltLibrary = Dependencies.createLibrary(libraryTable,
                                 arrayListOf(kobaltDependency), KobaltProjectComponent.KOBALT_JAR)
+                        Disposer.register(module, kobaltLibrary as Disposable)
                         Dependencies.addLibrary(kobaltLibrary, "compile", modifiableModel)
                         modifiableModel.commit()
                     } else {
