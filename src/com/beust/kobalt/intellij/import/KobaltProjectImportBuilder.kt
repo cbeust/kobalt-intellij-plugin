@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.*
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
 import com.intellij.openapi.vfs.LocalFileSystem
+import icons.KobaltIcons
 import java.io.File
 
 /**
@@ -21,7 +22,7 @@ import java.io.File
 class KobaltProjectImportBuilder(dataManager: ProjectDataManager)
 : AbstractExternalProjectImportBuilder<ImportFromKobaltControl>(dataManager, ImportFromKobaltControl(), Constants.KOBALT_SYSTEM_ID) {
 
-    override fun getIcon() = null //TODO
+    override fun getIcon() = KobaltIcons.Kobalt
 
     override fun getName() = "Kobalt"
 
