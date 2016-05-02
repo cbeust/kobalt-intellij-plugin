@@ -213,7 +213,8 @@
         <projectImportProvider implementation="com.beust.kobalt.intellij.import.KobaltProjectImportProvider"/>
         <projectImportBuilder implementation="com.beust.kobalt.intellij.import.KobaltProjectImportBuilder"/>
 
-        <externalSystemExecutionConsoleManager implementation="com.beust.kobalt.intellij.execution.KobaltExecutionConsoleManager" order="last"/>
+        <externalSystemExecutionConsoleManager
+                implementation="com.beust.kobalt.intellij.execution.KobaltExecutionConsoleManager" order="last"/>
         <externalSystemManager implementation="com.beust.kobalt.intellij.manager.KobaltManager"/>
         <externalSystemConfigLocator implementation="com.beust.kobalt.intellij.settings.KobaltConfigLocator"/>
         <projectService serviceImplementation="com.beust.kobalt.intellij.project.KobaltNotification"/>
@@ -221,7 +222,8 @@
         <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltLocalSettings"/>
         <stepsBeforeRunProvider implementation="com.beust.kobalt.intellij.execution.KobaltBeforeRunTaskProvider" />
         <configurationProducer implementation="com.beust.kobalt.intellij.execution.KobaltRuntimeConfigurationProducer"/>
-        <library.presentationProvider implementation="com.beust.kobalt.intellij.config.KobaltLibraryPresentationProvider" order="last"/>
+        <library.presentationProvider
+                implementation="com.beust.kobalt.intellij.config.KobaltLibraryPresentationProvider" order="last"/>
 
     </extensions>
 
