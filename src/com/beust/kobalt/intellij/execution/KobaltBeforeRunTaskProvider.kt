@@ -12,14 +12,13 @@ import javax.swing.Icon
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltBeforeRunTaskProvider(project: Project) : ExternalSystemBeforeRunTaskProvider(Constants.KOBALT_SYSTEM_ID,project,ID) {
+class KobaltBeforeRunTaskProvider(project: Project)
+        : ExternalSystemBeforeRunTaskProvider(Constants.KOBALT_SYSTEM_ID,project,ID) {
     companion object{
         val ID = Key.create<ExternalSystemBeforeRunTask>("Kobalt.BeforeRunTask")
     }
 
-    override fun getIcon(): Icon? {
-        return super.getIcon()
-    }
+    override fun getIcon() = Constants.ICON
 
     override fun getTaskIcon(task: ExternalSystemBeforeRunTask?): Icon? {
         return super.getTaskIcon(task)

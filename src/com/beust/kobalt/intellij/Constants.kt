@@ -20,5 +20,7 @@ class Constants {
         val BUILD_FILE_EXTENSIONS = "kt"
 
         val KOBALT_LIBRARY_KIND = "kobalt.library"
+
+        val ICON = KobaltIcons.Kobalt
     }
 }
