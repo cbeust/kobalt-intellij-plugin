@@ -20,7 +20,8 @@ import java.io.File
  *         Date:  27.04.2016
  */
 class KobaltProjectImportBuilder(dataManager: ProjectDataManager)
-: AbstractExternalProjectImportBuilder<ImportFromKobaltControl>(dataManager, ImportFromKobaltControl(), Constants.KOBALT_SYSTEM_ID) {
+        : AbstractExternalProjectImportBuilder<ImportFromKobaltControl>(dataManager, ImportFromKobaltControl(),
+                Constants.KOBALT_SYSTEM_ID) {
 
     override fun getIcon() = KobaltIcons.Kobalt
 
