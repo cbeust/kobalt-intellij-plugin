@@ -4,8 +4,13 @@ package com.beust.kobalt.intellij
 // The classes in this file are mapped from the JSON coming back from the server
 //
 
-class DependencyData(val id: String, val scope: String, val path: String)
-class TaskData(val name: String, val description: String)
+class DependencyData(val id: String, val scope: String, val path: String) {
+    override fun toString() = id
+}
+
+class TaskData(val name: String, val description: String) {
+    override fun toString() = name
+}
 
 class ProjectData(val name: String, val directory: String,
         val dependentProjects: List<String>,
