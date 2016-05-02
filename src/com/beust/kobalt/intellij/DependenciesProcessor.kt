@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit
  * @author Dmitry Zhuravlev
  *         Date: 18.04.16
  */
+@Deprecated("Use DependenciesProcessorNew")
 class DependenciesProcessor() {
 
     companion object {
