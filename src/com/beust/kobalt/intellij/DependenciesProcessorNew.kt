@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 class DependenciesProcessorNew() {
 
     companion object {
-        val LOG = Logger.getInstance(DependenciesProcessor::class.java)
+        val LOG = Logger.getInstance(DependenciesProcessorNew::class.java)
     }
 
     interface Api {
