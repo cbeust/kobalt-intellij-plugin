@@ -28,11 +28,14 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         private val LOG = Logger.getInstance("#" + KobaltProjectResolver::class.java.name)
     }
 
-//    var dependenciesResolver = KobaltServerMock()  //FIXME only for testing purpose
-    var dependenciesResolver = DependenciesProcessorNew()
+//    val dependenciesResolver = KobaltServerMock()  //FIXME only for testing purpose
+    val dependenciesResolver = DependenciesProcessorNew()
 
-    override fun resolveProjectInfo(id: ExternalSystemTaskId, projectPath: String, isPreviewMode: Boolean, settings: KobaltExecutionSettings?, listener: ExternalSystemTaskNotificationListener): DataNode<ProjectData>? {
-        val projectDataNode = DataNode(ProjectKeys.PROJECT, ProjectData(KOBALT_SYSTEM_ID, "Kobalt Project", projectPath, projectPath), null)
+    override fun resolveProjectInfo(id: ExternalSystemTaskId, projectPath: String, isPreviewMode: Boolean,
+            settings: KobaltExecutionSettings?, listener: ExternalSystemTaskNotificationListener):
+                DataNode<ProjectData>? {
+        val projectDataNode = DataNode(ProjectKeys.PROJECT,
+                ProjectData(KOBALT_SYSTEM_ID, "Kobalt Project", projectPath, projectPath), null)
         projectDataNode.createChild(JavaProjectData.KEY, createJavaProjectData(projectPath))
         dependenciesResolver.run(projectPath){projectsData->
             val moduleDataMap = projectsData.map { serverData ->
@@ -51,7 +54,8 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         return projectDataNode
     }
 
-    private fun buildDependencyNodes(dataMap: Map<String, KobaltModuleData>, nodeMap: Map<String, DataNode<ModuleData>>, serverData: com.beust.kobalt.intellij.ProjectData) {
+    private fun buildDependencyNodes(dataMap: Map<String, KobaltModuleData>, nodeMap: Map<String,
+            DataNode<ModuleData>>, serverData: com.beust.kobalt.intellij.ProjectData) {
         serverData.dependentProjects.forEach { dependant ->
             val ownerData = dataMap[serverData.name]?.moduleData
             val dependantData = dataMap[dependant]?.moduleData
@@ -62,7 +66,8 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         }
     }
 
-    private fun buildKobaltModuleData(projectPath: String, serverData: com.beust.kobalt.intellij.ProjectData): KobaltModuleData {
+    private fun buildKobaltModuleData(projectPath: String, serverData: com.beust.kobalt.intellij.ProjectData):
+            KobaltModuleData {
         val moduleRootPath = FileUtil.toSystemIndependentName(projectPath + File.separator + serverData.directory)
         val moduleData = ModuleData(
                 serverData.name,
@@ -83,14 +88,18 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
             val libraryFile = File(serverCompileLibrary.path)
             val libraryData = LibraryData(KOBALT_SYSTEM_ID, serverCompileLibrary.id,!libraryFile.exists())
             libraryData.addPath(LibraryPathType.BINARY, serverCompileLibrary.path)
-            LibraryDependencyData(moduleData, libraryData, LibraryLevel.MODULE).apply { scope = DependencyScope.COMPILE }
+            LibraryDependencyData(moduleData, libraryData, LibraryLevel.MODULE).apply {
+                scope = DependencyScope.COMPILE
+            }
         }
 
         val testLibraries = serverData.testDependencies.map { serverTestLibrary ->
             val libraryFile = File(serverTestLibrary.path)
             val libraryData = LibraryData(KOBALT_SYSTEM_ID, serverTestLibrary.id, !libraryFile.exists())
             libraryData.addPath(LibraryPathType.BINARY, serverTestLibrary.path)
-            LibraryDependencyData(moduleData, libraryData, LibraryLevel.MODULE).apply { scope = DependencyScope.TEST }
+            LibraryDependencyData(moduleData, libraryData, LibraryLevel.MODULE).apply {
+                scope = DependencyScope.TEST
+            }
         }
 
         val tasksData = serverData.tasks.map { serverTaskData ->
@@ -99,7 +108,8 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         return KobaltModuleData(moduleData, tasksData, contentRoot, compileLibraries, testLibraries)
     }
 
-    private fun buildProjectDataNodes(kobaltModuleData: KobaltModuleData, projectDataNode: DataNode<ProjectData>): DataNode<ModuleData> {
+    private fun buildProjectDataNodes(kobaltModuleData: KobaltModuleData, projectDataNode: DataNode<ProjectData>)
+            : DataNode<ModuleData> {
         val(moduleData, tasksData, contentRoot, compileDependencies, testDependencies) = kobaltModuleData
         val moduleDataNode = projectDataNode.createChild(ProjectKeys.MODULE, moduleData);
         moduleDataNode.createChild(ProjectKeys.CONTENT_ROOT, contentRoot)
@@ -115,10 +125,11 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         return moduleDataNode
     }
 
-    private fun populateContentRoot(contentRoot: ContentRootData, type: ExternalSystemSourceType, dirs: Set<String>) =
-            dirs.forEach { dir ->
-                contentRoot.storePath(type, contentRoot.rootPath + File.separator + dir)
-            }
+    private fun populateContentRoot(contentRoot: ContentRootData, type: ExternalSystemSourceType,
+            dirs: Set<String>) =
+        dirs.forEach { dir ->
+            contentRoot.storePath(type, contentRoot.rootPath + File.separator + dir)
+        }
 
 
     fun createJavaProjectData(projectPath: String): JavaProjectData {
@@ -131,7 +142,8 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         return javaProjectData
     }
 
-    override fun cancelTask(taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
+    override fun cancelTask(taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener)
+            : Boolean {
         return true //TODO
     }
 

@@ -34,12 +34,10 @@ import java.net.URL
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurableAware, ExternalSystemAutoImportAware, StartupActivity, ExternalSystemManager<
-        KobaltProjectSettings,
-        KobaltSettingsListener,
-        KobaltSettings,
-        KobaltLocalSettings,
-        KobaltExecutionSettings> {
+class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurableAware, ExternalSystemAutoImportAware,
+        StartupActivity,
+        ExternalSystemManager<KobaltProjectSettings, KobaltSettingsListener, KobaltSettings, KobaltLocalSettings,
+                KobaltExecutionSettings> {
 
     companion object {
         internal var LOG = Logger.getInstance("#" + KobaltManager::class.java.name)
@@ -56,7 +54,8 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
 
     override fun runActivity(project: Project) {
         val connection = project.messageBus.connect(project)
-        connection.subscribe(KobaltSettings.getInstance(project).changesTopic, object : KobaltSettingsListenerAdapter() {
+        connection.subscribe(KobaltSettings.getInstance(project).changesTopic,
+                object : KobaltSettingsListenerAdapter() {
             override fun onKobaltHomeChange(oldPath: String?, newPath: String?, linkedProjectPath: String) {
                 ensureProjectsRefresh()
             }
@@ -72,7 +71,8 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
     }
 
     override fun enhanceRemoteProcessing(parameters: SimpleJavaParameters) {
-        // add Kotlin runtime. This is workaround because at the moment RemoteExternalSystemCommunicationManager have classpath without Kotlin and cannot call ProjectResolver
+        // Add Kotlin runtime. This is a workaround because at the moment RemoteExternalSystemCommunicationManager
+        // has classpath without Kotlin and cannot call ProjectResolver
         val additionalClasspath = mutableListOf<String>()
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Unit::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(JsonParser::class.java))
@@ -104,7 +104,8 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
 
     override fun getSystemId() = Constants.KOBALT_SYSTEM_ID
 
-    override fun getExternalProjectDescriptor() = FileChooserDescriptorFactory.createSingleFileDescriptor(Constants.BUILD_FILE_EXTENSIONS)
+    override fun getExternalProjectDescriptor() =
+            FileChooserDescriptorFactory.createSingleFileDescriptor(Constants.BUILD_FILE_EXTENSIONS)
 
     override fun getProjectIcon() = KobaltIcons.Kobalt
 }
