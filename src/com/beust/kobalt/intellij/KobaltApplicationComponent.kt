@@ -58,7 +58,7 @@ class KobaltApplicationComponent : ApplicationComponent {
                     val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
                     threadPool.submit(Callable {
                         DistributionDownloader().install(KobaltApplicationComponent.version, null,
-                                progressText)})
+                                progressText,{})})
                 } else {
                     CompletedFuture(path)
                 }
@@ -114,7 +114,6 @@ class KobaltApplicationComponent : ApplicationComponent {
     }
 
     override fun initComponent() {
-        ServerUtil.maybeDownloadAndInstallKobaltJar()
     }
 
     override fun disposeComponent() {
