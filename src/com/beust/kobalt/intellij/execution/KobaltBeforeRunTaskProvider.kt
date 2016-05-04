@@ -6,6 +6,7 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemBefor
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemBeforeRunTaskProvider
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Key
+import icons.KobaltIcons
 import javax.swing.Icon
 
 /**
@@ -18,7 +19,7 @@ class KobaltBeforeRunTaskProvider(project: Project)
         val ID = Key.create<ExternalSystemBeforeRunTask>("Kobalt.BeforeRunTask")
     }
 
-    override fun getIcon() = Constants.ICON
+    override fun getIcon() = KobaltIcons.Kobalt
 
     override fun getTaskIcon(task: ExternalSystemBeforeRunTask?): Icon? {
         return super.getTaskIcon(task)
