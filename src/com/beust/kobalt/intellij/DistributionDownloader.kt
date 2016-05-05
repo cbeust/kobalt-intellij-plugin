@@ -9,6 +9,7 @@ import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.platform.templates.github.DownloadUtil
+import com.intellij.util.io.ZipUtil
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -100,44 +101,24 @@ class DistributionDownloader {
             //
             log(1, "Downloading $fileName")
             download(version, localZipFile.toFile(), progress, progressText)
-        } else {
-            log(1, "$localZipFile already present, no need to download it")
-        }
-
-
-        if (Files.exists(localZipFile)) {
             //
             // Extract all the zip files
             //
             val zipFile = ZipFile(localZipFile.toFile())
-            val entries = zipFile.entries()
             val outputDirectory = File(KFiles.distributionsDir)
             outputDirectory.mkdirs()
-            while (entries.hasMoreElements()) {
-                val entry = entries.nextElement()
-                val entryFile = File(entry.name)
-                if (entry.isDirectory) {
-                    entryFile.mkdirs()
-                } else {
-                    val dest = Paths.get(zipOutputDir, entryFile.path)
-                    log(2, "  Writing ${entry.name} to $dest")
-                    try {
-                        Files.createDirectories(dest.parent)
-                        Files.copy(zipFile.getInputStream(entry),
-                                dest,
-                                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-                    } catch(ex: IOException) {
-                        log.error("Error while copying $entry to $dest: ${ex.message}", ex)
-                    }
-                }
+            try {
+                ZipUtil.extract(zipFile, outputDirectory, null)
+            }catch(e:IOException){
+                log.warn("Error while unzipping $zipFile to $outputDirectory : $e")
             }
-            log(2, "$localZipFile extracted")
+            LocalFileSystem.getInstance().refreshIoFiles(listOf(kobaltJarFile.toFile()), true, false){
+                onSuccessInstall(kobaltJarFile)
+            }
         } else {
-            log(1, "Something went wrong: $localZipFile should exist but can't be found")
+            log(1, "$localZipFile already present, no need to download it")
         }
-        LocalFileSystem.getInstance().refreshIoFiles(listOf(kobaltJarFile.toFile()), true, false){
-            onSuccessInstall(kobaltJarFile)
-        }
+
         return kobaltJarFile
     }
 
