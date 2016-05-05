@@ -71,7 +71,7 @@ class DistributionDownloader {
             }
         }
 
-        fun maybeDownloadAndInstallKobaltJarSilently(proxyConfig:ProxyConfig?=null) : Path? {
+        fun maybeDownloadAndInstallKobaltJarSilently() : Path? {
             if (!Constants.DEV_MODE) {
                 return DistributionDownloader().install(KobaltApplicationComponent.version, null, null, {})
             } else {
