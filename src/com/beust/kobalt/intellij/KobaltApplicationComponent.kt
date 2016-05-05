@@ -56,7 +56,7 @@ class KobaltApplicationComponent : ApplicationComponent {
             val result =
                     if (!Constants.DEV_MODE) {
                         threadPool.submit(Callable {
-                            DistributionDownloader.maybeDownloadAndInstallKobaltJarSilently()
+                            DistributionDownloader.maybeDownloadAndInstallKobaltJarSilently() ?: path
                         }
                         )
                     } else {
