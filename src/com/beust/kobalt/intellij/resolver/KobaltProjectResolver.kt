@@ -2,7 +2,7 @@ package com.beust.kobalt.intellij.resolver
 
 import com.beust.kobalt.intellij.Constants
 import com.beust.kobalt.intellij.Constants.Companion.KOBALT_SYSTEM_ID
-import com.beust.kobalt.intellij.DependenciesProcessorNew
+import com.beust.kobalt.intellij.DependenciesProcessor
 import com.beust.kobalt.intellij.settings.KobaltExecutionSettings
 import com.intellij.externalSystem.JavaProjectData
 import com.intellij.openapi.diagnostic.Logger
@@ -28,12 +28,13 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         private val LOG = Logger.getInstance("#" + KobaltProjectResolver::class.java.name)
     }
 
-//    val dependenciesResolver = KobaltServerMock()  //FIXME only for testing purpose
-    val dependenciesResolver = DependenciesProcessorNew()
+//    val dependenciesResolver = KobaltServerMock()  //only for testing purpose
 
     override fun resolveProjectInfo(id: ExternalSystemTaskId, projectPath: String, isPreviewMode: Boolean,
             settings: KobaltExecutionSettings?, listener: ExternalSystemTaskNotificationListener):
                 DataNode<ProjectData>? {
+        if(settings==null) return null
+        val dependenciesResolver = DependenciesProcessor(settings.kobaltJar)
         val projectDataNode = DataNode(ProjectKeys.PROJECT,
                 ProjectData(KOBALT_SYSTEM_ID, "Kobalt Project", projectPath, projectPath), null)
         projectDataNode.createChild(JavaProjectData.KEY, createJavaProjectData(projectPath))

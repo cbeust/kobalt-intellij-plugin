@@ -5,10 +5,10 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.intellij.openapi.components.ApplicationComponent
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.util.io.HttpRequests
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
-import java.net.URL
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.Callable
@@ -54,14 +54,14 @@ class KobaltApplicationComponent : ApplicationComponent {
         internal val kobaltJar: Future<Path> by lazy {
             val path = findKobaltJar(KobaltApplicationComponent.version)
             val result =
-                if (! Constants.DEV_MODE) {
-                    val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
-                    threadPool.submit(Callable {
-                        DistributionDownloader().install(KobaltApplicationComponent.version, null,
-                                progressText,{})})
-                } else {
-                    CompletedFuture(path)
-                }
+                    if (!Constants.DEV_MODE) {
+                        threadPool.submit(Callable {
+                            DistributionDownloader.maybeDownloadAndInstallKobaltJarSilently()
+                        }
+                        )
+                    } else {
+                        CompletedFuture(path)
+                    }
             result
         }
 
@@ -80,18 +80,22 @@ class KobaltApplicationComponent : ApplicationComponent {
                     else {
                         var result = Constants.MIN_KOBALT_VERSION
                         try {
-                            val ins = URL(DistributionDownloader.RELEASE_URL).openConnection().inputStream
-                            @Suppress("UNCHECKED_CAST")
-                            val reader = BufferedReader(InputStreamReader(ins))
-                            val jo = JsonParser().parse(reader) as JsonArray
-                            if (jo.size() > 0) {
-                                var versionName = (jo.get(0) as JsonObject).get("name").asString
-                                if (versionName == null || versionName.isBlank()) {
-                                    versionName = (jo.get(0) as JsonObject).get("tag_name").asString
+                            result = HttpRequests.request(DistributionDownloader.RELEASE_URL)
+                                    .productNameAsUserAgent().connect {request->
+                                var version:String = Constants.MIN_KOBALT_VERSION
+                                @Suppress("UNCHECKED_CAST")
+                                val reader = BufferedReader(InputStreamReader(request.inputStream))
+                                val jo = JsonParser().parse(reader) as JsonArray
+                                if (jo.size() > 0) {
+                                    var versionName = (jo.get(0) as JsonObject).get("name").asString
+                                    if (versionName == null || versionName.isBlank()) {
+                                        versionName = (jo.get(0) as JsonObject).get("tag_name").asString
+                                    }
+                                    if (versionName != null) {
+                                        version = versionName
+                                    }
                                 }
-                                if (versionName != null) {
-                                    result = versionName
-                                }
+                                version
                             }
                         } catch(ex: IOException) {
                             DistributionDownloader.warn(

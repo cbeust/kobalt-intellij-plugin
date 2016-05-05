@@ -16,7 +16,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
 
     override fun projectOpened() {
         if (BuildUtils.buildFileExist(project)) {
-            ServerUtil.maybeDownloadAndInstallKobaltJar {
+            DistributionDownloader.maybeDownloadAndInstallKobaltJar {
                 with(ApplicationManager.getApplication()) {
                     invokeLater {
                         BuildModule().run(project, KobaltApplicationComponent.kobaltJar.get())

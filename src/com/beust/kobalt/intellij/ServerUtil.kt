@@ -1,18 +1,13 @@
 package com.beust.kobalt.intellij
 
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
-import com.intellij.openapi.progress.util.StatusBarProgress
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.projectRoots.ProjectJdkTable
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
 import java.net.Socket
-import java.nio.file.Path
 import java.util.*
 
 //TODO stop server should be implemented
@@ -68,72 +63,21 @@ class ServerUtil {
             return false
         }
 
-        fun launchServer() {
-            maybeDownloadAndInstallKobaltJar { downloadedFilePath ->
-                val kobaltJar = downloadedFilePath
-                KobaltApplicationComponent.LOG.info("Kobalt jar: $kobaltJar")
-                if (!kobaltJar.toFile().exists()) {
-                    KobaltApplicationComponent.LOG.error("Can't find the jar file",
-                            kobaltJar.toFile().absolutePath + " can't be found")
-                    Dialogs.error(null, "Can't find the jar file", kobaltJar.toFile().absolutePath + " can't be found")
-                } else {
-                    val args = listOf(findJava(),
-                            //                "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n",
-                            "-jar", kobaltJar.toFile().absolutePath,
-                            "--log", "2",
-                            "--force",
-                            "--dev", "--server")
-                    //                KobaltApplicationComponent.threadPool.submit(Callable {
-                    //                    val cl = GeneralCommandLine(args)
-                    //                    LOG.warn("Launching " + args.joinToString(" "))
-                    //                    val output = ExecUtil.execAndGetOutput(cl)
-                    //                    LOG.warn("Server process exiting with code " + output.exitCode)
-                    //                    output.stderrLines.forEach { LOG.warn("    E: ")}
-                    //                    output.stdoutLines.forEach { LOG.warn("    O: ")}
-                    //                })
 
-                    val pb = ProcessBuilder(args)
-                    //            pb.directory(File(directory))
-                    pb.inheritIO()
-                    pb.environment().put("JAVA_HOME", ProjectJdkTable.getInstance().allJdks[0].homePath)
-                    val tempFile = if (Constants.DEV_MODE) {
-                        File(KFiles.homeDir(".kobalt", "server.out"))
-                    } else {
-                        createTempFile("kobalt")
-                    }
-                    //                pb.redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                    pb.redirectOutput(tempFile)
-                    DependenciesProcessor.LOG.warn("Launching " + args.joinToString(" "))
-                    DependenciesProcessor.LOG.warn("Server output in: $tempFile")
-                    val process = pb.start()
-                    waitForServerToStart()
-                    ////                val errorCode = process.waitFor()
-                    ////                if (errorCode == 0) {
-                    ////                    DependenciesProcessor.LOG.info("Server exiting")
-                    ////                } else {
-                    ////                    DependenciesProcessor.LOG.info("Server exiting with error")
-                    ////                }
-                }
-            }
-        }
-
-        fun launchServerNew() {
-            maybeDownloadAndInstallKobaltJarNew()
-            //TODO refactor
-            val kobaltJar = KobaltApplicationComponent.kobaltJar.get()
+        fun launchServer(kobaltJar: String) {
             KobaltApplicationComponent.LOG.info("Kobalt jar: $kobaltJar")
-            if (!kobaltJar.toFile().exists()) {
+            if (!File(kobaltJar).exists()) {
                 KobaltApplicationComponent.LOG.error("Can't find the jar file",
-                        kobaltJar.toFile().absolutePath + " can't be found")
-                DependenciesProcessorNew.LOG.error(null, "Can't find the jar file", kobaltJar.toFile().absolutePath + " can't be found")
+                        kobaltJar+ " can't be found")
+                DependenciesProcessor.LOG.error(null, "Can't find the jar file", kobaltJar + " can't be found")
             } else {
                 val args = listOf(findJava(),
 //                "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n",
-                        "-jar", kobaltJar.toFile().absolutePath,
+                        "-jar", kobaltJar,
                         "--log", "3",
                         "--force",
                         "--dev", "--server")
-                val pb = ProcessBuilder(args)
+                val pb = ProcessBuilder(args) //TODO think about different way to execute process because in some cases it doesn't closed properly
                 //            pb.directory(File(directory))
                 pb.inheritIO()
 //                pb.environment().put("JAVA_HOME", ProjectJdkTable.getInstance().allJdks[0].homePath)
@@ -143,8 +87,8 @@ class ServerUtil {
                     createTempFile("kobalt")
                 }
                 pb.redirectOutput(tempFile)
-                DependenciesProcessorNew.LOG.warn("Launching " + args.joinToString(" "))
-                DependenciesProcessorNew.LOG.warn("Server output in: $tempFile")
+                DependenciesProcessor.LOG.warn("Launching " + args.joinToString(" "))
+                DependenciesProcessor.LOG.warn("Server output in: $tempFile")
                 val process = pb.start()
 //                val errorCode = process.waitFor()
 //                if (errorCode == 0) {
@@ -155,49 +99,8 @@ class ServerUtil {
             }
         }
 
-        fun maybeDownloadAndInstallKobaltJar(onSuccess:(Path)->Unit) {
-            if (! Constants.DEV_MODE) {
-                val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
-                ApplicationManager.getApplication().invokeLater {
-                    val progress = StatusBarProgress().apply {
-                        text = progressText
-                    }
-
-                    ProgressManager.getInstance().runProcessWithProgressAsynchronously(
-                            object : Task.Backgroundable(null, "Downloading") {
-                                override fun run(progress: ProgressIndicator) {
-                                    onSuccess(DistributionDownloader().install(KobaltApplicationComponent.version, progress,
-                                            progressText,{onSuccess()}))
-                                }
-
-                            }, progress)
-                }
-            } else {
-                KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
-            }
-        }
-
-        fun maybeDownloadAndInstallKobaltJarNew() {
-            if (! Constants.DEV_MODE) {
-                val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
-                    val progress = StatusBarProgress().apply {
-                        text = progressText
-                    }
-
-//                    ProgressManager.getInstance().runProcessWithProgressAsynchronously(
-//                            object : Task.Backgroundable(null, "Downloading") {
-//                                override fun run(progress: ProgressIndicator) {
-                                    DistributionDownloader().install(KobaltApplicationComponent.version, progress,
-                                            progressText,{})
-//                                }
-//
-//                            }, progress)
-            } else {
-                KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
-            }
-        }
-
         private fun findJava(): String {
+            //TODO should use java from project SDK
             val javaHome = System.getProperty("java.home")
             val result = if (javaHome != null) "$javaHome/bin/java" else "java"
             return result

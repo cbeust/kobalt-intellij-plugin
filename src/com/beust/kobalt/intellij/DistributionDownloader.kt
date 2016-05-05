@@ -1,7 +1,11 @@
 package com.beust.kobalt.intellij
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
+import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.platform.templates.github.DownloadUtil
@@ -45,6 +49,36 @@ class DistributionDownloader {
         private fun log(level: Int, s: String) = log.info(s)
         fun warn(s: String) = log.warn(s)
         const val RELEASE_URL = "https://api.github.com/repos/cbeust/kobalt/releases"
+
+
+        fun maybeDownloadAndInstallKobaltJar(onSuccess: (Path) -> Unit) {
+            if (!Constants.DEV_MODE) {
+                val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
+                ApplicationManager.getApplication().invokeLater {
+                    val downloadTask = object : Task.Backgroundable(null, "Downloading") {
+                        override fun run(progress: ProgressIndicator) {
+                            onSuccess(DistributionDownloader().install(KobaltApplicationComponent.version, progress,
+                                    progressText, { onSuccess() }))
+                        }
+                    }
+                    val progress = BackgroundableProcessIndicator(downloadTask).apply {
+                        text = progressText
+                    }
+                    ProgressManager.getInstance().runProcessWithProgressAsynchronously(downloadTask, progress)
+                }
+            } else {
+                KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
+            }
+        }
+
+        fun maybeDownloadAndInstallKobaltJarSilently(proxyConfig:ProxyConfig?=null) : Path? {
+            if (!Constants.DEV_MODE) {
+                return DistributionDownloader().install(KobaltApplicationComponent.version, null, null, {})
+            } else {
+                KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
+                return null
+            }
+        }
     }
 
     val FILE_NAME = "kobalt"
@@ -54,7 +88,7 @@ class DistributionDownloader {
      *
      * @return the path to the Kobalt jar file
      */
-    fun install(version: String, progress: ProgressIndicator?, progressText: String, onSuccessInstall: (Path)->Unit) : Path {
+    fun install(version: String, progress: ProgressIndicator?, progressText: String?, onSuccessInstall: (Path)->Unit) : Path {
         val fileName = "$FILE_NAME-$version.zip"
         File(KFiles.distributionsDir).mkdirs()
         val localZipFile = Paths.get(KFiles.distributionsDir, fileName)
@@ -65,7 +99,7 @@ class DistributionDownloader {
             // Either the .zip or the .jar is missing, downloading it
             //
             log(1, "Downloading $fileName")
-            download(version, fileName, localZipFile.toFile(), progress, progressText)
+            download(version, localZipFile.toFile(), progress, progressText)
         } else {
             log(1, "$localZipFile already present, no need to download it")
         }
@@ -107,9 +141,9 @@ class DistributionDownloader {
         return kobaltJarFile
     }
 
-    private fun download(version: String, fn: String, file: File, progress: ProgressIndicator?, progressText: String) {
+    private fun download(version: String, file: File, progress: ProgressIndicator?, progressText: String?) {
         var fileUrl = "http://beust.com/kobalt/kobalt-$version.zip"
-        if (progress != null) {
+        if (progress != null&& progressText!=null) {
             progress.text = progressText
         }
 

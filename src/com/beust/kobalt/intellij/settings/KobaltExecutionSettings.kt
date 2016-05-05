@@ -6,6 +6,6 @@ import com.intellij.openapi.externalSystem.model.settings.ExternalSystemExecutio
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltExecutionSettings(val kobaltHome: String)
+class KobaltExecutionSettings(val kobaltHome: String, val kobaltJar: String)
 : ExternalSystemExecutionSettings() {
 }
