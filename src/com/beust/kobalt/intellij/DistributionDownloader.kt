@@ -1,13 +1,17 @@
 package com.beust.kobalt.intellij
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.progress.Task
+import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.platform.templates.github.DownloadUtil
+import com.intellij.util.io.ZipUtil
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -46,6 +50,36 @@ class DistributionDownloader {
         private fun log(level: Int, s: String) = log.info(s)
         fun warn(s: String) = log.warn(s)
         const val RELEASE_URL = "https://api.github.com/repos/cbeust/kobalt/releases"
+
+
+        fun maybeDownloadAndInstallKobaltJar(onSuccess: (Path) -> Unit) {
+            if (!Constants.DEV_MODE) {
+                val progressText = "Downloading Kobalt ${KobaltApplicationComponent.version}"
+                ApplicationManager.getApplication().invokeLater {
+                    val downloadTask = object : Task.Backgroundable(null, "Downloading") {
+                        override fun run(progress: ProgressIndicator) {
+                            onSuccess(DistributionDownloader().install(KobaltApplicationComponent.version, progress,
+                                    progressText, { onSuccess() }))
+                        }
+                    }
+                    val progress = BackgroundableProcessIndicator(downloadTask).apply {
+                        text = progressText
+                    }
+                    ProgressManager.getInstance().runProcessWithProgressAsynchronously(downloadTask, progress)
+                }
+            } else {
+                KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
+            }
+        }
+
+        fun maybeDownloadAndInstallKobaltJarSilently() : Path? {
+            if (!Constants.DEV_MODE) {
+                return DistributionDownloader().install(KobaltApplicationComponent.version, null, null, {})
+            } else {
+                KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
+                return null
+            }
+        }
     }
 
     val FILE_NAME = "kobalt"
@@ -55,7 +89,7 @@ class DistributionDownloader {
      *
      * @return the path to the Kobalt jar file
      */
-    fun install(version: String, progress: ProgressIndicator?, progressText: String) : Path {
+    fun install(version: String, progress: ProgressIndicator?, progressText: String?, onSuccessInstall: (Path)->Unit) : Path {
         val fileName = "$FILE_NAME-$version.zip"
         File(KFiles.distributionsDir).mkdirs()
         val localZipFile = Paths.get(KFiles.distributionsDir, fileName)
@@ -66,121 +100,35 @@ class DistributionDownloader {
             // Either the .zip or the .jar is missing, downloading it
             //
             log(1, "Downloading $fileName")
-            download(version, fileName, localZipFile.toFile(), progress, progressText)
-        } else {
-            log(1, "$localZipFile already present, no need to download it")
-        }
-
-
-        if (Files.exists(localZipFile)) {
+            download(version, localZipFile.toFile(), progress, progressText)
             //
             // Extract all the zip files
             //
             val zipFile = ZipFile(localZipFile.toFile())
-            val entries = zipFile.entries()
             val outputDirectory = File(KFiles.distributionsDir)
             outputDirectory.mkdirs()
-            while (entries.hasMoreElements()) {
-                val entry = entries.nextElement()
-                val entryFile = File(entry.name)
-                if (entry.isDirectory) {
-                    entryFile.mkdirs()
-                } else {
-                    val dest = Paths.get(zipOutputDir, entryFile.path)
-                    log(2, "  Writing ${entry.name} to $dest")
-                    try {
-                        Files.createDirectories(dest.parent)
-                        Files.copy(zipFile.getInputStream(entry),
-                                dest,
-                                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-                    } catch(ex: IOException) {
-                        log.error("Error while copying $entry to $dest: ${ex.message}", ex)
-                    }
-                }
+            try {
+                ZipUtil.extract(zipFile, outputDirectory, null)
+            }catch(e:IOException){
+                log.warn("Error while unzipping $zipFile to $outputDirectory : $e")
             }
-            log(2, "$localZipFile extracted")
+            LocalFileSystem.getInstance().refreshIoFiles(listOf(kobaltJarFile.toFile()), true, false){
+                onSuccessInstall(kobaltJarFile)
+            }
         } else {
-            log(1, "Something went wrong: $localZipFile should exist but can't be found")
+            log(1, "$localZipFile already present, no need to download it")
         }
 
         return kobaltJarFile
     }
 
-    private fun download(version: String, fn: String, file: File, progress: ProgressIndicator?, progressText: String) {
+    private fun download(version: String, file: File, progress: ProgressIndicator?, progressText: String?) {
         var fileUrl = "http://beust.com/kobalt/kobalt-$version.zip"
-
-        var done = false
-        var httpConn: HttpURLConnection? = null
-        var responseCode = 0
-        var url: URL? = null
-        while (!done) {
-            url = URL(fileUrl)
-            httpConn = url.openConnection() as HttpURLConnection
-            responseCode = httpConn.responseCode
-            if (responseCode == HttpURLConnection.HTTP_MOVED_TEMP
-                    || responseCode == HttpURLConnection.HTTP_MOVED_PERM) {
-                fileUrl = httpConn.getHeaderField("Location")
-            } else {
-                done = true
-            }
+        if (progress != null&& progressText!=null) {
+            progress.text = progressText
         }
 
-        // always check HTTP response code first
-        if (responseCode == HttpURLConnection.HTTP_OK && httpConn != null) {
-            var fileName = ""
-            val disposition = httpConn.getHeaderField("Content-Disposition")
-            val contentType = httpConn.contentType
-            val cl = if (httpConn.contentLength > 0) httpConn.contentLength else 25000000
-            val contentLength = cl.toDouble()
-
-            if (disposition != null) {
-                // extracts file name from header field
-                val index = disposition.indexOf("filename=")
-                if (index > 0) {
-                    fileName = disposition.substring(index + 10, disposition.length - 1)
-                }
-            } else {
-                // extracts file name from URL
-                fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1, fileUrl.length)
-            }
-
-            log(2, "Content-Type = " + contentType)
-            log(2, "Content-Disposition = " + disposition!!)
-            log(2, "Content-Length = " + contentLength)
-            log(2, "fileName = " + fileName)
-
-            // opens input stream from the HTTP connection
-            val inputStream = httpConn.inputStream
-
-            // opens an output stream to save into file
-            val outputStream = FileOutputStream(file)
-
-            var bytesSoFar: Double = 0.0
-            val buffer = ByteArray(100000)
-            var bytesRead = inputStream.read(buffer)
-            while (bytesRead != -1) {
-                outputStream.write(buffer, 0, bytesRead)
-                bytesSoFar += bytesRead.toLong()
-                if (bytesRead > 0) {
-                    val fraction = bytesSoFar / contentLength
-                    if (progress != null) {
-                        progress.fraction = fraction
-                        progress.text = progressText
-                    }
-                    log.info("\rDownloading $url $fraction%")
-                }
-                bytesRead = inputStream.read(buffer)
-            }
-            log.debug("\n")
-
-            outputStream.close()
-            inputStream.close()
-
-            log(1, "Downloaded " + fileUrl)
-        } else {
-            error("No file to download. Server replied HTTP code: " + responseCode)
-        }
-        httpConn.disconnect()
+        DownloadUtil.downloadContentToFile(progress, fileUrl, file)
 
         if (!file.exists()) {
             log.debug(file.toString() + " downloaded, extracting it")

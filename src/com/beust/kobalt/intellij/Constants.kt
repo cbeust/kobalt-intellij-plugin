@@ -21,6 +21,5 @@ class Constants {
 
         val KOBALT_LIBRARY_KIND = "kobalt.library"
 
-        val ICON = KobaltIcons.Kobalt
     }
 }

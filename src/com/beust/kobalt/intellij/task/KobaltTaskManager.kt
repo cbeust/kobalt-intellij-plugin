@@ -1,6 +1,7 @@
 package com.beust.kobalt.intellij.task
 
 import com.beust.kobalt.intellij.KobaltApplicationComponent
+import com.beust.kobalt.intellij.ServerUtil
 import com.beust.kobalt.intellij.settings.KobaltExecutionSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.configurations.SimpleJavaParameters
@@ -32,6 +33,10 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
                             if (event != null) {
                                 listener.onTaskOutput(id, event.text, true)
                             }
+                        }
+
+                        override fun processTerminated(event: ProcessEvent?) {
+                            ServerUtil.stopServer()
                         }
                     }
             )
