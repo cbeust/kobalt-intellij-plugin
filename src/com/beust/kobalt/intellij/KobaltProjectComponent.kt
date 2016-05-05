@@ -30,6 +30,8 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
 
     override fun initComponent() {}
     override fun disposeComponent() {}
-    override fun projectClosed() {}
+    override fun projectClosed() {
+        ServerUtil.stopServer()
+    }
 
 }
