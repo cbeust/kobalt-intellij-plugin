@@ -8,7 +8,7 @@ import com.intellij.openapi.externalSystem.util.PaintAwarePanel
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltProjectSettingsControl(val settings: KobaltProjectSettings) : AbstractExternalProjectSettingsControl<KobaltProjectSettings>(KobaltProjectSettings()) { //TODO build proper settings
+class KobaltProjectSettingsControl(val settings: KobaltProjectSettings) : AbstractExternalProjectSettingsControl<KobaltProjectSettings>(settings) {
 
     var uiBuilder = ProjectSettingsUIBuilder()
 

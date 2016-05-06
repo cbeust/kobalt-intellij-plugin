@@ -3,6 +3,7 @@ package com.beust.kobalt.intellij.manager
 import com.beust.kobalt.intellij.Constants
 import com.beust.kobalt.intellij.KFiles
 import com.beust.kobalt.intellij.KobaltApplicationComponent
+import com.beust.kobalt.intellij.import.KobaltAutoImportAware
 import com.beust.kobalt.intellij.resolver.KobaltProjectResolver
 import com.beust.kobalt.intellij.settings.*
 import com.beust.kobalt.intellij.task.KobaltTaskManager
@@ -12,6 +13,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.ExternalSystemAutoImportAware
 import com.intellij.openapi.externalSystem.ExternalSystemConfigurableAware
 import com.intellij.openapi.externalSystem.ExternalSystemManager
+import com.intellij.openapi.externalSystem.service.project.autoimport.CachingExternalSystemAutoImportAware
 import com.intellij.openapi.externalSystem.service.ui.DefaultExternalSystemUiAware
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemConstants
@@ -47,6 +49,8 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         internal var LOG = Logger.getInstance("#" + KobaltManager::class.java.name)
     }
 
+    private val autoImportDelegate = CachingExternalSystemAutoImportAware(KobaltAutoImportAware())
+
     override fun getConfigurable(project: Project) = KobaltConfigurable(project);
 
     override fun getExternalProjectConfigDescriptor(): FileChooserDescriptor? = null //TODO
@@ -54,7 +58,8 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
     override fun getProjectRepresentationName(targetProjectPath: String, rootProjectPath: String?) =
             ExternalSystemApiUtil.getProjectRepresentationName(targetProjectPath, rootProjectPath);
 
-    override fun getAffectedExternalProjectPath(changedFileOrDirPath: String, project: Project): String? = null //TODO
+    override fun getAffectedExternalProjectPath(changedFileOrDirPath: String, project: Project): String?
+            = autoImportDelegate.getAffectedExternalProjectPath(changedFileOrDirPath, project)
 
     override fun runActivity(project: Project) {
         val connection = project.messageBus.connect(project)

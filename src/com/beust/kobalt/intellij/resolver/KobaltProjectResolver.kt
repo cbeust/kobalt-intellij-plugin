@@ -1,6 +1,5 @@
 package com.beust.kobalt.intellij.resolver
 
-import com.beust.kobalt.intellij.Constants
 import com.beust.kobalt.intellij.Constants.Companion.KOBALT_SYSTEM_ID
 import com.beust.kobalt.intellij.DependenciesProcessor
 import com.beust.kobalt.intellij.settings.KobaltExecutionSettings
@@ -76,7 +75,7 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
                 StdModuleTypes.JAVA.id,
                 serverData.name,
                 moduleRootPath,
-                "$projectPath/${Constants.BUILD_FILE}")
+                projectPath)
 
         val contentRoot = ContentRootData(KOBALT_SYSTEM_ID, moduleRootPath)
 

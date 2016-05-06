@@ -208,6 +208,9 @@
     </extensionPoints>
 
     <extensions defaultExtensionNs="com.intellij">
+        <projectConfigurable groupId="build.tools" groupWeight="111" id="reference.settingsdialog.project.kobalt"
+                             instance="com.beust.kobalt.intellij.settings.KobaltConfigurable"/>
+
         <postStartupActivity implementation="com.beust.kobalt.intellij.project.KobaltStartupActivity"/>
 
         <projectImportProvider implementation="com.beust.kobalt.intellij.import.KobaltProjectImportProvider"/>
