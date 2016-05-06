@@ -2,6 +2,7 @@ package com.beust.kobalt.intellij.manager
 
 import com.beust.kobalt.intellij.Constants
 import com.beust.kobalt.intellij.KFiles
+import com.beust.kobalt.intellij.KobaltApplicationComponent
 import com.beust.kobalt.intellij.resolver.KobaltProjectResolver
 import com.beust.kobalt.intellij.settings.*
 import com.beust.kobalt.intellij.task.KobaltTaskManager
@@ -20,12 +21,15 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Pair
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.util.Function
 import com.intellij.util.PathUtil
 import com.intellij.util.containers.ContainerUtilRt
+import com.intellij.util.net.HttpConfigurable
 import icons.KobaltIcons
 import okhttp3.OkHttpClient
 import okio.Sink
+import org.apache.http.auth.Credentials
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.URL
@@ -80,14 +84,31 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(OkHttpClient::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Sink::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(GsonConverterFactory::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Credentials::class.java))
         parameters.classPath.addAll(additionalClasspath)
         parameters.vmParametersList.addProperty(
                 ExternalSystemConstants.EXTERNAL_SYSTEM_ID_KEY, Constants.KOBALT_SYSTEM_ID.id)
+        with(HttpConfigurable.getInstance()){
+            with(parameters.vmParametersList) {
+                if (!StringUtil.isEmpty(PROXY_EXCEPTIONS)) {
+                    val nonProxyHosts = PROXY_EXCEPTIONS.split(",").joinToString(separator = "|", transform = { StringUtil.trim(it) })
+                    add("http.nonProxyHosts",nonProxyHosts)
+                    add("https.nonProxyHosts",nonProxyHosts)
+                }
+                if (USE_HTTP_PROXY && StringUtil.isNotEmpty(PROXY_LOGIN)) {
+                    add("http.proxyUser", PROXY_LOGIN)
+                    add("https.proxyUser", PROXY_LOGIN)
+                    add("http.proxyPassword", plainProxyPassword)
+                    add("https.proxyPassword", plainProxyPassword)
+                }
+            }
+
+        }
     }
 
     override fun getExecutionSettingsProvider(): Function<Pair<Project, String>, KobaltExecutionSettings> =
             Function { pair ->
-                KobaltExecutionSettings(KFiles.distributionsDir)
+                KobaltExecutionSettings(KFiles.distributionsDir, KobaltApplicationComponent.kobaltJar.get().toFile().absolutePath)
             }
 
     override fun getTaskManagerClass() = KobaltTaskManager::class.java
