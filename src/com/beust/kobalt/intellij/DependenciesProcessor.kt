@@ -63,6 +63,7 @@ class DependenciesProcessor() {
         if (buildFile == null) {
             LOG.warn("Couldn't find ${Constants.BUILD_FILE}, aborting")
         } else {
+            LOG.debug("Call GetDependencies for build file ${buildFile.canonicalPath}")
             val response = service.getDependencies(buildFile.canonicalPath!!).execute()
 
             if (response.isSuccessful) {
@@ -73,7 +74,7 @@ class DependenciesProcessor() {
 
                 callback(projects)
             } else if (! response.isSuccessful) {
-                LOG.error("Couldn't call getDependencies() on the server: " + response.errorBody().toString())
+                LOG.error("Couldn't call getDependencies() on the server: " + response.errorBody().string())
             }
         }
     }
