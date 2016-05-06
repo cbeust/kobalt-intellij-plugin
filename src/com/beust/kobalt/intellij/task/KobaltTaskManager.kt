@@ -1,6 +1,5 @@
 package com.beust.kobalt.intellij.task
 
-import com.beust.kobalt.intellij.KobaltApplicationComponent
 import com.beust.kobalt.intellij.ServerUtil
 import com.beust.kobalt.intellij.settings.KobaltExecutionSettings
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -24,7 +23,8 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
                               scriptParameters: MutableList<String>, debuggerSetup: String?,
                               listener: ExternalSystemTaskNotificationListener) {
 
-        val parameters = prepareTaskExecutionParameters(projectPath, taskNames)
+        val kobaltJar = settings?.kobaltJar?:return
+        val parameters = prepareTaskExecutionParameters(projectPath, kobaltJar, taskNames)
 
         CapturingProcessHandler(parameters.toCommandLine()).apply {
             addProcessListener(
@@ -43,11 +43,11 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
         }.runProcess()
     }
 
-    private fun prepareTaskExecutionParameters(projectPath: String, taskNames: MutableList<String>): SimpleJavaParameters {
+    private fun prepareTaskExecutionParameters(projectPath: String, kobaltJar:String, taskNames: MutableList<String>): SimpleJavaParameters {
         val parameters = SimpleJavaParameters().apply {
             workingDirectory = projectPath
             mainClass = "com.beust.kobalt.wrapper.Main"
-            classPath.add(KobaltApplicationComponent.kobaltJar.get().toFile())
+            classPath.add(kobaltJar)
             programParametersList.addAll(taskNames)
 
         }
