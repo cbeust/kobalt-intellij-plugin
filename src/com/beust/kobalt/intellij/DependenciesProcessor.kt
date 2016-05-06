@@ -50,9 +50,13 @@ class DependenciesProcessor(val kobaltJar: String) {
 
             if (response.isSuccessful) {
                 val dd = response.body()
-                val projects = dd.projects
-                LOG.info("Read GetDependencyData, project count: ${projects.size}")
-                return projects
+                if (dd.errorMessage == null) {
+                    val projects = dd.projects
+                    LOG.info("Read GetDependencyData, project count: ${projects.size}")
+                    return projects
+                } else {
+                    LOG.error("getDependencies() encountered an error on the server: " + dd.errorMessage)
+                }
             } else if (!response.isSuccessful) {
                 LOG.error("Couldn't call getDependencies() on the server: " + response.errorBody().string())
             }
