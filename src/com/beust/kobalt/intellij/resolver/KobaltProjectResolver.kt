@@ -104,6 +104,7 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
 
         val tasksData = serverData.tasks.map { serverTaskData ->
             TaskData(KOBALT_SYSTEM_ID, serverTaskData.name, projectPath, serverTaskData.description)
+                    .apply { group = serverTaskData.group }
         }
         return KobaltModuleData(moduleData, tasksData, contentRoot, compileLibraries, testLibraries)
     }
