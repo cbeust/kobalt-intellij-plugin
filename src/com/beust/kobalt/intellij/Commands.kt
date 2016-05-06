@@ -8,7 +8,7 @@ class DependencyData(val id: String, val scope: String, val path: String) {
     override fun toString() = id
 }
 
-class TaskData(val name: String, val description: String) {
+class TaskData(val name: String, val description: String, val group: String) {
     override fun toString() = name
 }
 

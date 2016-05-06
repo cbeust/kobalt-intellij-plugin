@@ -28,7 +28,8 @@ class KobaltServerMock {
                     testDirs = setOf("src/test/java"),
                     sourceResourceDirs = setOf("main/resources"),
                     testResourceDirs = setOf("test/resources"),
-                    tasks = listOf(TaskData("assemble","Assemble Module"), TaskData("compile","Compile Module"))),
+                    tasks = listOf(TaskData("assemble","Assemble Module", "build"),
+                            TaskData("compile","Compile Module", "build"))),
 
                     ProjectData(
                             name = "module2",
@@ -44,7 +45,8 @@ class KobaltServerMock {
                             testDirs = setOf("src/test/java"),
                             sourceResourceDirs = setOf("main/resources"),
                             testResourceDirs = setOf("test/resources"),
-                            tasks = listOf(TaskData("assemble","Assemble Module"), TaskData("compile","Compile Module")))
+                            tasks = listOf(TaskData("assemble","Assemble Module", "build"),
+                                    TaskData("compile", "Compile Module", "build")))
             )
 
 
