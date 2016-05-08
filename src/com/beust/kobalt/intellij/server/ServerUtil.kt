@@ -1,14 +1,14 @@
-package com.beust.kobalt.intellij
+package com.beust.kobalt.intellij.server
 
+import com.beust.kobalt.intellij.KFiles
+import com.beust.kobalt.intellij.KobaltApplicationComponent
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.execution.process.CapturingProcessHandler
+import com.intellij.execution.process.OSProcessManager
 import com.intellij.execution.process.ProcessAdapter
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.Task
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JdkUtil
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.ShutDownTracker
@@ -21,23 +21,18 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class ServerUtil {
+
     companion object {
-        fun toBackgroundTask(project: Project?, title: String, function: Function0<Unit>): Task.Backgroundable {
-            return object : Task.Backgroundable(project, title) {
-                override fun run(p0: ProgressIndicator) {
-                    function.invoke()
-                }
-            }
-        }
+
         val SERVER_FILE = KFiles.homeDir(".kobalt", "kobaltServer.properties")
         val KEY_PORT = "port"
 
         @Volatile private var shuttingDown = false
 
-        @Volatile private var  processHandler : CapturingProcessHandler? = null
+        @Volatile private var processHandler: CapturingProcessHandler? = null
         @Volatile private var threadPool: ExecutorService? = null
 
-        val LOG = Logger.getInstance(DependenciesProcessor::class.java)
+        val LOG = Logger.getInstance(ServerUtil::class.java)
 
         fun findServerPort(): Int? {
             val file = File(SERVER_FILE)
@@ -53,30 +48,58 @@ class ServerUtil {
             }
         }
 
-        private fun waitForServerToStart() : Boolean {
+        fun waitForServerToStart(): Boolean {
             var attempts = 0
-
             while (attempts < 7) {
-                findServerPort()?.let { port ->
-                    try {
-                        Socket("localhost", port).use {
-                            LOG.warn("     Server is now running")
-                            return true
-                        }
-                    } catch(ex: IOException) {
-                        LOG.warn("    Couldn't connect to $port: $ex")
-                        // ignore
-                    }
+                if (!isServerRunning()) {
+                    LOG.debug("     Server is still starting, sleeping a bit")
+                    Thread.sleep(1000)
+                    attempts++
+                } else {
+                    LOG.debug("     Server is now running")
+                    return true
                 }
-                LOG.warn("     Server is still starting, sleeping a bit")
-                Thread.sleep(1000)
-                attempts++
             }
-            LOG.warn("     Couldn't start server after multiple attempts")
+            LOG.warn("     Couldn't wait server to start after $attempts attempts")
             return false
         }
 
-        fun stopServer(){
+        fun waitForServerToStop(): Boolean {
+            var attempts = 0
+
+            while (attempts < 7) {
+                if (isServerRunning()) {
+                    LOG.debug("     Server is still running, sleeping a bit")
+                    Thread.sleep(1000)
+                    attempts++
+                } else {
+                    LOG.debug("    Server stopped")
+                    return true
+                }
+            }
+            LOG.warn("     Couldn't wait to server to stop after $attempts attempts")
+            return false
+        }
+
+        fun isServerRunning(): Boolean {
+            findServerPort()?.let { port ->
+                try {
+                    Socket("localhost", port).use {
+                        LOG.debug("     Server is running")
+                        return true
+                    }
+                } catch(ex: IOException) {
+                    LOG.debug("    Couldn't connect to $port: $ex")
+                    // ignore
+                }
+            }
+            return false
+        }
+
+
+
+        @Synchronized fun stopServer() {
+            sendQuitCommand()
             if (processHandler?.isProcessTerminated ?: true) return
             processHandler?.destroyProcess()
             processHandler = null
@@ -84,7 +107,7 @@ class ServerUtil {
             threadPool = null
         }
 
-        fun launchServer(kobaltJar: String) {
+        @Synchronized fun launchServer(kobaltJar: String) {
             if (shuttingDown) {
                 return
             }
@@ -96,11 +119,11 @@ class ServerUtil {
             LOG.info("Kobalt jar: $kobaltJar")
             if (!File(kobaltJar).exists()) {
                 KobaltApplicationComponent.LOG.error("Can't find the jar file",
-                        kobaltJar+ " can't be found")
+                        kobaltJar + " can't be found")
                 LOG.error(null, "Can't find the jar file", kobaltJar + " can't be found")
             } else {
                 val serverExecutionParams = prepareServerExecutionParameters(kobaltJar)
-                processHandler = CapturingProcessHandler(serverExecutionParams.toCommandLine()).apply {
+                processHandler = MyCapturingProcessHandler(serverExecutionParams.toCommandLine()).apply {
                     addProcessListener(
                             object : ProcessAdapter() {
                                 override fun onTextAvailable(event: ProcessEvent?, outputType: Key<*>?) {
@@ -114,15 +137,54 @@ class ServerUtil {
                 threadPool?.execute {
                     processHandler?.runProcess()
                 }
+                waitForServerToStart()
+            }
+        }
+
+        private fun sendQuitCommand() {
+            if (!isServerRunning()) return
+            ServerFacade().sendQuitCommand()
+            waitForServerToStop()
+        }
+
+        private class MyCapturingProcessHandler(commandLine: GeneralCommandLine) : CapturingProcessHandler(commandLine) {
+            override fun killProcessTree(process: Process) {
+                executeOnPooledThread({
+                    killProcessTreeSync(process);
+                }
+                )
+            }
+
+            private fun killProcessTreeSync(process: Process) {
+                LOG.debug("killing process tree")
+                val destroyed = OSProcessManager.getInstance().killProcessTree(process)
+                if (!destroyed) {
+                    if (isTerminated(process)) {
+                        LOG.warn("Process has been already terminated: " + this.myCommandLine)
+                    } else {
+                        LOG.warn("Cannot kill process tree. Trying to destroy process using Java API. Cmdline:\n" + this.myCommandLine)
+                        process.destroy()
+                    }
+                }
+
+            }
+
+            private fun isTerminated(process: Process): Boolean {
+                try {
+                    process.exitValue()
+                    return true
+                } catch (var2: IllegalThreadStateException) {
+                    return false
+                }
 
             }
         }
 
-        private fun prepareServerExecutionParameters(kobaltJar:String): SimpleJavaParameters {
+        private fun prepareServerExecutionParameters(kobaltJar: String): SimpleJavaParameters {
             val parameters = SimpleJavaParameters().apply {
                 mainClass = "com.beust.kobalt.MainKt"
                 classPath.add(kobaltJar)
-                programParametersList.add("--log","3")
+                programParametersList.add("--log", "3")
                 programParametersList.add("--force")
                 programParametersList.add("--dev")
                 programParametersList.add("--server")

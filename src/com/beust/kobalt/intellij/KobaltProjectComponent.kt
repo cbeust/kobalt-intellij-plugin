@@ -1,5 +1,6 @@
 package com.beust.kobalt.intellij;
 
+import com.beust.kobalt.intellij.server.ServerUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.diagnostic.Logger
@@ -17,6 +18,7 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     override fun projectOpened() {
         if (BuildUtils.buildFileExist(project)) {
             DistributionDownloader.maybeDownloadAndInstallKobaltJar {
+                ServerUtil.stopServer()
                 with(ApplicationManager.getApplication()) {
                     invokeLater {
                         BuildModule().run(project, KobaltApplicationComponent.kobaltJar.get())
