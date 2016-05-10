@@ -58,8 +58,8 @@ class DistributionDownloader {
                 ApplicationManager.getApplication().invokeLater {
                     val downloadTask = object : Task.Backgroundable(null, "Downloading") {
                         override fun run(progress: ProgressIndicator) {
-                            onSuccess(DistributionDownloader().install(KobaltApplicationComponent.version, progress,
-                                    progressText, { onSuccess() }))
+                            DistributionDownloader().install(KobaltApplicationComponent.version, progress,
+                                    progressText, onSuccess)
                         }
                     }
                     val progress = BackgroundableProcessIndicator(downloadTask).apply {

@@ -28,7 +28,7 @@ class DependenciesProcessor(val kobaltJar: String) {
             ServerUtil.launchServer(kobaltJar)
         }
         LOG.debug("Call GetDependencies for build file ${buildFile.canonicalPath}")
-        val response = ServerFacade().sendGetDependencies(buildFile.canonicalPath!!)
+        val response = ServerFacade(ServerUtil.findServerPort()).sendGetDependencies(buildFile.canonicalPath!!)
 
         if (response.isSuccessful) {
             val dd = response.body()

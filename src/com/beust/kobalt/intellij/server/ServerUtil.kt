@@ -15,7 +15,6 @@ import com.intellij.openapi.util.ShutDownTracker
 import java.io.File
 import java.io.FileInputStream
 import java.io.IOException
-import java.net.Socket
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -23,9 +22,9 @@ import java.util.concurrent.Executors
 class ServerUtil {
 
     companion object {
-
-        val SERVER_FILE = KFiles.homeDir(".kobalt", "kobaltServer.properties")
-        val KEY_PORT = "port"
+        private const val PING_SUCCESSFUL_RESPONSE = "The Kobalt server is up and running"
+        private val SERVER_FILE = KFiles.homeDir(".kobalt", "kobaltServer.properties")
+        private const val KEY_PORT = "port"
 
         @Volatile private var shuttingDown = false
 
@@ -84,10 +83,8 @@ class ServerUtil {
         fun isServerRunning(): Boolean {
             findServerPort()?.let { port ->
                 try {
-                    Socket("localhost", port).use {
-                        LOG.debug("     Server is running")
-                        return true
-                    }
+                    val response = ServerFacade(findServerPort()).sendPingCommand()
+                    return if(response.isSuccessful) response.body().string() == PING_SUCCESSFUL_RESPONSE else false
                 } catch(ex: IOException) {
                     LOG.debug("    Couldn't connect to $port: $ex")
                     // ignore
@@ -143,7 +140,7 @@ class ServerUtil {
 
         private fun sendQuitCommand() {
             if (!isServerRunning()) return
-            ServerFacade().sendQuitCommand()
+            ServerFacade(findServerPort()).sendQuitCommand()
             waitForServerToStop()
         }
 
