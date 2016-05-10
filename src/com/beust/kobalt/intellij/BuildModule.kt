@@ -6,10 +6,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.DependencyScope
-import com.intellij.openapi.roots.ModifiableRootModel
-import com.intellij.openapi.roots.ModuleRootManager
-import com.intellij.openapi.roots.OrderRootType
+import com.intellij.openapi.roots.*
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
@@ -52,8 +49,9 @@ class BuildModule {
     }
 
     private fun updateBuildModule(kobaltJar: Path, libraryTable: LibraryTable, moduleManager: ModuleManager, project: Project) {
-        // Create the module
-        val module = moduleManager.newModule(project.baseDir.path
+        // Find or create the Build.kt module
+        val module = moduleManager.findModuleByName(KobaltProjectComponent.BUILD_MODULE_NAME)
+                ?:moduleManager.newModule(project.baseDir.path
                 + "/kobalt/${KobaltProjectComponent.BUILD_IML_NAME}", StdModuleTypes.JAVA.id)
         ModuleRootManager.getInstance(module).modifiableModel.let { modifiableModel ->
             //
@@ -62,12 +60,12 @@ class BuildModule {
             val kobaltDir = VirtualFileManager.getInstance().findFileByUrl(project.baseDir.url)
                     ?.findChild("kobalt")
             if (kobaltDir != null) {
-                // Setting the content root to the "kobalt" directory will automatically add "src"
-                // as a source folder
-                modifiableModel.addContentEntry(kobaltDir)
-
-                //                        val sdk = ProjectRootManager.getInstance(project).projectSdk
-                //                        modifiableModel.addContentEntry(sdk!!.homeDirectory!!)
+                modifiableModel.addContentEntry(kobaltDir).apply {
+                    kobaltDir.findChild("src")?.let {
+                        addSourceFolder(it, false)
+                    }
+                }
+                modifiableModel.sdk = ProjectRootManager.getInstance(project).projectSdk;
 
                 //
                 // Add kobalt.jar
@@ -84,7 +82,7 @@ class BuildModule {
         }
     }
 
-    fun refreshKobaltLibrary(libraryTable: LibraryTable, kobaltJar: Path,
+    private fun refreshKobaltLibrary(libraryTable: LibraryTable, kobaltJar: Path,
                              libraryName: String): Library? {
         var result: Library? = null
         libraryTable.modifiableModel.let { ltModel ->
@@ -106,7 +104,7 @@ class BuildModule {
         return result
     }
 
-    fun refreshBuildModuleContent(library: Library, modifiableModel: ModifiableRootModel) {
+   private fun refreshBuildModuleContent(library: Library, modifiableModel: ModifiableRootModel) {
             // Add the library to the module
             val existing = modifiableModel.findLibraryOrderEntry(library)
             if (existing == null) {
