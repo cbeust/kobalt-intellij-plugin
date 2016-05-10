@@ -22,7 +22,7 @@ import java.util.concurrent.Executors
 class ServerUtil {
 
     companion object {
-        private const val PING_SUCCESSFUL_RESPONSE = "The Kobalt server is up and running"
+        private const val PING_SUCCESSFUL_RESPONSE = "ok"
         private val SERVER_FILE = KFiles.homeDir(".kobalt", "kobaltServer.properties")
         private const val KEY_PORT = "port"
 
