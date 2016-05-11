@@ -1,6 +1,7 @@
 package com.beust.kobalt.intellij.server
 
 import com.beust.kobalt.intellij.GetDependenciesData
+import com.beust.kobalt.intellij.TemplatesData
 import com.intellij.openapi.diagnostic.Logger
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
@@ -21,7 +22,9 @@ class ServerFacade(val port: Int?) {
     }
 
     private interface ServerApi {
-        @GET("/v0/getDependencies") fun getDependencies(@Query("buildFile") buildFile: String): Call<GetDependenciesData>
+        @GET("/v0/getDependencies") fun getDependencies(@Query("buildFile") buildFile: String)
+                : Call<GetDependenciesData>
+        @GET("/v0/getTemplates") fun getTemplates(): Call<TemplatesData>
         @GET("/quit") fun quit(): Call<ResponseBody>
         @GET("/ping") fun ping(): Call<ResponseBody>
     }
@@ -32,6 +35,9 @@ class ServerFacade(val port: Int?) {
 
     fun sendGetDependencies(pathToBuildFile: String) =
             buildService().getDependencies(pathToBuildFile).execute()
+
+    fun sendGetTemplates() =
+            buildService().getTemplates().execute()
 
     private fun buildService(): ServerApi {
         return Retrofit.Builder()

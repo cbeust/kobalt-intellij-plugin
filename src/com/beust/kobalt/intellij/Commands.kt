@@ -21,3 +21,7 @@ class ProjectData(val name: String, val directory: String,
 
 class GetDependenciesData(val projects: List<ProjectData>, val errorMessage: String?)
 
+class TemplateData(val pluginName: String, val templates: List<String>)
+
+class TemplatesData(val templates: List<TemplateData>)
+
