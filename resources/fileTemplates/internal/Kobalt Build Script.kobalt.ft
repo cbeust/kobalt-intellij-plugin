@@ -1,11 +1,9 @@
-import com.beust.kobalt.project
-import com.beust.kobalt.repos
+import com.beust.kobalt.*
+import com.beust.kobalt.api.*
 
-val repos = repos()
-
+// val repos = repos()
 
 val module = project {
-
     name = "${MODULE_NAME}"
     group = "${MODULE_GROUP}"
     artifactId = name
@@ -14,7 +12,6 @@ val module = project {
 
     sourceDirectories {
         path("src/main/java")
-
     }
 
     sourceDirectoriesTest {
@@ -22,10 +19,10 @@ val module = project {
     }
 
     dependencies {
-
+//      compile("com.beust:jcommander:1.48")
     }
 
     dependenciesTest {
-        compile("junit:junit:4.12")
+//        compile("org.testng:testng:6.9.10")
     }
 }
