@@ -209,9 +209,15 @@
     </project-components>
 
     <extensionPoints>
+        <extensionPoint name="frameworkSupport" interface="com.beust.kobalt.intellij.frameworkSupport.KobaltFrameworkSupportProvider"/>
     </extensionPoints>
 
+    <extensions defaultExtensionNs="com.beust.kobalt.intellij">
+        <frameworkSupport implementation="com.beust.kobalt.intellij.frameworkSupport.KobaltJavaFrameworkSupportProvider"/>
+    </extensions>
+
     <extensions defaultExtensionNs="com.intellij">
+        <internalFileTemplate name="Kobalt Build Script"/>
         <projectConfigurable groupId="build.tools" groupWeight="111" id="reference.settingsdialog.project.kobalt"
                              instance="com.beust.kobalt.intellij.settings.KobaltConfigurable"/>
 
@@ -231,7 +237,7 @@
         <configurationProducer implementation="com.beust.kobalt.intellij.execution.KobaltRuntimeConfigurationProducer"/>
         <library.presentationProvider
                 implementation="com.beust.kobalt.intellij.config.KobaltLibraryPresentationProvider" order="last"/>
-
+        <moduleBuilder builderClass="com.beust.kobalt.intellij.project.wizard.KobaltModuleBuilder"/>
     </extensions>
 
 </idea-plugin>

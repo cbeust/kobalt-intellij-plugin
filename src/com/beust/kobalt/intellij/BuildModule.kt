@@ -6,7 +6,10 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.roots.*
+import com.intellij.openapi.roots.DependencyScope
+import com.intellij.openapi.roots.ModifiableRootModel
+import com.intellij.openapi.roots.ModuleRootManager
+import com.intellij.openapi.roots.OrderRootType
 import com.intellij.openapi.roots.libraries.Library
 import com.intellij.openapi.roots.libraries.LibraryTable
 import com.intellij.openapi.roots.libraries.LibraryTablesRegistrar
@@ -65,7 +68,7 @@ class BuildModule {
                         addSourceFolder(it, false)
                     }
                 }
-                modifiableModel.sdk = ProjectRootManager.getInstance(project).projectSdk;
+                modifiableModel.inheritSdk()
 
                 //
                 // Add kobalt.jar

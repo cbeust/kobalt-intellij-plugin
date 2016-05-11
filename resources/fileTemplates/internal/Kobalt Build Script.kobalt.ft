@@ -1,0 +1,31 @@
+import com.beust.kobalt.project
+import com.beust.kobalt.repos
+
+val repos = repos()
+
+
+val module = project {
+
+    name = "${MODULE_NAME}"
+    group = "${MODULE_GROUP}"
+    artifactId = name
+    version = "${MODULE_VERSION}"
+    directory = "${MODULE_PATH}"
+
+    sourceDirectories {
+        path("src/main/java")
+
+    }
+
+    sourceDirectoriesTest {
+        path("src/test/java")
+    }
+
+    dependencies {
+
+    }
+
+    dependenciesTest {
+        compile("junit:junit:4.12")
+    }
+}
