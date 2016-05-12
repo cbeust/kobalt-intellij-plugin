@@ -61,11 +61,11 @@ import java.io.IOException
 
 class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>(Constants.KOBALT_SYSTEM_ID, KobaltProjectSettings()) {
 
-    private var myWizardContext: WizardContext? = null
-
-    private var myParentProject: ProjectData? = null
     var projectId: ProjectId? = null
-    private var rootProjectPath: String? = null
+    var myParentProject: ProjectData? = null
+
+    private lateinit var myWizardContext: WizardContext
+    private lateinit var rootProjectPath: String
 
     override fun createModule(moduleModel: ModifiableModuleModel): Module {
         LOG.assertTrue(name != null)
@@ -73,7 +73,7 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
         LOG.assertTrue(originModuleFilePath != null)
 
         val moduleName = if (projectId == null) name else projectId!!.artifactId
-        val moduleFilePath = myWizardContext!!.projectFileDirectory + "/.idea/modules/" + moduleName + ModuleFileType.DOT_DEFAULT_EXTENSION
+        val moduleFilePath = myWizardContext.projectFileDirectory + "/.idea/modules/" + moduleName + ModuleFileType.DOT_DEFAULT_EXTENSION
         ModuleBuilder.deleteModuleFile(moduleFilePath)
         val moduleType = moduleType
         val module = moduleModel.newModule(moduleFilePath, moduleType.id)
@@ -108,9 +108,8 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
         if (myParentProject != null) {
             rootProjectPath = myParentProject!!.linkedExternalProjectPath
         } else {
-            rootProjectPath = FileUtil.toCanonicalPath(if (myWizardContext!!.isCreatingNewProject) project.basePath else modelContentRootDir.path)
+            rootProjectPath = FileUtil.toCanonicalPath(if (myWizardContext.isCreatingNewProject) project.basePath else modelContentRootDir.path)
         }
-        assert(rootProjectPath != null)
 
 
 
@@ -124,13 +123,12 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
 
     override fun setupModule(module: Module) {
         super.setupModule(module)
-        assert(rootProjectPath != null)
 
         var buildScriptFile = getBuildScript(module)
 
         val project = module.project
-        if (myWizardContext!!.isCreatingNewProject) {
-            externalProjectSettings.externalProjectPath = rootProjectPath!!
+        if (myWizardContext.isCreatingNewProject) {
+            externalProjectSettings.externalProjectPath = rootProjectPath
             val settings = ExternalSystemApiUtil.getSettings(project, Constants.KOBALT_SYSTEM_ID)
             project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, java.lang.Boolean.TRUE)
             //noinspection unchecked
@@ -141,14 +139,14 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
             val finalBuildScriptFile = buildScriptFile
             val runnable = Runnable {
                 if (myParentProject == null) {
-                    kobaltProjectSettings.externalProjectPath = rootProjectPath!!
+                    kobaltProjectSettings.externalProjectPath = rootProjectPath
                     val settings = ExternalSystemApiUtil.getSettings(project, Constants.KOBALT_SYSTEM_ID)
                     //noinspection unchecked
                     settings.linkProject(kobaltProjectSettings)
                 }
 
                 ExternalSystemUtil.refreshProject(
-                        project, Constants.KOBALT_SYSTEM_ID, rootProjectPath!!, false,
+                        project, Constants.KOBALT_SYSTEM_ID, rootProjectPath, false,
                         ProgressExecutionMode.IN_BACKGROUND_ASYNC)
 
                 val psiFile: PsiFile?
@@ -208,17 +206,10 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
         return file
     }
 
-    fun setParentProject(parentProject: ProjectData?) {
-        myParentProject = parentProject
-    }
-
     override fun modifySettingsStep(settingsStep: SettingsStep): ModuleWizardStep? {
         if (settingsStep is ProjectSettingsStep) {
             if (projectId != null) {
-                val moduleNameField = settingsStep.moduleNameField
-                if (moduleNameField != null) {
-                    moduleNameField.text = projectId!!.artifactId
-                }
+                settingsStep.moduleNameField.text = projectId!!.artifactId
                 settingsStep.setModuleName(projectId!!.artifactId)
             }
             settingsStep.bindModuleSettings()
@@ -251,20 +242,6 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
             }
 
         }
-
-        private fun appendToFile(file: VirtualFile, templateName: String, templateAttributes: Map<Any, Any>?) {
-            val manager = FileTemplateManager.getDefaultInstance()
-            val template = manager.getInternalTemplate(templateName)
-            try {
-                appendToFile(file, if (templateAttributes != null) template.getText(templateAttributes) else template.text)
-            } catch (e: IOException) {
-                LOG.warn(String.format("Unexpected exception on appending template %s config", Constants.KOBALT_SYSTEM_ID.readableName), e)
-                throw ConfigurationException(
-                        e.message, String.format("Can't append %s template config text", Constants.KOBALT_SYSTEM_ID.readableName))
-            }
-
-        }
-
 
         private fun getOrCreateExternalProjectConfigFile(parent: String, fileName: String): VirtualFile? {
             val file = File(parent, fileName)
