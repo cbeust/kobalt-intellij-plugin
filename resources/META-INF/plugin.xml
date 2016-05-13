@@ -220,6 +220,7 @@
 
     <extensions defaultExtensionNs="com.beust.kobalt.intellij">
         <frameworkSupport implementation="com.beust.kobalt.intellij.frameworkSupport.KobaltJavaFrameworkSupportProvider"/>
+        <frameworkSupport implementation="com.beust.kobalt.intellij.frameworkSupport.KobaltKotlinFrameworkSupportProvider"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">

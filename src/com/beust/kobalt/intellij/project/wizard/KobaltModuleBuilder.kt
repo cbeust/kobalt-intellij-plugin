@@ -1,29 +1,17 @@
-/*
- * Copyright 2000-2013 JetBrains s.r.o.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.beust.kobalt.intellij.project.wizard
 
 import com.beust.kobalt.intellij.Constants
+import com.beust.kobalt.intellij.frameworkSupport.KobaltBuildScriptBuilder
 import com.beust.kobalt.intellij.settings.KobaltProjectSettings
 import com.beust.kobalt.intellij.settings.KobaltProjectSettingsControl
+import com.intellij.codeInsight.actions.ReformatCodeProcessor
 import com.intellij.ide.fileTemplates.FileTemplateManager
 import com.intellij.ide.highlighter.ModuleFileType
 import com.intellij.ide.projectWizard.ProjectSettingsStep
 import com.intellij.ide.util.EditorHelper
 import com.intellij.ide.util.projectWizard.*
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys
@@ -35,10 +23,9 @@ import com.intellij.openapi.externalSystem.service.project.wizard.ExternalModule
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileEditor.impl.LoadTextUtil
 import com.intellij.openapi.module.*
 import com.intellij.openapi.options.ConfigurationException
-import com.intellij.openapi.project.ex.ProjectManagerEx
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.JavaSdkType
 import com.intellij.openapi.projectRoots.SdkTypeId
 import com.intellij.openapi.roots.ModifiableRootModel
@@ -50,11 +37,8 @@ import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
-import com.intellij.psi.codeStyle.CodeStyleSettingsManager
 import com.intellij.util.containers.ContainerUtil
 import java.io.File
 import java.io.IOException
@@ -87,14 +71,8 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
             return
         }
         val contentRootDir = File(contentEntryPath)
-        val kobaltModuleRootDir = File(contentEntryPath + File.separator + projectId!!.artifactId)
-        val kobaltModuleSourceDir = File(kobaltModuleRootDir, "src/main/java")
-        val kobaltModuleTestDir = File(kobaltModuleRootDir, "src/test/java")
         FileUtilRt.createDirectory(contentRootDir)
-        FileUtilRt.createDirectory(kobaltModuleSourceDir)
-        FileUtilRt.createDirectory(kobaltModuleTestDir)
-        val fileSystem = LocalFileSystem.getInstance()
-        val modelContentRootDir = fileSystem.refreshAndFindFileByIoFile(contentRootDir) ?: return
+        val modelContentRootDir = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(contentRootDir) ?: return
 
         modifiableRootModel.addContentEntry(modelContentRootDir)
 
@@ -111,12 +89,9 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
             rootProjectPath = FileUtil.toCanonicalPath(if (myWizardContext.isCreatingNewProject) project.basePath else modelContentRootDir.path)
         }
 
-
-
-        val kobaltBuildFile = setupKobaltBuildFile(modelContentRootDir)
-
-        if (kobaltBuildFile != null) {
-            modifiableRootModel.module.putUserData(BUILD_SCRIPT, kobaltBuildFile)
+        if (projectId != null && contentEntryPath != null) {
+            modifiableRootModel.module.putUserData(BUILD_SCRIPT_BUILDER,
+                    KobaltBuildScriptBuilder(projectId!!, modelContentRootDir.path))
         }
     }
 
@@ -124,7 +99,15 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
     override fun setupModule(module: Module) {
         super.setupModule(module)
 
-        var buildScriptFile = getBuildScript(module)
+        var buildScriptFile: VirtualFile? = null
+        val buildScriptBuilder = getBuildScriptBuilder(module)
+        try {
+            if (buildScriptBuilder != null) {
+                buildScriptFile = setupKobaltBuildFile(buildScriptBuilder.contentRootDir, buildScriptBuilder)
+            }
+        } catch (e: IOException) {
+            LOG.warn("Unexpected exception on applying frameworks templates", e)
+        }
 
         val project = module.project
         if (myWizardContext.isCreatingNewProject) {
@@ -149,17 +132,21 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
                         project, Constants.KOBALT_SYSTEM_ID, rootProjectPath, false,
                         ProgressExecutionMode.IN_BACKGROUND_ASYNC)
 
-                val psiFile: PsiFile?
-                if (finalBuildScriptFile != null) {
-                    psiFile = PsiManager.getInstance(project).findFile(finalBuildScriptFile)
-                    if (psiFile != null) {
-                        EditorHelper.openInEditor(psiFile)
-                    }
-                }
+                reformatAndOpenBuildFileInEditor(finalBuildScriptFile, project)
             }
 
             // execute when current dialog is closed
             ExternalSystemUtil.invokeLater(project, ModalityState.NON_MODAL, runnable)
+        }
+        ApplicationManager.getApplication().invokeLater { reformatAndOpenBuildFileInEditor(buildScriptFile, project) }
+    }
+
+    private fun reformatAndOpenBuildFileInEditor(buildScriptFile: VirtualFile?, project: Project) {
+        buildScriptFile?.let {
+            PsiManager.getInstance(project).findFile(buildScriptFile)?.let {
+                ReformatCodeProcessor(it, false).run()
+                EditorHelper.openInEditor(it)
+            }
         }
     }
 
@@ -190,8 +177,8 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
         return StdModuleTypes.JAVA
     }
 
-    private fun setupKobaltBuildFile(modelContentRootDir: VirtualFile): VirtualFile? {
-        val file = getOrCreateExternalProjectConfigFile(modelContentRootDir.path, Constants.BUILD_FILE)
+    private fun setupKobaltBuildFile(modelContentRootDir: String, scriptBuilder: KobaltBuildScriptBuilder): VirtualFile? {
+        val file = getOrCreateExternalProjectConfigFile(modelContentRootDir, Constants.BUILD_FILE)
 
         if (file != null) {
             val attributes = ContainerUtil.newHashMap<String, String>()
@@ -200,6 +187,7 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
                 attributes.put(TEMPLATE_ATTRIBUTE_MODULE_GROUP, projectId!!.groupId)
                 attributes.put(TEMPLATE_ATTRIBUTE_MODULE_NAME, projectId!!.artifactId)
                 attributes.put(TEMPLATE_ATTRIBUTE_MODULE_PATH, projectId!!.artifactId)
+                attributes.put(TEMPLATE_ATTRIBUTE_MODULE_BODY, scriptBuilder.buildBody())
             }
             saveFile(file, DEFAULT_TEMPLATE_KOBALT_BUILD, attributes)
         }
@@ -227,14 +215,15 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
         private val TEMPLATE_ATTRIBUTE_MODULE_NAME = "MODULE_NAME"
         private val TEMPLATE_ATTRIBUTE_MODULE_GROUP = "MODULE_GROUP"
         private val TEMPLATE_ATTRIBUTE_MODULE_VERSION = "MODULE_VERSION"
-        private val BUILD_SCRIPT = Key.create<VirtualFile>("kobalt.module.buildScript")
+        private val TEMPLATE_ATTRIBUTE_MODULE_BODY = "MODULE_BODY"
+        private val BUILD_SCRIPT_BUILDER = Key.create<KobaltBuildScriptBuilder>("kobalt.module.buildScriptBuilder")
 
 
         private fun saveFile(file: VirtualFile, templateName: String, templateAttributes: Map<String, String>?) {
             val manager = FileTemplateManager.getDefaultInstance()
             val template = manager.getInternalTemplate(templateName)
             try {
-                appendToFile(file, if (templateAttributes != null) template.getText(templateAttributes) else template.text)
+                VfsUtil.saveText(file, if (templateAttributes != null) template.getText(templateAttributes) else template.text)
             } catch (e: IOException) {
                 LOG.warn(String.format("Unexpected exception on applying template %s config", Constants.KOBALT_SYSTEM_ID.readableName), e)
                 throw ConfigurationException(
@@ -249,18 +238,11 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
             return LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)
         }
 
-        fun appendToFile(file: VirtualFile, text: String) {
-            var lineSeparator = LoadTextUtil.detectLineSeparator(file, true)
-            if (lineSeparator == null) {
-                lineSeparator = CodeStyleSettingsManager.getSettings(ProjectManagerEx.getInstanceEx().defaultProject).lineSeparator!!
-            }
-            val existingText = StringUtil.trimTrailing(VfsUtilCore.loadText(file))
-            val content = if (StringUtil.isNotEmpty(existingText)) existingText + lineSeparator else "" + StringUtil.convertLineSeparators(text, lineSeparator)
-            VfsUtil.saveText(file, content)
+
+        fun getBuildScriptBuilder(module: Module?): KobaltBuildScriptBuilder? {
+            return module?.getUserData(BUILD_SCRIPT_BUILDER)
         }
     }
 
-    fun getBuildScript(module: Module?): VirtualFile? {
-        return module?.getUserData(BUILD_SCRIPT)
-    }
+
 }

@@ -1,28 +1,15 @@
 import com.beust.kobalt.*
 import com.beust.kobalt.api.*
+import com.beust.kobalt.plugin.packaging.assemble
 
 // val repos = repos()
 
-val module = project {
+val p = project {
     name = "${MODULE_NAME}"
     group = "${MODULE_GROUP}"
     artifactId = name
     version = "${MODULE_VERSION}"
     directory = "${MODULE_PATH}"
 
-    sourceDirectories {
-        path("src/main/java")
-    }
-
-    sourceDirectoriesTest {
-        path("src/test/java")
-    }
-
-    dependencies {
-//      compile("com.beust:jcommander:1.48")
-    }
-
-    dependenciesTest {
-//        compile("org.testng:testng:6.9.10")
-    }
+    ${MODULE_BODY}
 }
