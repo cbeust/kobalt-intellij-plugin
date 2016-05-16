@@ -1,5 +1,6 @@
 package com.beust.kobalt.intellij.manager
 
+import com.beust.kobalt.intellij.BuildUtils
 import com.beust.kobalt.intellij.Constants
 import com.beust.kobalt.intellij.KFiles
 import com.beust.kobalt.intellij.KobaltApplicationComponent
@@ -73,7 +74,6 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
                 ExternalSystemUtil.refreshProjects(project, Constants.KOBALT_SYSTEM_ID, true)
             }
         })
-        //TODO
     }
 
     override fun enhanceLocalProcessing(urls: MutableList<URL>) {
@@ -113,7 +113,8 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
 
     override fun getExecutionSettingsProvider(): Function<Pair<Project, String>, KobaltExecutionSettings> =
             Function { pair ->
-                KobaltExecutionSettings(KFiles.distributionsDir, KobaltApplicationComponent.kobaltJar.get().toFile().absolutePath)
+                val kobaltVersion = BuildUtils.kobaltVersion(pair.first)?: KobaltApplicationComponent.latestKobaltVersion
+                KobaltExecutionSettings(KFiles.distributionsDir, BuildUtils.findKobaltJar(kobaltVersion).toFile().absolutePath)
             }
 
     override fun getTaskManagerClass() = KobaltTaskManager::class.java

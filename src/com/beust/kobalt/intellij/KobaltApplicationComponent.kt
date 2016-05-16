@@ -10,7 +10,6 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -52,7 +51,7 @@ class KobaltApplicationComponent : ApplicationComponent {
         }
 
         internal val kobaltJar: Future<Path> by lazy {
-            val path = findKobaltJar(KobaltApplicationComponent.version)
+            val path = BuildUtils.findKobaltJar(KobaltApplicationComponent.latestKobaltVersion)
             val result =
                     if (!Constants.DEV_MODE) {
                         threadPool.submit(Callable {
@@ -65,51 +64,42 @@ class KobaltApplicationComponent : ApplicationComponent {
             result
         }
 
-        private fun findKobaltJar(version: String) =
-            if (Constants.DEV_MODE) {
-                Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-$version.jar")
-            } else {
-                Paths.get(System.getProperty("user.home"),
-                        ".kobalt/wrapper/dist/kobalt-$version/kobalt/wrapper/kobalt-$version.jar")
-            }
-
-        private val latestKobaltVersion: Future<String>
-            get() {
-                val callable = Callable<String> {
-                    if (Constants.DEV_MODE) Constants.DEV_VERSION
-                    else {
-                        var result = Constants.MIN_KOBALT_VERSION
-                        try {
-                            result = HttpRequests.request(DistributionDownloader.RELEASE_URL)
-                                    .productNameAsUserAgent().connect {request->
-                                var version:String = Constants.MIN_KOBALT_VERSION
-                                @Suppress("UNCHECKED_CAST")
-                                val reader = BufferedReader(InputStreamReader(request.inputStream))
-                                val jo = JsonParser().parse(reader) as JsonArray
-                                if (jo.size() > 0) {
-                                    var versionName = (jo.get(0) as JsonObject).get("name").asString
-                                    if (versionName == null || versionName.isBlank()) {
-                                        versionName = (jo.get(0) as JsonObject).get("tag_name").asString
-                                    }
-                                    if (versionName != null) {
-                                        version = versionName
-                                    }
+        private fun latestKobaltVersionRequest(): Future<String> {
+            val callable = Callable<String> {
+                if (Constants.DEV_MODE) Constants.DEV_VERSION
+                else {
+                    var result = Constants.MIN_KOBALT_VERSION
+                    try {
+                        result = HttpRequests.request(DistributionDownloader.RELEASE_URL)
+                                .productNameAsUserAgent().connect { request ->
+                            var version: String = Constants.MIN_KOBALT_VERSION
+                            @Suppress("UNCHECKED_CAST")
+                            val reader = BufferedReader(InputStreamReader(request.inputStream))
+                            val jo = JsonParser().parse(reader) as JsonArray
+                            if (jo.size() > 0) {
+                                var versionName = (jo.get(0) as JsonObject).get("name").asString
+                                if (versionName == null || versionName.isBlank()) {
+                                    versionName = (jo.get(0) as JsonObject).get("tag_name").asString
                                 }
-                                version
+                                if (versionName != null) {
+                                    version = versionName
+                                }
                             }
-                        } catch(ex: IOException) {
-                            DistributionDownloader.warn(
-                                    "Couldn't load the release URL: ${DistributionDownloader.RELEASE_URL}")
+                            version
                         }
-                        result
+                    } catch(ex: IOException) {
+                        DistributionDownloader.warn(
+                                "Couldn't load the release URL: ${DistributionDownloader.RELEASE_URL}")
                     }
+                    result
                 }
-                return Executors.newFixedThreadPool(1).submit(callable)
             }
+            return Executors.newFixedThreadPool(1).submit(callable)
+        }
 
-        val version: String by lazy {
+        val latestKobaltVersion: String by lazy {
             try {
-                latestKobaltVersion.get(20, TimeUnit.SECONDS)
+                latestKobaltVersionRequest().get(20, TimeUnit.SECONDS)
             } catch(ex: Exception) {
                 Constants.MIN_KOBALT_VERSION
             }

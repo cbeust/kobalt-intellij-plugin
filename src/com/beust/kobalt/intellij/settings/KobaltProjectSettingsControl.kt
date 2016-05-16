@@ -1,6 +1,8 @@
 package com.beust.kobalt.intellij.settings
 
+import com.beust.kobalt.intellij.BuildUtils
 import com.beust.kobalt.intellij.settings.ui.ProjectSettingsUIBuilder
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.externalSystem.service.settings.AbstractExternalProjectSettingsControl
 import com.intellij.openapi.externalSystem.util.PaintAwarePanel
 
@@ -10,33 +12,30 @@ import com.intellij.openapi.externalSystem.util.PaintAwarePanel
  */
 class KobaltProjectSettingsControl(val settings: KobaltProjectSettings) : AbstractExternalProjectSettingsControl<KobaltProjectSettings>(settings) {
 
-    var uiBuilder = ProjectSettingsUIBuilder()
+    var uiBuilder = ProjectSettingsUIBuilder(settings)
 
     override fun applyExtraSettings(settings: KobaltProjectSettings) {
-        //TODO
+        uiBuilder.applySettings(settings)
+        with(ApplicationManager.getApplication()) {
+            runWriteAction {
+                val kobaltVersion = settings.kobaltVersion()
+                val externalProjectPath = settings.externalProjectPath
+                if (kobaltVersion != null && externalProjectPath!=null) BuildUtils.updateWrapperVersion(externalProjectPath, kobaltVersion)
+            }
+        }
     }
 
     override fun fillExtraControls(content: PaintAwarePanel, indentLevel: Int) {
         uiBuilder.createAndFillControls(content, indentLevel)
     }
 
-    override fun isExtraSettingModified(): Boolean {
-        //TODO
-        return false
-    }
+    override fun isExtraSettingModified() = uiBuilder.isExtraSettingModified()
 
-    override fun resetExtraSettings(p0: Boolean) {
-        //TODO
-    }
+    override fun resetExtraSettings(isDefaultModuleCreation: Boolean)  = uiBuilder.reset(isDefaultModuleCreation)
 
-    override fun validate(p0: KobaltProjectSettings): Boolean {
-        //TODO
-        return true
-    }
+    override fun validate(kobaltProjectSettings: KobaltProjectSettings) = uiBuilder.validate(kobaltProjectSettings)
 
-    fun update(linkedProjectPath: String?, isDefaultModuleCreation: Boolean) {
-         //TODO
-    }
+    fun update(linkedProjectPath: String?, isDefaultModuleCreation: Boolean) = uiBuilder.update(linkedProjectPath,isDefaultModuleCreation)
 
     override fun showUi(show: Boolean) {
         super.showUi(show)

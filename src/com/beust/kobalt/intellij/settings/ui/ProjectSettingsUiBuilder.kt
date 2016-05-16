@@ -1,30 +1,87 @@
 package com.beust.kobalt.intellij.settings.ui
 
+import com.beust.kobalt.intellij.Constants
 import com.beust.kobalt.intellij.KFiles
+import com.beust.kobalt.intellij.settings.KobaltProjectSettings
 import com.intellij.openapi.externalSystem.model.settings.LocationSettingType
 import com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil
 import com.intellij.openapi.externalSystem.util.PaintAwarePanel
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
+import com.intellij.openapi.options.ConfigurationException
+import com.intellij.openapi.ui.MessageType
+import com.intellij.openapi.ui.TextComponentAccessor
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.ui.components.JBLabel
+import java.io.File
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 
 /**
  * @author Dmitry Zhuravlev
  *         Date: 27.04.16
  */
-class ProjectSettingsUIBuilder {
+class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
 
     lateinit private var myKobaltHomeLabel: JBLabel
-    lateinit private var myKobaltHomePathField: TextFieldWithBrowseButton
+    lateinit var myKobaltHomePathField: TextFieldWithBrowseButton
 
     fun createAndFillControls(content: PaintAwarePanel, indentLevel: Int) {
         addKobaltHomeComponents(content, indentLevel)
     }
 
+    fun applySettings(settings: KobaltProjectSettings) {
+        FileUtil.toCanonicalPath(myKobaltHomePathField.text).let { kobaltHomePath ->
+            if(kobaltHomePath.isNotEmpty()){
+                settings.kobaltHome = kobaltHomePath
+            }
+        }
+    }
+
+    fun validate(kobaltProjectSettings: KobaltProjectSettings): Boolean {
+        val kobaltHome = myKobaltHomePathField.text
+        if (kobaltHome == null || !File(kobaltHome).exists()) {
+            DelayedBalloonInfo(MessageType.ERROR, LocationSettingType.UNKNOWN, 0).run()
+            throw ConfigurationException("Kobalt location is incorrect!")
+        }
+        return true
+    }
+
+    fun isExtraSettingModified(): Boolean {
+        return initialSettings.kobaltHome != FileUtil.toCanonicalPath(myKobaltHomePathField.text)
+    }
+
+
+    fun reset(defaultModuleCreation: Boolean) {
+        val kobaltHome = initialSettings.kobaltHome
+        myKobaltHomePathField.text = kobaltHome ?: KFiles.kobaltHomeDir
+        myKobaltHomePathField.textField.foreground = LocationSettingType.DEDUCED.color
+    }
+
+
+    fun update(linkedProjectPath: String?, defaultModuleCreation: Boolean) {
+        //TODO
+    }
+
+
     fun addKobaltHomeComponents(content: PaintAwarePanel, indentLevel: Int): ProjectSettingsUIBuilder {
         myKobaltHomeLabel = JBLabel("Kobalt home:")
         myKobaltHomePathField = TextFieldWithBrowseButton()
-        myKobaltHomePathField.text = KFiles.kobaltHomeDir
-        myKobaltHomePathField.textField.foreground = LocationSettingType.DEDUCED.color
+        myKobaltHomePathField.addBrowseFolderListener("", "Kobalt home:",
+                null, FileChooserDescriptorFactory.createSingleFolderDescriptor(),
+                TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT, false)
+        myKobaltHomePathField.textField.document.addDocumentListener(object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent) {
+                myKobaltHomePathField.textField.foreground = LocationSettingType.EXPLICIT_CORRECT.color
+            }
+
+            override fun removeUpdate(e: DocumentEvent) {
+                myKobaltHomePathField.textField.foreground = LocationSettingType.EXPLICIT_CORRECT.color
+            }
+
+            override fun changedUpdate(e: DocumentEvent) {
+            }
+        })
         content.add(myKobaltHomeLabel, ExternalSystemUiUtil.getLabelConstraints(indentLevel))
         content.add(myKobaltHomePathField, ExternalSystemUiUtil.getFillLineConstraints(0))
         return this
@@ -37,4 +94,28 @@ class ProjectSettingsUIBuilder {
     fun disposeUIResources() {
         ExternalSystemUiUtil.disposeUi(this)
     }
+
+    private inner class DelayedBalloonInfo internal constructor(private val myMessageType: MessageType, settingType: LocationSettingType, delayMillis: Long) : Runnable {
+        private val myText: String
+        private val myTriggerTime: Long
+
+        init {
+            myText = settingType.getDescription(Constants.KOBALT_SYSTEM_ID)
+            myTriggerTime = System.currentTimeMillis() + delayMillis
+        }
+
+        override fun run() {
+            val diff = myTriggerTime - System.currentTimeMillis()
+            if (diff > 0) {
+                return
+            }
+            if (!myKobaltHomePathField.isShowing) {
+                // Don't schedule the balloon if the configurable is hidden.
+                return
+            }
+            ExternalSystemUiUtil.showBalloon(myKobaltHomePathField, myMessageType, myText)
+        }
+    }
+
+
 }

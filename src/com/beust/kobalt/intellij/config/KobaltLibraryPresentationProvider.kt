@@ -1,7 +1,6 @@
 package com.beust.kobalt.intellij.config
 
 import com.beust.kobalt.intellij.Constants
-import com.beust.kobalt.intellij.KobaltApplicationComponent
 import com.intellij.openapi.roots.libraries.LibraryKind
 import com.intellij.openapi.roots.libraries.LibraryPresentationProvider
 import com.intellij.openapi.vfs.VfsUtilCore
@@ -27,13 +26,12 @@ class KobaltLibraryPresentationProvider : LibraryPresentationProvider<KobaltLibr
     override fun getIcon() = KobaltIcons.Kobalt
 
     override fun detect(classesRoots: MutableList<VirtualFile>): KobaltLibraryProperties? {
-        val libraryFiles = VfsUtilCore.toVirtualFileArray(classesRoots)
-        val kobaltVersion = KobaltApplicationComponent.version
-        if (containsKobaltJar(libraryFiles, kobaltVersion)) {
-            return KobaltLibraryProperties(kobaltVersion)
-        }
+        val kobaltJar = findKobaltJarVersion(VfsUtilCore.toVirtualFileArray(classesRoots))
+        if(kobaltJar.isNotEmpty()) return KobaltLibraryProperties(kobaltJar[0])
         return null
     }
 
-    private fun containsKobaltJar(libraryFiles: Array<out VirtualFile>, kobaltVersion: String) = libraryFiles.any { it.name == "kobalt-$kobaltVersion.jar" }
+    private fun findKobaltJarVersion(libraryFiles: Array<out VirtualFile>) = libraryFiles
+            .filter { it.name.startsWith("kobalt-") && it.name.endsWith(".jar") }
+            .map { it.name.substring(it.name.lastIndexOf("-"), it.name.lastIndex) }
 }

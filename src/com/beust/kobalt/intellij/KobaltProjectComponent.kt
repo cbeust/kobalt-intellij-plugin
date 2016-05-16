@@ -20,12 +20,13 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
             DistributionDownloader.maybeDownloadAndInstallKobaltJar(
                     onSuccessDownload = {
                         ServerUtil.stopServer()
-                        BuildUtils.updateWrapperVersion(project, KobaltApplicationComponent.version)
+                        BuildUtils.updateWrapperVersion(project, KobaltApplicationComponent.latestKobaltVersion)
                     },
                     onKobaltJarPresent = {
                         with(StartupManager.getInstance(project)) {
                             runWhenProjectIsInitialized {
-                                BuildModule().run(project, KobaltApplicationComponent.kobaltJar.get())
+                                val kobaltVersion = BuildUtils.kobaltVersion(project)?: KobaltApplicationComponent.latestKobaltVersion
+                                BuildModule().run(project, BuildUtils.findKobaltJar(kobaltVersion))
                             }
                         }
                     })
