@@ -32,6 +32,6 @@ class KobaltLibraryPresentationProvider : LibraryPresentationProvider<KobaltLibr
     }
 
     private fun findKobaltJarVersion(libraryFiles: Array<out VirtualFile>) = libraryFiles
-            .filter { it.name.startsWith("kobalt-") && it.name.endsWith(".jar") }
-            .map { it.name.substring(it.name.lastIndexOf("-"), it.name.lastIndex) }
+            .filter { libraryFile -> libraryFile.name.startsWith("kobalt-") && libraryFile.name.endsWith(".jar") }
+            .map { libraryFile -> libraryFile.name.substring(libraryFile.name.lastIndexOf("-"), libraryFile.name.lastIndex) }
 }
