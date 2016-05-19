@@ -25,6 +25,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Pair
 import com.intellij.openapi.util.text.StringUtil
+import com.intellij.openapi.vfs.CharsetToolkit
 import com.intellij.util.Function
 import com.intellij.util.PathUtil
 import com.intellij.util.containers.ContainerUtilRt
@@ -91,6 +92,8 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(GsonConverterFactory::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Credentials::class.java))
         parameters.classPath.addAll(additionalClasspath)
+        parameters.charset = CharsetToolkit.UTF8_CHARSET
+        parameters.vmParametersList.addProperty("file.encoding", CharsetToolkit.UTF8)
         parameters.vmParametersList.addProperty(
                 ExternalSystemConstants.EXTERNAL_SYSTEM_ID_KEY, Constants.KOBALT_SYSTEM_ID.id)
         with(HttpConfigurable.getInstance()){
