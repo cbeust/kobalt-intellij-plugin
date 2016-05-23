@@ -4,7 +4,6 @@ import com.beust.kobalt.intellij.server.ServerUtil
 import com.intellij.openapi.components.ProjectComponent
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupManager
 
 class KobaltProjectComponent(val project: Project) : ProjectComponent {
     companion object {
@@ -16,21 +15,6 @@ class KobaltProjectComponent(val project: Project) : ProjectComponent {
     }
 
     override fun projectOpened() {
-        if (BuildUtils.buildFileExist(project)) {
-            DistributionDownloader.maybeDownloadAndInstallKobaltJar(
-                    onSuccessDownload = {
-                        ServerUtil.stopServer()
-                        BuildUtils.updateWrapperVersion(project, KobaltApplicationComponent.latestKobaltVersion)
-                    },
-                    onKobaltJarPresent = {
-                        with(StartupManager.getInstance(project)) {
-                            runWhenProjectIsInitialized {
-                                val kobaltVersion = BuildUtils.kobaltVersion(project)?: KobaltApplicationComponent.latestKobaltVersion
-                                BuildModule().run(project, BuildUtils.findKobaltJar(kobaltVersion))
-                            }
-                        }
-                    })
-        }
     }
 
     override fun getComponentName() = "kobalt.ProjectComponent"

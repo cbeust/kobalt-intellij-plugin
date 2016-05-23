@@ -17,16 +17,19 @@ object BuildUtils {
 
     fun buildFileExist(project: Project?) = buildFile(project)?.exists() ?: false
 
-    fun kobaltVersion(project: Project) = ExternalSystemApiUtil.getSettings(project, Constants.KOBALT_SYSTEM_ID).getLinkedProjectsSettings().let { settings ->
-        val iterator = settings.iterator()
-        if (iterator.hasNext()) {
-            val elem = iterator.next()
-            if (elem is KobaltProjectSettings) {
-                return@let elem.kobaltVersion()
+    fun kobaltVersion(project: Project) = kobaltProjectSettings(project)?.kobaltVersion()
+
+    fun kobaltProjectSettings(project: Project): KobaltProjectSettings? =
+            ExternalSystemApiUtil.getSettings(project, Constants.KOBALT_SYSTEM_ID).getLinkedProjectsSettings().let { settings ->
+                val iterator = settings.iterator()
+                if (iterator.hasNext()) {
+                    val elem = iterator.next()
+                    if (elem is KobaltProjectSettings) {
+                        return@let elem
+                    }
+                }
+                null
             }
-        }
-        null
-    }
 
     fun findKobaltJar(version: String) =
             if (Constants.DEV_MODE) {

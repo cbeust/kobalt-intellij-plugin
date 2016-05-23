@@ -1,8 +1,12 @@
 package com.beust.kobalt.intellij.project
 
+import com.beust.kobalt.intellij.BuildModule
 import com.beust.kobalt.intellij.BuildUtils
+import com.beust.kobalt.intellij.DistributionDownloader
+import com.beust.kobalt.intellij.KobaltApplicationComponent
 import com.beust.kobalt.intellij.import.KobaltProjectImportBuilder
 import com.beust.kobalt.intellij.import.KobaltProjectImportProvider
+import com.beust.kobalt.intellij.server.ServerUtil
 import com.beust.kobalt.intellij.settings.KobaltSettings
 import com.intellij.ide.actions.ImportModuleAction
 import com.intellij.ide.util.PropertiesComponent
@@ -15,6 +19,7 @@ import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys
 import com.intellij.openapi.externalSystem.service.project.manage.ProjectDataManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
+import com.intellij.openapi.startup.StartupManager
 import javax.swing.event.HyperlinkEvent
 
 /**
@@ -26,10 +31,49 @@ class KobaltStartupActivity : StartupActivity {
         internal var SHOW_UNLINKED_KOBALT_POPUP = "show.inlinked.kobalt.project.popup"
         internal var IMPORT_EVENT_DESCRIPTION = "import"
         internal val DO_NOT_SHOW_EVENT_DESCRIPTION = "do.not.show"
+
+        internal var DOWNLOAD_EVENT_DESCRIPTION = "download"
     }
 
     override fun runActivity(project: Project) {
         showNotificationForUnlinkedkobaltProject(project)
+        showNotificationAboutNewKobaltVersion(project)
+    }
+
+    private fun showNotificationAboutNewKobaltVersion(project: Project) {
+        val currentKobaltVersion = BuildUtils.kobaltVersion(project)?:return
+        if (BuildUtils.buildFileExist(project)) {
+            if (BuildUtils.kobaltProjectSettings(project)?.autoDownloadKobalt ?: false) {
+                downloadAndInstallKobalt(project)
+            } else if(KobaltApplicationComponent.latestKobaltVersion > currentKobaltVersion){
+                val message = """<a href=$DOWNLOAD_EVENT_DESCRIPTION>Download and apply</a> new version of Kobalt."""
+                KobaltNotification.getInstance(project).showBalloon(
+                        "New Kobalt version available",
+                        message, NotificationType.INFORMATION, object : NotificationListener.Adapter() {
+                    override fun hyperlinkActivated(notification: Notification, e: HyperlinkEvent) {
+                        notification.expire()
+                        if (DOWNLOAD_EVENT_DESCRIPTION == e.description) {
+                            downloadAndInstallKobalt(project)
+                        }
+                    }
+                })
+            }
+        }
+    }
+
+    private fun downloadAndInstallKobalt(project: Project) {
+        DistributionDownloader.maybeDownloadAndInstallKobaltJar(
+                onSuccessDownload = { installedVersion ->
+                    ServerUtil.stopServer()
+                    BuildUtils.updateWrapperVersion(project, installedVersion)
+                },
+                onKobaltJarPresent = { installedVersion ->
+                    with(StartupManager.getInstance(project)) {
+                        runWhenProjectIsInitialized {
+                            BuildModule().run(project, BuildUtils.findKobaltJar(installedVersion))
+                        }
+                    }
+                })
     }
 
     private fun showNotificationForUnlinkedkobaltProject(project: Project) {
@@ -66,4 +110,8 @@ class KobaltStartupActivity : StartupActivity {
             })
         }
     }
+}
+
+infix fun String.greaterThan(kobaltVersion: String?): Boolean {
+    throw UnsupportedOperationException("not implemented") //To change body of created functions use File | Settings | File Templates.
 }

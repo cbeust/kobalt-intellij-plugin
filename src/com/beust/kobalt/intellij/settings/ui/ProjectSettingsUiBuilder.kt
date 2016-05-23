@@ -12,6 +12,7 @@ import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.TextComponentAccessor
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
 import java.io.File
 import javax.swing.event.DocumentEvent
@@ -25,6 +26,7 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
 
     lateinit private var myKobaltHomeLabel: JBLabel
     lateinit var myKobaltHomePathField: TextFieldWithBrowseButton
+    lateinit var myKobaltAutoDownloadBox: JBCheckBox
 
     fun createAndFillControls(content: PaintAwarePanel, indentLevel: Int) {
         addKobaltHomeComponents(content, indentLevel)
@@ -36,6 +38,7 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
                 settings.kobaltHome = kobaltHomePath
             }
         }
+        settings.autoDownloadKobalt = myKobaltAutoDownloadBox.isSelected
     }
 
     fun validate(kobaltProjectSettings: KobaltProjectSettings): Boolean {
@@ -48,7 +51,7 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
     }
 
     fun isExtraSettingModified(): Boolean {
-        return initialSettings.kobaltHome != FileUtil.toCanonicalPath(myKobaltHomePathField.text)
+        return initialSettings.kobaltHome != FileUtil.toCanonicalPath(myKobaltHomePathField.text) || initialSettings.autoDownloadKobalt != myKobaltAutoDownloadBox.isSelected
     }
 
 
@@ -56,6 +59,7 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
         val kobaltHome = initialSettings.kobaltHome
         myKobaltHomePathField.text = kobaltHome ?: KFiles.kobaltHomeDir
         myKobaltHomePathField.textField.foreground = LocationSettingType.DEDUCED.color
+        myKobaltAutoDownloadBox.isSelected = initialSettings.autoDownloadKobalt ?: true
     }
 
 
@@ -67,6 +71,7 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
     fun addKobaltHomeComponents(content: PaintAwarePanel, indentLevel: Int): ProjectSettingsUIBuilder {
         myKobaltHomeLabel = JBLabel("Kobalt home:")
         myKobaltHomePathField = TextFieldWithBrowseButton()
+        myKobaltAutoDownloadBox = JBCheckBox("Always download and apply new versions of Kobalt")
         myKobaltHomePathField.addBrowseFolderListener("", "Kobalt home:",
                 null, FileChooserDescriptorFactory.createSingleFolderDescriptor(),
                 TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT, false)
@@ -84,6 +89,7 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
         })
         content.add(myKobaltHomeLabel, ExternalSystemUiUtil.getLabelConstraints(indentLevel))
         content.add(myKobaltHomePathField, ExternalSystemUiUtil.getFillLineConstraints(0))
+        content.add(myKobaltAutoDownloadBox, ExternalSystemUiUtil.getFillLineConstraints(indentLevel))
         return this
     }
 

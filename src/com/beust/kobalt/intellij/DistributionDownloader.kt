@@ -52,7 +52,7 @@ class DistributionDownloader {
         const val RELEASE_URL = "https://api.github.com/repos/cbeust/kobalt/releases"
 
 
-        fun maybeDownloadAndInstallKobaltJar(onSuccessDownload: (Path) -> Unit, onKobaltJarPresent: (Path) -> Unit) {
+        fun maybeDownloadAndInstallKobaltJar(onSuccessDownload: (String) -> Unit, onKobaltJarPresent: (String) -> Unit) {
             if (!Constants.DEV_MODE) {
                 val progressText = "Downloading Kobalt ${KobaltApplicationComponent.latestKobaltVersion}"
                 ApplicationManager.getApplication().invokeLater {
@@ -89,7 +89,7 @@ class DistributionDownloader {
      *
      * @return the path to the Kobalt jar file
      */
-    fun install(version: String, progress: ProgressIndicator?, progressText: String?, onSuccessDownload: (Path)->Unit, onSuccessInstall: (Path)->Unit) : Path {
+    fun install(version: String, progress: ProgressIndicator?, progressText: String?, onSuccessDownload: (String)->Unit, onSuccessInstall: (String)->Unit) : Path {
         val fileName = "$FILE_NAME-$version.zip"
         File(KFiles.distributionsDir).mkdirs()
         val localZipFile = Paths.get(KFiles.distributionsDir, fileName)
@@ -113,12 +113,12 @@ class DistributionDownloader {
                 log.warn("Error while unzipping $zipFile to $outputDirectory : $e")
             }
             LocalFileSystem.getInstance().refreshIoFiles(listOf(kobaltJarFile.toFile()), true, false){
-                onSuccessDownload(kobaltJarFile)
-                onSuccessInstall(kobaltJarFile)
+                onSuccessDownload(version)
+                onSuccessInstall(version)
             }
         } else {
             log(1, "$localZipFile already present, no need to download it")
-            onSuccessInstall(kobaltJarFile)
+            onSuccessInstall(version)
         }
 
         return kobaltJarFile

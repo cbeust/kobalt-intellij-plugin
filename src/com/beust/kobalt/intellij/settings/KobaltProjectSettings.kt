@@ -6,7 +6,7 @@ import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltProjectSettings(var kobaltHome: String? = null) : ExternalProjectSettings() {
+class KobaltProjectSettings(var kobaltHome: String? = null, var autoDownloadKobalt: Boolean? = null) : ExternalProjectSettings() {
 
     fun kobaltVersion(): String? {
         val home = kobaltHome
