@@ -17,5 +17,6 @@ class KobaltProjectSettings(var kobaltHome: String? = null, var autoDownloadKoba
     override fun clone() = KobaltProjectSettings().apply {
         this@KobaltProjectSettings.copyTo(this)
         this@apply.kobaltHome = this@KobaltProjectSettings.kobaltHome
+        this@apply.autoDownloadKobalt = this@KobaltProjectSettings.autoDownloadKobalt
     }
 }

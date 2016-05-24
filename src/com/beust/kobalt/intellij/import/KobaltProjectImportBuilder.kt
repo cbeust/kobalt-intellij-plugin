@@ -1,13 +1,18 @@
 package com.beust.kobalt.intellij.import
 
+import com.beust.kobalt.intellij.BuildModule
+import com.beust.kobalt.intellij.BuildUtils
 import com.beust.kobalt.intellij.Constants
 import com.intellij.externalSystem.JavaProjectData
 import com.intellij.ide.util.projectWizard.WizardContext
 import com.intellij.openapi.externalSystem.model.DataNode
 import com.intellij.openapi.externalSystem.model.project.ProjectData
+import com.intellij.openapi.externalSystem.service.project.IdeModifiableModelsProvider
 import com.intellij.openapi.externalSystem.service.project.manage.ProjectDataManager
 import com.intellij.openapi.externalSystem.service.project.wizard.AbstractExternalProjectImportBuilder
+import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.*
 import com.intellij.openapi.roots.LanguageLevelProjectExtension
@@ -85,4 +90,14 @@ class KobaltProjectImportBuilder(dataManager: ProjectDataManager)
     }
 
     override fun isSuitableSdkType(sdkType: SdkTypeId?) = sdkType === JavaSdk.getInstance();
+
+    override fun finishImport(project: Project?, externalProjectNode: DataNode<ProjectData>?, isFromUI: Boolean, modules: MutableList<Module>?, modelsProvider: IdeModifiableModelsProvider?, projectSettings: ExternalProjectSettings?) {
+        //ensure that Build.kt module present
+        project?.let {
+            BuildUtils.kobaltVersion(it)?.let { kobaltVersion ->
+                BuildModule().run(project, BuildUtils.findKobaltJar(kobaltVersion))
+            }
+        }
+        super.finishImport(project, externalProjectNode, isFromUI, modules, modelsProvider, projectSettings)
+    }
 }

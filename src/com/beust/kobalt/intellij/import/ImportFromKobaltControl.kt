@@ -5,7 +5,6 @@ import com.beust.kobalt.intellij.KFiles
 import com.beust.kobalt.intellij.settings.*
 import com.intellij.openapi.externalSystem.service.settings.AbstractImportFromExternalSystemControl
 import com.intellij.openapi.project.ProjectManager
-import com.intellij.openapi.util.text.StringUtil
 
 /**
  * @author Dmitry Zhuravlev
@@ -21,11 +20,11 @@ class ImportFromKobaltControl :
 
 companion object{
     private fun getInitialProjectSettings(): KobaltProjectSettings {
-        val result = KobaltProjectSettings()
         val kobaltHome = KFiles.kobaltHomeDir
-        if (!StringUtil.isEmpty(kobaltHome)) {
-            result.kobaltHome = kobaltHome
-        }
+        val result = KobaltProjectSettings(
+                autoDownloadKobalt = true,
+                kobaltHome = if(!kobaltHome.isNullOrEmpty()) kobaltHome else null
+        )
         return result
     }
 }

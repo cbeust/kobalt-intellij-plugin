@@ -21,14 +21,7 @@ object BuildUtils {
 
     fun kobaltProjectSettings(project: Project): KobaltProjectSettings? =
             ExternalSystemApiUtil.getSettings(project, Constants.KOBALT_SYSTEM_ID).getLinkedProjectsSettings().let { settings ->
-                val iterator = settings.iterator()
-                if (iterator.hasNext()) {
-                    val elem = iterator.next()
-                    if (elem is KobaltProjectSettings) {
-                        return@let elem
-                    }
-                }
-                null
+                settings.firstOrNull { it is KobaltProjectSettings } as? KobaltProjectSettings
             }
 
     fun findKobaltJar(version: String) =
