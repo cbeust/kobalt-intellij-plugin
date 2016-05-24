@@ -20,7 +20,7 @@ class ImportFromKobaltControl :
 
 companion object{
     private fun getInitialProjectSettings(): KobaltProjectSettings {
-        val kobaltHome = KFiles.kobaltHomeDir
+        val kobaltHome = KFiles.latestKobaltHomeDir
         val result = KobaltProjectSettings(
                 autoDownloadKobalt = true,
                 kobaltHome = if(!kobaltHome.isNullOrEmpty()) kobaltHome else null

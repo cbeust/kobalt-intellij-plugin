@@ -29,7 +29,11 @@ class KFiles {
 
         /** Where all the .zip files are extracted */
         val distributionsDir = homeDir(KOBALT_DOT_DIR, "wrapper", "dist")
-        val kobaltHomeDir = FileUtil.toSystemIndependentName(homeDir(KOBALT_DOT_DIR, "wrapper", "dist", "kobalt-${KobaltApplicationComponent.latestKobaltVersion}"))
+
+        fun kobaltHomeDir(version: String) = FileUtil.toSystemIndependentName(homeDir(KOBALT_DOT_DIR, "wrapper", "dist", "kobalt-$version"))
+
+        val latestKobaltHomeDir = kobaltHomeDir(KobaltApplicationComponent.latestKobaltVersion)
+
         fun homeDir(vararg dirs: String) : String = System.getProperty("user.home") +
                 File.separator + dirs.toMutableList().joinToString(File.separator)
 

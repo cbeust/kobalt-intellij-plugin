@@ -1,9 +1,6 @@
 package com.beust.kobalt.intellij.project
 
-import com.beust.kobalt.intellij.BuildModule
-import com.beust.kobalt.intellij.BuildUtils
-import com.beust.kobalt.intellij.DistributionDownloader
-import com.beust.kobalt.intellij.KobaltApplicationComponent
+import com.beust.kobalt.intellij.*
 import com.beust.kobalt.intellij.import.KobaltProjectImportBuilder
 import com.beust.kobalt.intellij.import.KobaltProjectImportProvider
 import com.beust.kobalt.intellij.server.ServerUtil
@@ -71,6 +68,7 @@ class KobaltStartupActivity : StartupActivity {
                     with(StartupManager.getInstance(project)) {
                         runWhenProjectIsInitialized {
                             BuildModule().run(project, BuildUtils.findKobaltJar(installedVersion))
+                            BuildUtils.kobaltProjectSettings(project)?.kobaltHome = KFiles.kobaltHomeDir(installedVersion)
                         }
                     }
                 })

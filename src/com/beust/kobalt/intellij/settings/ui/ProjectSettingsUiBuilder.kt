@@ -57,7 +57,7 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
 
     fun reset(defaultModuleCreation: Boolean) {
         val kobaltHome = initialSettings.kobaltHome
-        myKobaltHomePathField.text = kobaltHome ?: KFiles.kobaltHomeDir
+        myKobaltHomePathField.text = kobaltHome ?: KFiles.latestKobaltHomeDir
         myKobaltHomePathField.textField.foreground = LocationSettingType.DEDUCED.color
         myKobaltAutoDownloadBox.isSelected = initialSettings.autoDownloadKobalt ?: true
     }
