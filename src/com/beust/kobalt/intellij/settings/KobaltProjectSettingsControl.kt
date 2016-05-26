@@ -25,6 +25,8 @@ class KobaltProjectSettingsControl(val settings: KobaltProjectSettings) : Abstra
         }
     }
 
+    override fun updateInitialSettings() = uiBuilder.applySettings(initialSettings)
+
     override fun fillExtraControls(content: PaintAwarePanel, indentLevel: Int) {
         uiBuilder.createAndFillControls(content, indentLevel)
     }
