@@ -59,7 +59,7 @@ class ServerUtil {
                     return true
                 }
             }
-            LOG.warn("     Couldn't wait server to start after $attempts attempts")
+            LOG.warn("     Server failed to start after $attempts attempts")
             return false
         }
 
@@ -76,7 +76,7 @@ class ServerUtil {
                     return true
                 }
             }
-            LOG.warn("     Couldn't wait to server to stop after $attempts attempts")
+            LOG.warn("     Server failed to stop after $attempts attempts")
             return false
         }
 
