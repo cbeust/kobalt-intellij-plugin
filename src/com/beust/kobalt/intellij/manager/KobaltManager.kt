@@ -100,14 +100,14 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
             with(parameters.vmParametersList) {
                 if (!StringUtil.isEmpty(PROXY_EXCEPTIONS)) {
                     val nonProxyHosts = PROXY_EXCEPTIONS.split(",").joinToString(separator = "|", transform = { StringUtil.trim(it) })
-                    add("http.nonProxyHosts",nonProxyHosts)
-                    add("https.nonProxyHosts",nonProxyHosts)
+                    addProperty("http.nonProxyHosts",nonProxyHosts)
+                    addProperty("https.nonProxyHosts",nonProxyHosts)
                 }
                 if (USE_HTTP_PROXY && StringUtil.isNotEmpty(PROXY_LOGIN)) {
-                    add("http.proxyUser", PROXY_LOGIN)
-                    add("https.proxyUser", PROXY_LOGIN)
-                    add("http.proxyPassword", plainProxyPassword)
-                    add("https.proxyPassword", plainProxyPassword)
+                    addProperty("http.proxyUser", PROXY_LOGIN)
+                    addProperty("https.proxyUser", PROXY_LOGIN)
+                    addProperty("http.proxyPassword", plainProxyPassword)
+                    addProperty("https.proxyPassword", plainProxyPassword)
                 }
             }
 
