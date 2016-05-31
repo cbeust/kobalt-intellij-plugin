@@ -6,6 +6,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.progress.impl.BackgroundableProcessIndicator
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.platform.templates.github.DownloadUtil
@@ -55,6 +56,17 @@ class DistributionDownloader {
         fun warn(s: String) = log.warn(s)
         const val RELEASE_URL = "https://api.github.com/repos/cbeust/kobalt/releases"
 
+        fun downloadAndInstallKobaltJarSynchronously(project: Project?, kobaltVersion:String, canBeCanceled: Boolean) {
+            val progressText = "Downloading Kobalt $kobaltVersion"
+            ProgressManager.getInstance().run(
+                    object : Task.Modal(project, "Downloading", canBeCanceled) {
+                        override fun run(progress: ProgressIndicator) {
+                            DistributionDownloader().install(kobaltVersion, progress,
+                                    progressText, {}, {})
+                        }
+                    }
+            )
+        }
 
         fun maybeDownloadAndInstallKobaltJar(onSuccessDownload: (String) -> Unit, onKobaltJarPresent: (String) -> Unit) {
             if (!Constants.DEV_MODE) {

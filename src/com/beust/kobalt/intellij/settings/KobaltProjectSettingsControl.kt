@@ -35,7 +35,7 @@ class KobaltProjectSettingsControl(val settings: KobaltProjectSettings) : Abstra
 
     override fun resetExtraSettings(isDefaultModuleCreation: Boolean)  = uiBuilder.reset(isDefaultModuleCreation)
 
-    override fun validate(kobaltProjectSettings: KobaltProjectSettings) = uiBuilder.validate(kobaltProjectSettings)
+    override fun validate(kobaltProjectSettings: KobaltProjectSettings) = uiBuilder.validate(project, kobaltProjectSettings)
 
     fun update(linkedProjectPath: String?, isDefaultModuleCreation: Boolean) = uiBuilder.update(linkedProjectPath,isDefaultModuleCreation)
 

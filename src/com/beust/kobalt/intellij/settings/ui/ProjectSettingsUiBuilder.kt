@@ -1,13 +1,16 @@
 package com.beust.kobalt.intellij.settings.ui
 
 import com.beust.kobalt.intellij.Constants
+import com.beust.kobalt.intellij.DistributionDownloader
 import com.beust.kobalt.intellij.KFiles
+import com.beust.kobalt.intellij.KobaltApplicationComponent
 import com.beust.kobalt.intellij.settings.KobaltProjectSettings
 import com.intellij.openapi.externalSystem.model.settings.LocationSettingType
 import com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil
 import com.intellij.openapi.externalSystem.util.PaintAwarePanel
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.options.ConfigurationException
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.TextComponentAccessor
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
@@ -41,7 +44,10 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
         settings.autoDownloadKobalt = myKobaltAutoDownloadBox.isSelected
     }
 
-    fun validate(kobaltProjectSettings: KobaltProjectSettings): Boolean {
+    fun validate(project: Project?, kobaltProjectSettings: KobaltProjectSettings): Boolean {
+        if(myKobaltAutoDownloadBox.isSelected) {
+            DistributionDownloader.downloadAndInstallKobaltJarSynchronously(project, KobaltApplicationComponent.latestKobaltVersion, false)
+        }
         val kobaltHome = myKobaltHomePathField.text
         if (kobaltHome == null || !File(kobaltHome).exists()) {
             DelayedBalloonInfo(MessageType.ERROR, LocationSettingType.UNKNOWN, 0).run()
@@ -72,6 +78,10 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
         myKobaltHomeLabel = JBLabel("Kobalt home:")
         myKobaltHomePathField = TextFieldWithBrowseButton()
         myKobaltAutoDownloadBox = JBCheckBox("Always download and apply new versions of Kobalt")
+        myKobaltAutoDownloadBox.addItemListener({
+            myKobaltHomePathField.isEditable = !myKobaltAutoDownloadBox.isSelected
+            myKobaltHomePathField.isEnabled = !myKobaltAutoDownloadBox.isSelected
+        })
         myKobaltHomePathField.addBrowseFolderListener("", "Kobalt home:",
                 null, FileChooserDescriptorFactory.createSingleFolderDescriptor(),
                 TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT, false)
