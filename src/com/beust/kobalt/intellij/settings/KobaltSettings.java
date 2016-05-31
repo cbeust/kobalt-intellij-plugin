@@ -18,7 +18,7 @@ import java.util.Set;
  * @author Dmitry Zhuravlev
  *         Date: 26.04.16
  */
-@State(name = "KobaltSettings", storages = @Storage("kobalt.xml"))
+@State(name = "KobaltSettings", storages = @Storage(file = "kobalt.xml"))
 public class KobaltSettings extends AbstractExternalSystemSettings<KobaltSettings, KobaltProjectSettings, KobaltSettingsListener>
         implements PersistentStateComponent<KobaltSettings.KobaltSettingsState> {
 
