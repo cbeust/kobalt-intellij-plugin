@@ -15,7 +15,6 @@ import com.intellij.openapi.externalSystem.service.project.ExternalSystemProject
 import com.intellij.openapi.module.StdModuleTypes
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.util.io.FileUtil
-import com.intellij.pom.java.LanguageLevel
 import java.io.File
 
 /**
@@ -135,11 +134,6 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
 
     fun createJavaProjectData(projectPath: String): JavaProjectData {
         val javaProjectData = JavaProjectData(KOBALT_SYSTEM_ID, projectPath + "/build/classes")
-        var resolvedLanguageLevel: LanguageLevel? = null
-
-        if (resolvedLanguageLevel != null) {
-            javaProjectData.languageLevel = resolvedLanguageLevel
-        }
         return javaProjectData
     }
 
