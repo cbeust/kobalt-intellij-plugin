@@ -19,7 +19,8 @@ class ProjectData(val name: String, val directory: String,
         val sourceResourceDirs: Set<String>, val testResourceDirs: Set<String>,
         val tasks: Collection<TaskData>)
 
-class GetDependenciesData(val projects: List<ProjectData>, val errorMessage: String?)
+class GetDependenciesData(val projects: List<ProjectData>, val allTasks: Collection<TaskData>,
+        val errorMessage: String?)
 
 class TemplateData(val pluginName: String, val templates: List<String>)
 

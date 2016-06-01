@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NonNls
 
 class Constants {
     companion object {
-        val MIN_KOBALT_VERSION = "0.786"
+        val MIN_KOBALT_VERSION = "0.798"
 
         @JvmField @NonNls val KOBALT_SYSTEM_ID = ProjectSystemId("KOBALT")
 
