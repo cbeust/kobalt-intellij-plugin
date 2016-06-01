@@ -21,5 +21,9 @@ class Constants {
 
         val KOBALT_LIBRARY_KIND = "kobalt.library"
 
+        val KOBALT_BUILD_DIR_NAME = "kobaltBuild"
+        val KOBALT_BUILD_CLASSES_DIR_NAME = "$KOBALT_BUILD_DIR_NAME/classes"
+        val KOBALT_BUILD_TEST_CLASSES_DIR_NAME = "$KOBALT_BUILD_DIR_NAME/test-classes"
+
     }
 }

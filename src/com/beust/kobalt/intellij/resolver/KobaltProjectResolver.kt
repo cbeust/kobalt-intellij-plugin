@@ -1,5 +1,8 @@
 package com.beust.kobalt.intellij.resolver
 
+import com.beust.kobalt.intellij.Constants.Companion.KOBALT_BUILD_CLASSES_DIR_NAME
+import com.beust.kobalt.intellij.Constants.Companion.KOBALT_BUILD_DIR_NAME
+import com.beust.kobalt.intellij.Constants.Companion.KOBALT_BUILD_TEST_CLASSES_DIR_NAME
 import com.beust.kobalt.intellij.Constants.Companion.KOBALT_SYSTEM_ID
 import com.beust.kobalt.intellij.DependenciesProcessor
 import com.beust.kobalt.intellij.settings.KobaltExecutionSettings
@@ -75,9 +78,15 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
                 serverData.name,
                 moduleRootPath,
                 projectPath)
+                .apply {
+                    isInheritProjectCompileOutputPath = false
+                    setCompileOutputPath(ExternalSystemSourceType.SOURCE, "$projectPath/$KOBALT_BUILD_CLASSES_DIR_NAME")
+                    setCompileOutputPath(ExternalSystemSourceType.TEST, "$projectPath/$KOBALT_BUILD_TEST_CLASSES_DIR_NAME")
+                }
 
         val contentRoot = ContentRootData(KOBALT_SYSTEM_ID, moduleRootPath)
 
+        populateContentRoot(contentRoot, ExternalSystemSourceType.EXCLUDED, setOf(KOBALT_BUILD_DIR_NAME))
         populateContentRoot(contentRoot, ExternalSystemSourceType.SOURCE, serverData.sourceDirs)
         populateContentRoot(contentRoot, ExternalSystemSourceType.RESOURCE, serverData.sourceResourceDirs)
         populateContentRoot(contentRoot, ExternalSystemSourceType.TEST, serverData.testDirs)
@@ -133,7 +142,7 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
 
 
     fun createJavaProjectData(projectPath: String): JavaProjectData {
-        val javaProjectData = JavaProjectData(KOBALT_SYSTEM_ID, projectPath + "/build/classes")
+        val javaProjectData = JavaProjectData(KOBALT_SYSTEM_ID, "$projectPath/$KOBALT_BUILD_CLASSES_DIR_NAME")
         return javaProjectData
     }
 
