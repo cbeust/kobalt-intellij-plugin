@@ -3,7 +3,7 @@ package com.beust.kobalt.intellij.manager
 import com.beust.kobalt.intellij.BuildUtils
 import com.beust.kobalt.intellij.Constants
 import com.beust.kobalt.intellij.KFiles
-import com.beust.kobalt.intellij.KobaltApplicationComponent
+import com.beust.kobalt.intellij.KobaltProjectComponent
 import com.beust.kobalt.intellij.import.KobaltAutoImportAware
 import com.beust.kobalt.intellij.resolver.KobaltProjectResolver
 import com.beust.kobalt.intellij.settings.*
@@ -116,7 +116,8 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
 
     override fun getExecutionSettingsProvider(): Function<Pair<Project, String>, KobaltExecutionSettings> =
             Function { pair ->
-                val kobaltVersion = BuildUtils.kobaltVersion(pair.first)?: KobaltApplicationComponent.latestKobaltVersion
+                val project = pair.first
+                val kobaltVersion = BuildUtils.kobaltVersion(project)?: KobaltProjectComponent.getInstance(project).latestKobaltVersion
                 KobaltExecutionSettings(KFiles.distributionsDir, BuildUtils.findKobaltJar(kobaltVersion).toFile().absolutePath)
             }
 

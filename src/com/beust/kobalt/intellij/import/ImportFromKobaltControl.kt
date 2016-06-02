@@ -1,5 +1,6 @@
 package com.beust.kobalt.intellij.import
 
+import com.beust.kobalt.intellij.BuildUtils
 import com.beust.kobalt.intellij.Constants
 import com.beust.kobalt.intellij.KFiles
 import com.beust.kobalt.intellij.settings.*
@@ -20,7 +21,7 @@ class ImportFromKobaltControl :
 
 companion object{
     private fun getInitialProjectSettings(): KobaltProjectSettings {
-        val kobaltHome = KFiles.latestKobaltHomeDir
+        val kobaltHome = KFiles.kobaltHomeDir(BuildUtils.latestKobaltVersionOrDefault(Constants.MIN_KOBALT_VERSION))
         val result = KobaltProjectSettings(
                 autoDownloadKobalt = true,
                 kobaltHome = if(!kobaltHome.isNullOrEmpty()) kobaltHome else null

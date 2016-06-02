@@ -33,8 +33,6 @@ class KFiles {
 
         fun kobaltHomeDir(version: String) = FileUtil.toSystemIndependentName(homeDir(KOBALT_DOT_DIR, "wrapper", "dist", "kobalt-$version"))
 
-        val latestKobaltHomeDir = kobaltHomeDir(KobaltApplicationComponent.latestKobaltVersion)
-
         fun homeDir(vararg dirs: String) : String = System.getProperty("user.home") +
                 File.separator + dirs.toMutableList().joinToString(File.separator)
 
@@ -68,13 +66,14 @@ class DistributionDownloader {
             )
         }
 
-        fun maybeDownloadAndInstallKobaltJar(onSuccessDownload: (String) -> Unit, onKobaltJarPresent: (String) -> Unit) {
+        fun maybeDownloadAndInstallKobaltJar(project:Project, onSuccessDownload: (String) -> Unit, onKobaltJarPresent: (String) -> Unit) {
             if (!Constants.DEV_MODE) {
-                val progressText = "Downloading Kobalt ${KobaltApplicationComponent.latestKobaltVersion}"
+                val latestKobaltVersion = KobaltProjectComponent.getInstance(project).latestKobaltVersion
+                val progressText = "Downloading Kobalt $latestKobaltVersion"
                 ApplicationManager.getApplication().invokeLater {
                     val downloadTask = object : Task.Backgroundable(null, "Downloading") {
                         override fun run(progress: ProgressIndicator) {
-                            DistributionDownloader().install(KobaltApplicationComponent.latestKobaltVersion, progress,
+                            DistributionDownloader().install(latestKobaltVersion, progress,
                                     progressText, onSuccessDownload, onKobaltJarPresent)
                         }
                     }
@@ -88,14 +87,6 @@ class DistributionDownloader {
             }
         }
 
-        fun maybeDownloadAndInstallKobaltJarSilently() : Path? {
-            if (!Constants.DEV_MODE) {
-                return DistributionDownloader().install(KobaltApplicationComponent.latestKobaltVersion, null, null, {},{})
-            } else {
-                KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
-                return null
-            }
-        }
     }
 
     val FILE_NAME = "kobalt"

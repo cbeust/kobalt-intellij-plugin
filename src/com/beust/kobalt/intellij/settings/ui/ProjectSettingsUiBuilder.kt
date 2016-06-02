@@ -1,9 +1,10 @@
 package com.beust.kobalt.intellij.settings.ui
 
+import com.beust.kobalt.intellij.BuildUtils.latestKobaltVersionOrDefault
 import com.beust.kobalt.intellij.Constants
+import com.beust.kobalt.intellij.Constants.Companion.MIN_KOBALT_VERSION
 import com.beust.kobalt.intellij.DistributionDownloader
 import com.beust.kobalt.intellij.KFiles
-import com.beust.kobalt.intellij.KobaltApplicationComponent
 import com.beust.kobalt.intellij.settings.KobaltProjectSettings
 import com.intellij.openapi.externalSystem.model.settings.LocationSettingType
 import com.intellij.openapi.externalSystem.util.ExternalSystemUiUtil
@@ -46,7 +47,7 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
 
     fun validate(project: Project?, kobaltProjectSettings: KobaltProjectSettings): Boolean {
         if(myKobaltAutoDownloadBox.isSelected) {
-            DistributionDownloader.downloadAndInstallKobaltJarSynchronously(project, KobaltApplicationComponent.latestKobaltVersion, false)
+            DistributionDownloader.downloadAndInstallKobaltJarSynchronously(project, latestKobaltVersionOrDefault(MIN_KOBALT_VERSION), false)
         }
         val kobaltHome = myKobaltHomePathField.text
         if (kobaltHome == null || !File(kobaltHome).exists()) {
@@ -63,7 +64,7 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
 
     fun reset(defaultModuleCreation: Boolean) {
         val kobaltHome = initialSettings.kobaltHome
-        myKobaltHomePathField.text = kobaltHome ?: KFiles.latestKobaltHomeDir
+        myKobaltHomePathField.text = kobaltHome ?: KFiles.kobaltHomeDir(latestKobaltVersionOrDefault(MIN_KOBALT_VERSION))
         myKobaltHomePathField.textField.foreground = LocationSettingType.DEDUCED.color
         myKobaltAutoDownloadBox.isSelected = initialSettings.autoDownloadKobalt ?: true
     }

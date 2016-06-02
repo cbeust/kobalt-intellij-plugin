@@ -42,7 +42,7 @@ class KobaltStartupActivity : StartupActivity {
         if (BuildUtils.buildFileExist(project)) {
             if (BuildUtils.kobaltProjectSettings(project)?.autoDownloadKobalt ?: false) {
                 downloadAndInstallKobalt(project)
-            } else if(KobaltApplicationComponent.latestKobaltVersion > currentKobaltVersion){
+            } else if(KobaltProjectComponent.getInstance(project).latestKobaltVersion > currentKobaltVersion){
                 val message = """<a href=$DOWNLOAD_EVENT_DESCRIPTION>Download and apply</a> new version of Kobalt."""
                 KobaltNotification.getInstance(project).showBalloon(
                         "New Kobalt version available",
@@ -59,7 +59,7 @@ class KobaltStartupActivity : StartupActivity {
     }
 
     private fun downloadAndInstallKobalt(project: Project) {
-        DistributionDownloader.maybeDownloadAndInstallKobaltJar(
+        DistributionDownloader.maybeDownloadAndInstallKobaltJar(project,
                 onSuccessDownload = { installedVersion ->
                     ServerUtil.stopServer()
                     BuildUtils.updateWrapperVersion(project, installedVersion)
