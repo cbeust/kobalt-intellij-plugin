@@ -39,7 +39,9 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         val projectDataNode = DataNode(ProjectKeys.PROJECT,
                 ProjectData(KOBALT_SYSTEM_ID, "Kobalt Project", projectPath, projectPath), null)
         projectDataNode.createChild(JavaProjectData.KEY, createJavaProjectData(projectPath))
-        dependenciesResolver.run(projectPath){projectsData->
+        dependenciesResolver.run(projectPath){dependenciesData->
+            val projectsData = dependenciesData.projects
+            val allTasksData = dependenciesData.allTasks
             val moduleDataMap = projectsData.map { serverData ->
                 serverData.name to buildKobaltModuleData(projectPath, serverData)
             }.toMap()
@@ -48,8 +50,14 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
                 pair.key to buildProjectDataNodes(pair.value, projectDataNode)
             }.toMap()
 
-            projectsData.map { serverData ->
+            projectsData.forEach { serverData ->
                 buildDependencyNodes(moduleDataMap, nodeMap, serverData)
+            }
+
+            allTasksData.forEach { serverTaskData ->
+                val taskData = TaskData(KOBALT_SYSTEM_ID, serverTaskData.name, projectPath, serverTaskData.description)
+                        .apply { group = serverTaskData.group }
+                projectDataNode.createChild(ProjectKeys.TASK, taskData)
             }
         }
 
@@ -128,7 +136,7 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         testDependencies.forEach { dependency ->
             moduleDataNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, dependency)
         }
-        tasksData.map { task ->
+        tasksData.forEach { task ->
             moduleDataNode.createChild(ProjectKeys.TASK, task)
         }
         return moduleDataNode

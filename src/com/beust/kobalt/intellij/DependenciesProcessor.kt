@@ -15,14 +15,14 @@ class DependenciesProcessor(val kobaltJar: String) {
         val LOG = Logger.getInstance(DependenciesProcessor::class.java)
     }
 
-    fun run(projectPath: String, callback: (List<ProjectData>) -> Unit) = callback.invoke(sendGetDependencies(projectPath))
+    fun run(projectPath: String, callback: (GetDependenciesData) -> Unit) = sendGetDependencies(projectPath)?.run { callback.invoke(this) }
 
 
-    private fun sendGetDependencies(projectPath: String): List<ProjectData> {
+    private fun sendGetDependencies(projectPath: String): GetDependenciesData? {
         val buildFile = File(projectPath + File.separator + Constants.BUILD_FILE)
         if (!buildFile.exists()) {
             LOG.warn("Couldn't find ${Constants.BUILD_FILE} in ${buildFile.canonicalPath}, aborting")
-            return emptyList()
+            return null
         }
         if (!ServerUtil.isServerRunning()) {
             ServerUtil.launchServer(kobaltJar)
@@ -35,13 +35,13 @@ class DependenciesProcessor(val kobaltJar: String) {
             if (dd.errorMessage == null) {
                 val projects = dd.projects
                 LOG.info("Read GetDependencyData, project count: ${projects.size}")
-                return projects
+                return dd
             } else {
                 LOG.error("getDependencies() encountered an error on the server: " + dd.errorMessage)
             }
         } else if (!response.isSuccessful) {
             LOG.error("Couldn't call getDependencies() on the server: " + response.errorBody().string())
         }
-        return emptyList()
+        return null
     }
 }
