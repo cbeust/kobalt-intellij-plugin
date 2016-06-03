@@ -14,6 +14,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.ExternalSystemAutoImportAware
 import com.intellij.openapi.externalSystem.ExternalSystemConfigurableAware
 import com.intellij.openapi.externalSystem.ExternalSystemManager
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.externalSystem.service.project.autoimport.CachingExternalSystemAutoImportAware
 import com.intellij.openapi.externalSystem.service.ui.DefaultExternalSystemUiAware
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
@@ -120,7 +121,10 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
             Function { pair ->
                 val project = pair.first
                 val kobaltVersion = BuildUtils.kobaltVersion(project) ?: KobaltProjectComponent.getInstance(project).latestKobaltVersion
-                val vmExecutablePath = (ProjectRootManager.getInstance(project).projectSdk!!).let { sdk ->
+                val projectSdk = ProjectRootManager.getInstance(project).projectSdk
+                        ?: ExternalSystemJdkUtil.getAvailableJdk(project)?.second
+                        ?: throw RuntimeException("JDK not found in system! Please add one and define JAVA_HOME variable")
+                val vmExecutablePath = (projectSdk).let { sdk ->
                     val javaSDKType = sdk.sdkType as JavaSdkType
                     javaSDKType.getVMExecutablePath(sdk)
                 }
