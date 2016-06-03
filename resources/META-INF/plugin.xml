@@ -175,7 +175,7 @@
     </change-notes>
 
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-    <idea-version since-build="131"/>
+    <idea-version since-build="162.646.4"/>
 
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
          on how to target different products -->
@@ -253,7 +253,7 @@
         <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltSettings"/>
         <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltLocalSettings"/>
         <stepsBeforeRunProvider implementation="com.beust.kobalt.intellij.execution.KobaltBeforeRunTaskProvider" />
-        <configurationProducer implementation="com.beust.kobalt.intellij.execution.KobaltRuntimeConfigurationProducer"/>
+        <runConfigurationProducer implementation="com.beust.kobalt.intellij.execution.KobaltRunConfigurationProducer"/>
         <library.presentationProvider
                 implementation="com.beust.kobalt.intellij.config.KobaltLibraryPresentationProvider" order="last"/>
         <moduleBuilder builderClass="com.beust.kobalt.intellij.project.wizard.KobaltModuleBuilder"/>
