@@ -15,17 +15,17 @@ class DependenciesProcessor(val kobaltJar: String) {
         val LOG = Logger.getInstance(DependenciesProcessor::class.java)
     }
 
-    fun run(projectPath: String, callback: (GetDependenciesData) -> Unit) = sendGetDependencies(projectPath)?.run { callback.invoke(this) }
+    fun run(vmExecutablePath:String, projectPath: String, callback: (GetDependenciesData) -> Unit) = sendGetDependencies(vmExecutablePath, projectPath)?.run { callback.invoke(this) }
 
 
-    private fun sendGetDependencies(projectPath: String): GetDependenciesData? {
+    private fun sendGetDependencies(vmExecutablePath:String, projectPath: String): GetDependenciesData? {
         val buildFile = File(projectPath + File.separator + Constants.BUILD_FILE)
         if (!buildFile.exists()) {
             LOG.warn("Couldn't find ${Constants.BUILD_FILE} in ${buildFile.canonicalPath}, aborting")
             return null
         }
         if (!ServerUtil.isServerRunning()) {
-            ServerUtil.launchServer(kobaltJar)
+            ServerUtil.launchServer(vmExecutablePath,kobaltJar)
         }
         LOG.debug("Call GetDependencies for build file ${buildFile.canonicalPath}")
         val response = ServerFacade(ServerUtil.findServerPort()).sendGetDependencies(buildFile.canonicalPath!!)

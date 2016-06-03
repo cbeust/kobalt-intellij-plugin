@@ -27,8 +27,9 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
                               listener: ExternalSystemTaskNotificationListener) {
 
         val kobaltJar = settings?.kobaltJar ?: return
+        val vmExecutablePath = settings?.vmExecutablePath ?: return
         val parameters = prepareTaskExecutionParameters(projectPath, kobaltJar, taskNames)
-        processHandler = MyCapturingProcessHandler(parameters.toCommandLine()).apply {
+        processHandler = MyCapturingProcessHandler(parameters.toCommandLine(vmExecutablePath)).apply {
              addProcessListener(
                      object : ProcessAdapter() {
                          override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>?) {
@@ -59,6 +60,6 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
 
 }
 
-fun SimpleJavaParameters.toCommandLine(): GeneralCommandLine {
-    return JdkUtil.setupJVMCommandLine("java", this, false) //TODO get path for java from module JDK definition
+fun SimpleJavaParameters.toCommandLine(vmExecutablePath:String): GeneralCommandLine {
+    return JdkUtil.setupJVMCommandLine(vmExecutablePath, this, false)
 }

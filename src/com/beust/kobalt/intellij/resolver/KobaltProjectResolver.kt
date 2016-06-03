@@ -39,7 +39,7 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         val projectDataNode = DataNode(ProjectKeys.PROJECT,
                 ProjectData(KOBALT_SYSTEM_ID, "Kobalt Project", projectPath, projectPath), null)
         projectDataNode.createChild(JavaProjectData.KEY, createJavaProjectData(projectPath))
-        dependenciesResolver.run(projectPath){dependenciesData->
+        dependenciesResolver.run(settings.vmExecutablePath, projectPath){dependenciesData->
             val projectsData = dependenciesData.projects
             val allTasksData = dependenciesData.allTasks
             val moduleDataMap = projectsData.map { serverData ->

@@ -22,6 +22,8 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.projectRoots.JavaSdkType
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Pair
 import com.intellij.openapi.util.text.StringUtil
@@ -117,8 +119,12 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
     override fun getExecutionSettingsProvider(): Function<Pair<Project, String>, KobaltExecutionSettings> =
             Function { pair ->
                 val project = pair.first
-                val kobaltVersion = BuildUtils.kobaltVersion(project)?: KobaltProjectComponent.getInstance(project).latestKobaltVersion
-                KobaltExecutionSettings(KFiles.distributionsDir, BuildUtils.findKobaltJar(kobaltVersion).toFile().absolutePath)
+                val kobaltVersion = BuildUtils.kobaltVersion(project) ?: KobaltProjectComponent.getInstance(project).latestKobaltVersion
+                val vmExecutablePath = (ProjectRootManager.getInstance(project).projectSdk!!).let { sdk ->
+                    val javaSDKType = sdk.sdkType as JavaSdkType
+                    javaSDKType.getVMExecutablePath(sdk)
+                }
+                KobaltExecutionSettings(KFiles.distributionsDir, BuildUtils.findKobaltJar(kobaltVersion).toFile().absolutePath, vmExecutablePath)
             }
 
     override fun getTaskManagerClass() = KobaltTaskManager::class.java

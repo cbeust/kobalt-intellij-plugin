@@ -104,7 +104,7 @@ class ServerUtil {
             threadPool = null
         }
 
-        @Synchronized fun launchServer(kobaltJar: String) {
+        @Synchronized fun launchServer(vmExecutablePath:String, kobaltJar: String) {
             if (shuttingDown) {
                 return
             }
@@ -120,7 +120,7 @@ class ServerUtil {
                 LOG.error(null, "Can't find the jar file", kobaltJar + " can't be found")
             } else {
                 val serverExecutionParams = prepareServerExecutionParameters(kobaltJar)
-                processHandler = MyCapturingProcessHandler(serverExecutionParams.toCommandLine()).apply {
+                processHandler = MyCapturingProcessHandler(serverExecutionParams.toCommandLine(vmExecutablePath)).apply {
                     addProcessListener(
                             object : ProcessAdapter() {
                                 override fun onTextAvailable(event: ProcessEvent?, outputType: Key<*>?) {
@@ -159,15 +159,8 @@ class ServerUtil {
             return parameters
         }
 
-        fun SimpleJavaParameters.toCommandLine(): GeneralCommandLine {
-            return JdkUtil.setupJVMCommandLine(findJava(), this, false) //TODO get path for java from module JDK definition
-        }
-
-        private fun findJava(): String {
-            //TODO should use java from project SDK
-            val javaHome = System.getProperty("java.home")
-            val result = if (javaHome != null) "$javaHome/bin/java" else "java"
-            return result
+        fun SimpleJavaParameters.toCommandLine(vmExecutablePath:String): GeneralCommandLine {
+            return JdkUtil.setupJVMCommandLine(vmExecutablePath, this, false)
         }
     }
 }
