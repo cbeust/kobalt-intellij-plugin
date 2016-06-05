@@ -26,12 +26,12 @@ class KobaltLibraryPresentationProvider : LibraryPresentationProvider<KobaltLibr
     override fun getIcon() = KobaltIcons.Kobalt
 
     override fun detect(classesRoots: MutableList<VirtualFile>): KobaltLibraryProperties? {
-        val kobaltJar = findKobaltJarVersion(VfsUtilCore.toVirtualFileArray(classesRoots))
-        if(kobaltJar.isNotEmpty()) return KobaltLibraryProperties(kobaltJar[0])
+        val kobaltJarVersion = detectKobaltJarVersion(VfsUtilCore.toVirtualFileArray(classesRoots))
+        if(kobaltJarVersion.isNotEmpty()) return KobaltLibraryProperties(kobaltJarVersion[0])
         return null
     }
 
-    private fun findKobaltJarVersion(libraryFiles: Array<out VirtualFile>) = libraryFiles
+    private fun detectKobaltJarVersion(libraryFiles: Array<out VirtualFile>) = libraryFiles
             .filter { libraryFile -> libraryFile.name.startsWith("kobalt-") && libraryFile.name.endsWith(".jar") }
-            .map { libraryFile -> libraryFile.name.substring(libraryFile.name.lastIndexOf("-"), libraryFile.name.lastIndex) }
+            .map { libraryFile -> libraryFile.name.substring(libraryFile.name.lastIndexOf("-") + 1, libraryFile.name.lastIndexOf(".jar")) }
 }
