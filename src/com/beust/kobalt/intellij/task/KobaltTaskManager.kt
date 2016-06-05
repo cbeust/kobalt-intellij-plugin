@@ -28,7 +28,7 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
 
         val kobaltJar = settings?.kobaltJar ?: return
         val vmExecutablePath = settings?.vmExecutablePath ?: return
-        val parameters = prepareTaskExecutionParameters(projectPath, kobaltJar, taskNames)
+        val parameters = prepareTaskExecutionParameters(projectPath, kobaltJar, taskNames, scriptParameters, vmOptions, debuggerSetup)
         processHandler = MyCapturingProcessHandler(parameters.toCommandLine(vmExecutablePath)).apply {
              addProcessListener(
                      object : ProcessAdapter() {
@@ -41,12 +41,19 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
         processOutput = processHandler?.runProcess()
     }
 
-    private fun prepareTaskExecutionParameters(projectPath: String, kobaltJar: String, taskNames: MutableList<String>): SimpleJavaParameters {
+    private fun prepareTaskExecutionParameters(projectPath: String, kobaltJar: String, taskNames: MutableList<String>,
+                                               scriptParameters: MutableList<String>, vmOptions: MutableList<String>,
+                                               debuggerSetup: String?): SimpleJavaParameters {
         val parameters = SimpleJavaParameters().apply {
             workingDirectory = projectPath
             mainClass = "com.beust.kobalt.MainKt"
             classPath.add(kobaltJar)
+            vmParametersList.addAll(vmOptions)
+            if(debuggerSetup!=null) {
+                vmParametersList.addParametersString(debuggerSetup)
+            }
             programParametersList.addAll(taskNames)
+            programParametersList.addAll(scriptParameters)
         }
         return parameters
     }
