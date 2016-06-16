@@ -36,8 +36,9 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
                 DataNode<ProjectData>? {
         if(settings==null) return null
         val dependenciesResolver = DependenciesProcessor(settings.kobaltJar)
+        val projectName = File(projectPath).let { projectPathFile -> if (projectPathFile.isDirectory) projectPathFile.name else "Kobalt Project" }
         val projectDataNode = DataNode(ProjectKeys.PROJECT,
-                ProjectData(KOBALT_SYSTEM_ID, "Kobalt Project", projectPath, projectPath), null)
+                ProjectData(KOBALT_SYSTEM_ID, projectName, projectPath, projectPath), null)
         projectDataNode.createChild(JavaProjectData.KEY, createJavaProjectData(projectPath))
         dependenciesResolver.run(settings.vmExecutablePath, projectPath){dependenciesData->
             val projectsData = dependenciesData.projects
