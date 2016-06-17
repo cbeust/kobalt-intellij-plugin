@@ -37,7 +37,8 @@ object BuildUtils {
 
     fun findKobaltJar(version: String) =
             if (Constants.DEV_MODE) {
-                Paths.get(System.getProperty("user.home"), "kotlin/kobalt/kobaltBuild/libs/kobalt-$version.jar")
+                Paths.get(System.getProperty("user.home"),
+                        "kotlin/kobalt/kobaltBuild/libs/kobalt-${Constants.DEV_VERSION}.jar")
             } else {
                 Paths.get(System.getProperty("user.home"),
                         ".kobalt/wrapper/dist/kobalt-$version/kobalt/wrapper/kobalt-$version.jar")
