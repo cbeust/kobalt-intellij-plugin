@@ -35,6 +35,7 @@ import com.intellij.util.containers.ContainerUtilRt
 import com.intellij.util.net.HttpConfigurable
 import icons.KobaltIcons
 import okhttp3.OkHttpClient
+import okhttp3.ws.WebSocket
 import okio.Sink
 import org.apache.http.auth.Credentials
 import retrofit2.Retrofit
@@ -94,6 +95,7 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Sink::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(GsonConverterFactory::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Credentials::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(WebSocket::class.java))
         parameters.classPath.addAll(additionalClasspath)
         parameters.charset = CharsetToolkit.UTF8_CHARSET
         parameters.vmParametersList.addProperty("file.encoding", CharsetToolkit.UTF8)

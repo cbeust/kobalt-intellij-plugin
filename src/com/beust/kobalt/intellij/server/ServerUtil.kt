@@ -33,7 +33,8 @@ class ServerUtil {
 
         val LOG = Logger.getInstance(ServerUtil::class.java)
 
-        fun findServerPort(): Int? {
+        fun findServerPort(): Int {
+            val defaultPort = 1234
             val file = File(SERVER_FILE)
             if (file.exists()) {
                 val p = Properties().apply {
@@ -43,7 +44,8 @@ class ServerUtil {
                 }
                 return p.getProperty(KEY_PORT).toInt()
             } else {
-                return null
+                LOG.warn("Cannot found Kobalt server port in $SERVER_FILE. The default port $defaultPort will be used.")
+                return defaultPort
             }
         }
 

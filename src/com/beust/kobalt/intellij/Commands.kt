@@ -20,7 +20,25 @@ data class ProjectData(val name: String, val directory: String,
         val tasks: Collection<TaskData>)
 
 data class GetDependenciesData(val projects: List<ProjectData>, val allTasks: Collection<TaskData>,
-        val errorMessage: String?)
+        val errorMessage: String?){
+    companion object {
+        val NAME = "GetDependencies"
+    }
+}
+
+class ProgressCommand(val progress: Int? = null, val message: String? = null) {
+    companion object {
+        val NAME = "ProgressCommand"
+    }
+}
+
+class CancelGetDependenciesCommand() {
+    companion object {
+        val NAME = "CancelGetDependenciesCommand"
+    }
+}
+
+class WebSocketCommand(val commandName: String, val errorMessage: String? = null, val payload: String)
 
 data class PingResponse(val result: String)
 
