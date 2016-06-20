@@ -8,6 +8,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationEvent
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
+import com.intellij.openapi.util.io.FileUtil
 import okhttp3.Response
 import okhttp3.ResponseBody
 import okio.Buffer
@@ -52,19 +53,19 @@ class DependenciesProcessor(val kobaltJar: String) {
 
     private fun sendGetDependenciesWebSocket(vmExecutablePath: String, projectPath: String, taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): GetDependenciesData? {
         val buildFile = File(projectPath + File.separator + Constants.BUILD_FILE)
-        val buildFileCanonicalPath = buildFile.canonicalPath
+        val buildFilePath = FileUtil.toSystemIndependentName(buildFile.canonicalPath)
         if (!buildFile.exists()) {
-            LOG.warn("Couldn't find ${Constants.BUILD_FILE} in $buildFileCanonicalPath, aborting")
+            LOG.warn("Couldn't find ${Constants.BUILD_FILE} in $buildFilePath, aborting")
             return null
         }
         if (!ServerUtil.isServerRunning()) {
             ServerUtil.launchServer(vmExecutablePath, kobaltJar)
         }
-        LOG.debug("Call GetDependencies for build file $buildFileCanonicalPath")
+        LOG.debug("Call GetDependencies for build file $buildFilePath")
 
         kobaltWebSocketClient = KobaltWebSocketClient(
                 port = ServerUtil.findServerPort(),
-                url = "/v1/getDependencies?buildFile=$buildFileCanonicalPath",
+                url = "/v1/getDependencies?buildFile=$buildFilePath",
                 onOpen = { response ->
                     processServerSocketOpen(response, taskId, listener)
                 },
