@@ -7,6 +7,7 @@ import okhttp3.ws.WebSocketCall
 import okhttp3.ws.WebSocketListener
 import okio.Buffer
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Dmitry Zhuravlev
@@ -17,7 +18,8 @@ class KobaltWebSocketClient(val port: Int, val host: String = "localhost", val u
                             val onPong: (Buffer?) -> Unit = { b -> },
                             val onClose: (Int, String?) -> Unit = { c, r -> },
                             val onFailure: (IOException, Response?) -> Unit = { e, r -> },
-                            val onMessage: (ResponseBody) -> Unit = { b -> }) {
+                            val onMessage: (ResponseBody) -> Unit = { b -> },
+                            val readTimeoutInHours: Long = 1) {
 
     private var socket: WebSocket? = null
 
@@ -29,7 +31,8 @@ class KobaltWebSocketClient(val port: Int, val host: String = "localhost", val u
         val request = Request.Builder()
                 .url("ws://$host:$port$url")
                 .build()
-        WebSocketCall.create(OkHttpClient(), request).enqueue(object : WebSocketListener {
+        val okHttpClient = OkHttpClient.Builder().readTimeout(readTimeoutInHours, TimeUnit.HOURS).build()
+        WebSocketCall.create(okHttpClient, request).enqueue(object : WebSocketListener {
             override fun onOpen(ws: WebSocket, response: Response) {
                 socket = ws
                 this@KobaltWebSocketClient.onOpen(response)
