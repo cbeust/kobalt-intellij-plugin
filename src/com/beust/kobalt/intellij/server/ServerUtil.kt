@@ -117,7 +117,7 @@ class ServerUtil {
             threadPool = Executors.newFixedThreadPool(2)
             LOG.info("Kobalt jar: $kobaltJar")
             if (!File(kobaltJar).exists()) {
-                KobaltApplicationComponent.LOG.error("Can't find the jar file",
+                KobaltApplicationComponent.LOG.error("Can't find the jar file $kobaltJar",
                         kobaltJar + " can't be found")
                 LOG.error(null, "Can't find the jar file", kobaltJar + " can't be found")
             } else {
