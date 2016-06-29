@@ -1,7 +1,6 @@
 package com.beust.kobalt.intellij.server
 
 import com.beust.kobalt.intellij.KFiles
-import com.beust.kobalt.intellij.KobaltApplicationComponent
 import com.beust.kobalt.intellij.MyCapturingProcessHandler
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.configurations.SimpleJavaParameters
@@ -117,9 +116,7 @@ class ServerUtil {
             threadPool = Executors.newFixedThreadPool(2)
             LOG.info("Kobalt jar: $kobaltJar")
             if (!File(kobaltJar).exists()) {
-                KobaltApplicationComponent.LOG.error("Can't find the jar file $kobaltJar",
-                        kobaltJar + " can't be found")
-                LOG.error(null, "Can't find the jar file", kobaltJar + " can't be found")
+                LOG.error("Can't find the jar file $kobaltJar")
             } else {
                 val serverExecutionParams = prepareServerExecutionParameters(kobaltJar)
                 processHandler = MyCapturingProcessHandler(serverExecutionParams.toCommandLine(vmExecutablePath)).apply {
