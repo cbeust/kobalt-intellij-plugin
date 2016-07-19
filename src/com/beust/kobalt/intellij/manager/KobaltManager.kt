@@ -108,9 +108,9 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
                     addProperty("http.nonProxyHosts",nonProxyHosts)
                     addProperty("https.nonProxyHosts",nonProxyHosts)
                 }
-                if (USE_HTTP_PROXY && StringUtil.isNotEmpty(PROXY_LOGIN)) {
-                    addProperty("http.proxyUser", PROXY_LOGIN)
-                    addProperty("https.proxyUser", PROXY_LOGIN)
+                if (USE_HTTP_PROXY && StringUtil.isNotEmpty(proxyLogin)) {
+                    addProperty("http.proxyUser", proxyLogin)
+                    addProperty("https.proxyUser", proxyLogin)
                     addProperty("http.proxyPassword", plainProxyPassword)
                     addProperty("https.proxyPassword", plainProxyPassword)
                 }
