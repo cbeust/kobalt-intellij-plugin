@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.116</version>
+    <version>1.117</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,9 +9,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.117</h1>
+        <ul>
+            <li>Remove duplication of Tasks nodes.
+        </ul>
         <h1>1.115</h1>
         <ul>
-            <li>Make plugin compatible regarding changes in API (com.intellij.util.net.HttpConfigurable)
+            <li>Make plugin compatible regarding changes in API (com.intellij.util.net.HttpConfigurable).
         </ul>
         <h1>1.114</h1>
         <ul>
