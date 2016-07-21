@@ -260,7 +260,6 @@
 
         <projectImportProvider implementation="com.beust.kobalt.intellij.import.KobaltProjectImportProvider"/>
         <projectImportBuilder implementation="com.beust.kobalt.intellij.import.KobaltProjectImportBuilder"/>
-        <externalSystemViewContributor implementation="com.beust.kobalt.intellij.project.view.KobaltViewContributor"/>
         <externalSystemExecutionConsoleManager
                 implementation="com.beust.kobalt.intellij.execution.KobaltExecutionConsoleManager" order="last"/>
         <externalSystemManager implementation="com.beust.kobalt.intellij.manager.KobaltManager"/>
