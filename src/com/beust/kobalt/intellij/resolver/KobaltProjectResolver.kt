@@ -4,6 +4,7 @@ import com.beust.kobalt.intellij.Constants.Companion.KOBALT_BUILD_CLASSES_DIR_NA
 import com.beust.kobalt.intellij.Constants.Companion.KOBALT_BUILD_DIR_NAME
 import com.beust.kobalt.intellij.Constants.Companion.KOBALT_BUILD_TEST_CLASSES_DIR_NAME
 import com.beust.kobalt.intellij.Constants.Companion.KOBALT_SYSTEM_ID
+import com.beust.kobalt.intellij.DependencyData
 import com.beust.kobalt.intellij.settings.KobaltExecutionSettings
 import com.intellij.externalSystem.JavaProjectData
 import com.intellij.openapi.diagnostic.Logger
@@ -105,46 +106,44 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         populateContentRoot(contentRoot, ExternalSystemSourceType.TEST, serverData.testDirs)
         populateContentRoot(contentRoot, ExternalSystemSourceType.TEST_RESOURCE, serverData.testResourceDirs)
 
-        val compileLibraries = serverData.compileDependencies.map { serverCompileLibrary ->
-            val libraryFile = File(serverCompileLibrary.path)
-            val libraryData = LibraryData(KOBALT_SYSTEM_ID, serverCompileLibrary.id, !libraryFile.exists())
-            libraryData.addPath(LibraryPathType.BINARY, serverCompileLibrary.path)
-            LibraryDependencyData(moduleData, libraryData, LibraryLevel.MODULE).apply {
-                scope = DependencyScope.COMPILE
-            }
-        }
-
-        val testLibraries = serverData.testDependencies.map { serverTestLibrary ->
-            val libraryFile = File(serverTestLibrary.path)
-            val libraryData = LibraryData(KOBALT_SYSTEM_ID, serverTestLibrary.id, !libraryFile.exists())
-            libraryData.addPath(LibraryPathType.BINARY, serverTestLibrary.path)
-            LibraryDependencyData(moduleData, libraryData, LibraryLevel.MODULE).apply {
-                scope = DependencyScope.TEST
-            }
-        }
-
         val tasksData = serverData.tasks.map { serverTaskData ->
             TaskData(KOBALT_SYSTEM_ID, "${moduleData.id}:${serverTaskData.name}", projectPath, serverTaskData.description)
                     .apply { group = serverTaskData.group }
         }
-        return KobaltModuleData(moduleData, tasksData, contentRoot, compileLibraries, testLibraries)
+        return KobaltModuleData(moduleData, tasksData, contentRoot, serverData.compileDependencies, serverData.testDependencies)
     }
 
     private fun buildProjectDataNodes(kobaltModuleData: KobaltModuleData, projectDataNode: DataNode<ProjectData>)
             : DataNode<ModuleData> {
         val(moduleData, tasksData, contentRoot, compileDependencies, testDependencies) = kobaltModuleData
-        val moduleDataNode = projectDataNode.createChild(ProjectKeys.MODULE, moduleData);
+        val moduleDataNode = projectDataNode.createChild(ProjectKeys.MODULE, moduleData)
         moduleDataNode.createChild(ProjectKeys.CONTENT_ROOT, contentRoot)
         compileDependencies.forEach { dependency ->
-            moduleDataNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, dependency)
+            buildLibraryDependenciesNodes(moduleDataNode, moduleData, dependency, dependency.scope.toScope())
         }
         testDependencies.forEach { dependency ->
-            moduleDataNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, dependency)
+            buildLibraryDependenciesNodes(moduleDataNode, moduleData, dependency, DependencyScope.TEST)
         }
         tasksData.forEach { task ->
             moduleDataNode.createChild(ProjectKeys.TASK, task)
         }
         return moduleDataNode
+    }
+
+    private fun buildLibraryDependenciesNodes(moduleDataNode: DataNode<ModuleData>, moduleData: ModuleData, serverDepLibrary: DependencyData, depScope: DependencyScope,
+                                              libraryDepDataNode: DataNode<LibraryDependencyData>? = null) {
+        val libraryFile = File(serverDepLibrary.path)
+        val libraryData = LibraryData(KOBALT_SYSTEM_ID, serverDepLibrary.id, !libraryFile.exists())
+        libraryData.addPath(LibraryPathType.BINARY, serverDepLibrary.path)
+
+        val libraryDepData = LibraryDependencyData(moduleData, libraryData, LibraryLevel.MODULE).apply {
+            scope = depScope
+        }
+        val currentLibraryDepNode = if (libraryDepDataNode == null) moduleDataNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDepData) else
+            libraryDepDataNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDepData)
+        serverDepLibrary.children.forEach { library ->
+            buildLibraryDependenciesNodes(moduleDataNode, moduleData, library, depScope, currentLibraryDepNode)
+        }
     }
 
     private fun populateContentRoot(contentRoot: ContentRootData, type: ExternalSystemSourceType,
@@ -165,6 +164,14 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
     private data class KobaltModuleData(val moduleData: ModuleData,
                                         val kobaltTasksData: List<TaskData>,
                                         val contentRoot: ContentRootData,
-                                        val compileDependencies: List<LibraryDependencyData>,
-                                        val testDependencies: List<LibraryDependencyData>)
+                                        val compileDependencies: List<DependencyData>,
+                                        val testDependencies: List<DependencyData>)
+
+    private fun String.toScope(): DependencyScope = when (this) {
+        "compile" -> DependencyScope.COMPILE
+        "provided" -> DependencyScope.PROVIDED
+        "runtime" -> DependencyScope.RUNTIME
+        else -> DependencyScope.COMPILE
+    }
+
 }

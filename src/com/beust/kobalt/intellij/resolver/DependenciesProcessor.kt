@@ -65,7 +65,7 @@ class DependenciesProcessor(val kobaltJar: String) {
 
         kobaltWebSocketClient = KobaltWebSocketClient(
                 port = ServerUtil.findServerPort(),
-                url = "/v1/getDependencies?buildFile=$buildFilePath",
+                url = "/v1/getDependencyGraph?buildFile=$buildFilePath",
                 onOpen = { response ->
                     processServerSocketOpen(response, taskId, listener)
                 },
