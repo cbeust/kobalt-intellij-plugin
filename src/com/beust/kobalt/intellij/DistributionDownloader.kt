@@ -1,5 +1,9 @@
 package com.beust.kobalt.intellij
 
+import com.beust.kobalt.intellij.project.KobaltNotification
+import com.intellij.notification.Notification
+import com.intellij.notification.NotificationListener
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
@@ -17,6 +21,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.zip.ZipFile
+import javax.swing.event.HyperlinkEvent
 
 class KFiles {
     companion object {
@@ -53,28 +58,38 @@ class DistributionDownloader {
         private fun log(level: Int, s: String) = log.info(s)
         fun warn(s: String) = log.warn(s)
         const val RELEASE_URL = "https://api.github.com/repos/cbeust/kobalt/releases"
-
-        fun downloadAndInstallKobaltJarSynchronously(project: Project?, kobaltVersion:String, canBeCanceled: Boolean) {
+        const val RETRY_DOWNLOAD = "retry.download"
+        fun downloadAndInstallKobaltJarSynchronously(project: Project?, kobaltVersion: String, canBeCanceled: Boolean) {
             val progressText = "Downloading Kobalt $kobaltVersion"
             ProgressManager.getInstance().run(
                     object : Task.Modal(project, "Downloading", canBeCanceled) {
                         override fun run(progress: ProgressIndicator) {
-                            DistributionDownloader().install(kobaltVersion, progress,
-                                    progressText, {}, {})
+                            try {
+                                DistributionDownloader().install(kobaltVersion, progress,
+                                        progressText, {}, {})
+                            } catch(e: IOException) {
+                                KobaltNotification.getInstance(project).run {
+                                    showDownloadFailedNotification(e.message, project, { downloadAndInstallKobaltJarSynchronously(project, kobaltVersion, canBeCanceled) })
+                                }
+                            }
                         }
                     }
             )
         }
 
-        fun maybeDownloadAndInstallKobaltJar(project:Project, onSuccessDownload: (String) -> Unit, onKobaltJarPresent: (String) -> Unit) {
+        fun maybeDownloadAndInstallKobaltJar(project: Project, onSuccessDownload: (String) -> Unit, onKobaltJarPresent: (String) -> Unit) {
             if (!Constants.DEV_MODE) {
                 val latestKobaltVersion = KobaltProjectComponent.getInstance(project).latestKobaltVersion
                 val progressText = "Downloading Kobalt $latestKobaltVersion"
                 ApplicationManager.getApplication().invokeLater {
                     val downloadTask = object : Task.Backgroundable(null, "Downloading") {
                         override fun run(progress: ProgressIndicator) {
-                            DistributionDownloader().install(latestKobaltVersion, progress,
-                                    progressText, onSuccessDownload, onKobaltJarPresent)
+                            try {
+                                DistributionDownloader().install(latestKobaltVersion, progress,
+                                        progressText, onSuccessDownload, onKobaltJarPresent)
+                            } catch(e: IOException) {
+                                showDownloadFailedNotification(e.message, project, { maybeDownloadAndInstallKobaltJar(project, onSuccessDownload, onKobaltJarPresent) })
+                            }
                         }
                     }
                     val progress = BackgroundableProcessIndicator(downloadTask).apply {
@@ -84,6 +99,19 @@ class DistributionDownloader {
                 }
             } else {
                 KobaltApplicationComponent.LOG.info("DEV_MODE is on, not downloading anything")
+            }
+        }
+
+        inline private fun showDownloadFailedNotification(message:String?, project: Project?, crossinline download: () -> Unit) {
+            KobaltNotification.getInstance(project).run {
+                showBalloon("Download failed", (message ?: "Cannot download new Kobalt version")+" <a href=$RETRY_DOWNLOAD>Retry download</a>", NotificationType.ERROR,object : NotificationListener.Adapter(){
+                    override fun hyperlinkActivated(notification: Notification, e: HyperlinkEvent) {
+                        notification.expire()
+                        if (RETRY_DOWNLOAD == e.description) {
+                            download()
+                        }
+                    }
+                })
             }
         }
 

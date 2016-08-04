@@ -10,16 +10,19 @@ import com.intellij.openapi.project.Project
  * @author Dmitry Zhuravlev
  *         Date:  27.04.2016
  */
-class KobaltNotification(val project: Project) {
-    companion object{
+class KobaltNotification(val project: Project?) {
+    companion object {
         private val NOTIFICATION_GROUP = NotificationGroup.balloonGroup("Kobalt Notification Group")
-        fun getInstance(project:Project) = ServiceManager.getService<KobaltNotification>(project, KobaltNotification::class.java);
+        fun getInstance(project: Project? = null) = when (project) {
+            null -> ServiceManager.getService<KobaltNotification>(KobaltNotification::class.java)!!
+            else -> ServiceManager.getService<KobaltNotification>(project, KobaltNotification::class.java)!!
+        }
     }
 
     fun showBalloon(title: String,
                     message: String,
                     type: NotificationType,
-                    listener: NotificationListener?) {
+                    listener: NotificationListener? = null) {
         NOTIFICATION_GROUP.createNotification(title, message, type, listener).notify(project)
     }
 }
