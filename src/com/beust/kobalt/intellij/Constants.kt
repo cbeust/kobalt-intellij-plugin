@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NonNls
 
 class Constants {
     companion object {
-        val MIN_KOBALT_VERSION = "0.880"
+        val MIN_KOBALT_VERSION = "0.883"
         /** If true, will launch kobalt found in ~/kotlin/kobalt/libs/kobalt-$DEV_VERSION.jar */
         val DEV_MODE = false
         val DEV_VERSION_INT = 1 + Integer.parseInt(MIN_KOBALT_VERSION.substring(2))
