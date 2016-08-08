@@ -7,6 +7,7 @@ import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.execution.process.ProcessAdapter
 import com.intellij.execution.process.ProcessEvent
+import com.intellij.execution.process.ProcessOutputTypes
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.projectRoots.JdkUtil
 import com.intellij.openapi.util.Key
@@ -82,7 +83,7 @@ class ServerUtil {
         }
 
         fun isServerRunning(): Boolean {
-            findServerPort()?.let { port ->
+            findServerPort().let { port ->
                 try {
                     val response = ServerFacade(findServerPort()).sendPingCommand()
                     return if(response.isSuccessful) response.body().result == PING_SUCCESSFUL_RESPONSE else false
@@ -124,7 +125,11 @@ class ServerUtil {
                             object : ProcessAdapter() {
                                 override fun onTextAvailable(event: ProcessEvent?, outputType: Key<*>?) {
                                     if (event != null) {
-                                        LOG.info(event.text)
+                                        if (outputType != null && outputType.equals(ProcessOutputTypes.STDERR)) {
+                                            LOG.error(event.text)
+                                        } else {
+                                            LOG.info(event.text)
+                                        }
                                     }
                                 }
                             }
