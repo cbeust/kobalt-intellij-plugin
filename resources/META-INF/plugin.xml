@@ -224,9 +224,14 @@
                 text="_Sync build file" description="Sync the build file" icon="AllIcons.Actions.Refresh">
             <keyboard-shortcut first-keystroke="control alt K" keymap="$default"/>
         </action>
+        <action id="kobalt.FindKobaltProject" class="com.beust.kobalt.intellij.FindDetachedKobaltProjectAction"
+                text="Find detached _Kobalt project" description="Recheck this project for detached Kobalt project" icon="AllIcons.Actions.Search">
+            <keyboard-shortcut first-keystroke="shift K" keymap="$default"/>
+        </action>
         <group id="kobalt.ToolsMenu" class="com.beust.kobalt.intellij.KobaltToolsGroup" popup="true"
                text="_Kobalt" description="Kobalt">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <reference id="kobalt.FindKobaltProject"/>
             <!--<reference id="kobalt.SyncBuildFile"/>-->
 <!--
             <action id="kobalt.EnableBuildCompletion" class="com.beust.kobalt.intellij.EnableBuildCompletionAction"
