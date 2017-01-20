@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.119</version>
+    <version>1.120</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,9 +9,9 @@
     ]]></description>
 
     <change-notes><![CDATA[
-        <h1>1.119</h1>
+        <h1>1.120</h1>
         <ul>
-            <li>Capture the server output if it fails to start properly.
+            <li>Fixed: Incorrect of a Kobalt configuration in Gradle projects.
         </ul>
         <h1>1.118</h1>
         <ul>
