@@ -18,6 +18,7 @@ import java.io.IOException
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import com.beust.kobalt.intellij.use  //FIXME see the workaround explanation in com.beust.kobalt.intellij.Closeable.kt file
 
 class ServerUtil {
 
