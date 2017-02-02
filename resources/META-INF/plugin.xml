@@ -211,6 +211,8 @@
     <depends>com.intellij.modules.lang</depends>
     -->
 
+    <depends optional="true" config-file="kotlin-idea-plugin-integration.xml">org.jetbrains.kotlin</depends>
+
     <extensions defaultExtensionNs="com.intellij">
         <!--<weigher key="completion" implementationClass="com.beust.kobalt.intellij.KobaltWeigher" />-->
         <toolWindow anchor="right" id="Kobalt" icon="KobaltIcons.KobaltToolWindow"
