@@ -4,7 +4,7 @@ package com.beust.kobalt.intellij
 // The classes in this file are mapped from the JSON coming back from the server
 //
 
-data class DependencyData(val id: String, val scope: String, val path: String,
+data class DependencyData(val id: String, val scope: String, val path: String, var isLatest: Boolean = true,
         val children: List<DependencyData> = emptyList()) {
     override fun toString() = id
 }
