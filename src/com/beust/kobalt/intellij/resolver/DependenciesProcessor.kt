@@ -112,7 +112,7 @@ class DependenciesProcessor(val kobaltJar: String) {
         if (wsCommand.errorMessage != null) {
             val errorMessage = "Received error message from server: " + wsCommand.errorMessage
             val processorEx = ProcessorException(errorMessage)
-            LOG.error(errorMessage)
+            LOG.warn(errorMessage)
             listener.onFailure(taskId, processorEx)
             dependenciesFuture.completeExceptionally(processorEx)
         } else {
