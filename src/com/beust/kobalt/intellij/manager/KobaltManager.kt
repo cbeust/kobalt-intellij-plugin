@@ -101,6 +101,13 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         parameters.vmParametersList.addProperty("file.encoding", CharsetToolkit.UTF8)
         parameters.vmParametersList.addProperty(
                 ExternalSystemConstants.EXTERNAL_SYSTEM_ID_KEY, Constants.KOBALT_SYSTEM_ID.id)
+
+        // To debug the retrieval of dependencies, uncomment this and launch a remote debugging
+        // configuration. Note that suspend=y, so the sync will not proceed until the remote
+        // connects to it.
+//        parameters.vmParametersList.addParametersString(
+//                "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5009")
+
         with(HttpConfigurable.getInstance()){
             with(parameters.vmParametersList) {
                 if (!StringUtil.isEmpty(PROXY_EXCEPTIONS)) {
