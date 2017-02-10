@@ -118,10 +118,10 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         val(moduleData, tasksData, contentRoot, compileDependencies, testDependencies) = kobaltModuleData
         val moduleDataNode = projectDataNode.createChild(ProjectKeys.MODULE, moduleData)
         moduleDataNode.createChild(ProjectKeys.CONTENT_ROOT, contentRoot)
-        compileDependencies.forEach { dependency ->
+        compileDependencies.filter {it.isLatest}.forEach { dependency ->
             buildLibraryDependenciesNodes(moduleDataNode, moduleData, dependency, dependency.scope.toScope())
         }
-        testDependencies.forEach { dependency ->
+        testDependencies.filter {it.isLatest}.forEach { dependency ->
             buildLibraryDependenciesNodes(moduleDataNode, moduleData, dependency, DependencyScope.TEST)
         }
         tasksData.forEach { task ->
@@ -139,9 +139,9 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         val libraryDepData = LibraryDependencyData(moduleData, libraryData, LibraryLevel.MODULE).apply {
             scope = depScope
         }
-        val currentLibraryDepNode = if (libraryDepDataNode == null) moduleDataNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDepData) else
-            libraryDepDataNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDepData)
-        serverDepLibrary.children.forEach { library ->
+        val currentLibraryDepNode = libraryDepDataNode?.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDepData)
+                ?: moduleDataNode.createChild(ProjectKeys.LIBRARY_DEPENDENCY, libraryDepData)
+        serverDepLibrary.children.filter {it.isLatest}.forEach { library ->
             buildLibraryDependenciesNodes(moduleDataNode, moduleData, library, depScope, currentLibraryDepNode)
         }
     }
