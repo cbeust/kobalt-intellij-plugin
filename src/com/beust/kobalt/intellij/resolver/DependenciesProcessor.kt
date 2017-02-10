@@ -111,7 +111,7 @@ class DependenciesProcessor(val kobaltJar: String) {
         val wsCommand = Gson().fromJson(json, WebSocketCommand::class.java)
         if (wsCommand.errorMessage != null) {
             val errorMessage = "Received error message from server: " + wsCommand.errorMessage
-            val processorEx = ProcessorException(errorMessage)
+            val processorEx = RuntimeException(errorMessage)
             LOG.warn(errorMessage)
             listener.onFailure(taskId, processorEx)
             dependenciesFuture.completeExceptionally(processorEx)
@@ -136,7 +136,7 @@ class DependenciesProcessor(val kobaltJar: String) {
                 }
                 else -> {
                     val errorMessage = "Unknown command: ${wsCommand.commandName} json:\n$json"
-                    val processorEx = ProcessorException(errorMessage)
+                    val processorEx = RuntimeException(errorMessage)
                     LOG.error(errorMessage)
                     listener.onFailure(taskId, processorEx)
                     dependenciesFuture.completeExceptionally(processorEx)
