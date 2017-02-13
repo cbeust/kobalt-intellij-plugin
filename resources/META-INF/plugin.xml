@@ -287,6 +287,7 @@
         <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltSettings"/>
         <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltLocalSettings"/>
         <stepsBeforeRunProvider implementation="com.beust.kobalt.intellij.execution.KobaltBeforeRunTaskProvider" />
+        <externalSystemTaskNotificationListener implementation="com.beust.kobalt.intellij.task.KobaltTaskNotificationListenerAdapter"/>
         <runConfigurationProducer implementation="com.beust.kobalt.intellij.execution.KobaltRunConfigurationProducer"/>
         <library.presentationProvider
                 implementation="com.beust.kobalt.intellij.config.KobaltLibraryPresentationProvider" order="last"/>
