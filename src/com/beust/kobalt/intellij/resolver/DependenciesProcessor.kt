@@ -5,6 +5,7 @@ import com.beust.kobalt.intellij.server.ServerFacade
 import com.beust.kobalt.intellij.server.ServerUtil
 import com.google.gson.Gson
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.externalSystem.model.ExternalSystemException
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationEvent
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
@@ -15,6 +16,7 @@ import okio.Buffer
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutionException
 
 /**
  * @author Dmitry Zhuravlev
@@ -81,8 +83,11 @@ class DependenciesProcessor(val kobaltJar: String) {
                 onMessage = { body ->
                     processMessageBody(body, dependenciesFuture, taskId, listener)
                 })
-
-        return dependenciesFuture.get()
+        try {
+            return dependenciesFuture.get()
+        } catch(e: ExecutionException) {
+            throw ExternalSystemException(e.cause ?: e)
+        }
     }
 
     private fun processServerSocketOpen(response: Response, taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener) {
@@ -110,11 +115,11 @@ class DependenciesProcessor(val kobaltJar: String) {
         val json = body.string()
         val wsCommand = Gson().fromJson(json, WebSocketCommand::class.java)
         if (wsCommand.errorMessage != null) {
-            val errorMessage = "Received error message from server: " + wsCommand.errorMessage
+            val errorMessage = "Received error message from Kobalt server: " + wsCommand.errorMessage
             val processorEx = RuntimeException(errorMessage)
             LOG.warn(errorMessage)
             listener.onFailure(taskId, processorEx)
-            dependenciesFuture.completeExceptionally(processorEx)
+//            dependenciesFuture.completeExceptionally(processorEx)
         } else {
             when (wsCommand.commandName) {
                 GetDependenciesData.NAME -> {
@@ -139,7 +144,7 @@ class DependenciesProcessor(val kobaltJar: String) {
                     val processorEx = RuntimeException(errorMessage)
                     LOG.error(errorMessage)
                     listener.onFailure(taskId, processorEx)
-                    dependenciesFuture.completeExceptionally(processorEx)
+//                    dependenciesFuture.completeExceptionally(processorEx)
                 }
             }
         }
