@@ -18,27 +18,29 @@ import java.lang.Exception
 class KobaltTaskNotificationListenerAdapter : ExternalSystemTaskNotificationListenerAdapter() {
     override fun onFailure(taskId: ExternalSystemTaskId, e: Exception) {
         if (Constants.KOBALT_SYSTEM_ID.id == taskId.projectSystemId.id && taskId.type == ExternalSystemTaskType.RESOLVE_PROJECT) {
-            showMessage(e.message ?: "", taskId)
+            showFailMessage(e.message ?: "", taskId)
         }
     }
 }
 
-private fun showMessage(msg: String, taskId: ExternalSystemTaskId) {
+private fun showFailMessage(msg: String, taskId: ExternalSystemTaskId) {
     val project = taskId.findProject()
     if (project != null) {
         val buildFilePath = BuildUtils.buildFile(project)?.path
-        val (line, column) = parseLineAndColumn(msg)
+        val (line, column) = tryParseBuildFileLineAndColumn(msg)
         val notification = NotificationData(
                 buildFilePath ?: "Kobalt problem", msg, NotificationCategory.ERROR, NotificationSource.PROJECT_SYNC, buildFilePath, line, column, false)
         ExternalSystemNotificationManager.getInstance(project).showNotification(taskId.projectSystemId, notification)
     }
 }
 
-private fun parseLineAndColumn(msg: String): Pair<Int, Int> {
+private fun tryParseBuildFileLineAndColumn(msg: String): Pair<Int, Int> {
     val lineColumnStart = ".kt:"
     val lineColumnStartIndex = msg.indexOf(lineColumnStart)
+    if (lineColumnStartIndex == -1) return Pair(-1, -1)
     val lineColumnEndIndex = lineColumnStartIndex + msg.substring(lineColumnStartIndex).indexOf(" ")
-    val lineAndColumnWithColonDelimiter = msg.substring(msg.indexOf(lineColumnStart) + lineColumnStart.length, lineColumnEndIndex)
+    if (lineColumnEndIndex == -1) return Pair(-1, -1)
+    val lineAndColumnWithColonDelimiter = msg.substring(lineColumnStartIndex + lineColumnStart.length, lineColumnEndIndex)
     val line = try {
         lineAndColumnWithColonDelimiter.split(":").getOrNull(0)?.toInt() ?: -1
     } catch (e: NumberFormatException ) {
