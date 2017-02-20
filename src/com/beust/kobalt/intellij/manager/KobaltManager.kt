@@ -137,7 +137,7 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
                     val javaSDKType = sdk.sdkType as JavaSdkType
                     javaSDKType.getVMExecutablePath(sdk)
                 }
-                KobaltExecutionSettings(KFiles.distributionsDir, BuildUtils.findKobaltJar(kobaltVersion).toFile().absolutePath, vmExecutablePath)
+                KobaltExecutionSettings(KFiles.distributionsDir, kobaltVersion, BuildUtils.findKobaltJar(kobaltVersion).toFile().absolutePath, vmExecutablePath)
             }
 
     override fun getTaskManagerClass() = KobaltTaskManager::class.java
