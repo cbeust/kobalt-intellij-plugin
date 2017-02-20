@@ -26,7 +26,7 @@ class SyncBuildFileAction : KobaltAction("Sync build file") {
         FileDocumentManager.getInstance().saveAllDocuments()
         event.project?.let { project ->
             project.getComponent(KobaltProjectComponent::class.java)?.let {
-/*                DependenciesProcessor().run(it, project) { projectsData ->
+/*                KobaltServerResponseProcessor().run(it, project) { projectsData ->
                     LOG.info("$projectsData")
                     //                    Modules.configureModules(project, projectsData)
 //                    KobaltToolWindowComponent.getInstance(project).update(projectsData)

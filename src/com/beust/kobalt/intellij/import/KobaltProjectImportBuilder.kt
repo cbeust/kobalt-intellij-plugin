@@ -1,7 +1,5 @@
 package com.beust.kobalt.intellij.import
 
-import com.beust.kobalt.intellij.BuildModule
-import com.beust.kobalt.intellij.BuildUtils
 import com.beust.kobalt.intellij.Constants
 import com.intellij.externalSystem.JavaProjectData
 import com.intellij.ide.util.projectWizard.WizardContext
@@ -93,11 +91,11 @@ class KobaltProjectImportBuilder(dataManager: ProjectDataManager)
 
     override fun finishImport(project: Project?, externalProjectNode: DataNode<ProjectData>?, isFromUI: Boolean, modules: MutableList<Module>?, modelsProvider: IdeModifiableModelsProvider?, projectSettings: ExternalProjectSettings?) {
         //ensure that Build.kt module present
-        project?.let {
+       /* project?.let {
             BuildUtils.kobaltVersion(it)?.let { kobaltVersion ->
                 BuildModule().run(project, BuildUtils.findKobaltJar(kobaltVersion))
             }
-        }
+        }*/
         super.finishImport(project, externalProjectNode, isFromUI, modules, modelsProvider, projectSettings)
     }
 }

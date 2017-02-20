@@ -22,10 +22,10 @@ import java.util.concurrent.ExecutionException
  * @author Dmitry Zhuravlev
  *         Date: 18.04.16
  */
-class DependenciesProcessor(val kobaltJar: String) {
+class KobaltServerResponseProcessor(val kobaltJar: String) {
 
     companion object {
-        val LOG = Logger.getInstance(DependenciesProcessor::class.java)
+        val LOG = Logger.getInstance(KobaltServerResponseProcessor::class.java)
     }
 
     private var kobaltWebSocketClient: KobaltWebSocketClient? = null

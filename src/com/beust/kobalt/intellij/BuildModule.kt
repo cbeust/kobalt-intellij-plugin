@@ -21,6 +21,7 @@ import java.nio.file.Path
 /**
  * Add a module "Build.kt" that enables auto completion of the build file.
  */
+@Deprecated("External system API now handle Build.kt module creation/disposion ")
 class BuildModule {
     companion object {
         val LOG = Logger.getInstance(BuildModule::class.java)
