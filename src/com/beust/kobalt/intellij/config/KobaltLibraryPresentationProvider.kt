@@ -15,6 +15,9 @@ class KobaltLibraryPresentationProvider : LibraryPresentationProvider<KobaltLibr
 
     companion object {
         private val KOBALT_KIND = LibraryKind.create(Constants.KOBALT_LIBRARY_KIND)
+
+        private const val KOBALT_LIBRARY_NAME_PATTERN = "(kobalt-(\\d+.\\d+).jar)"
+        private const val KOBALT_LIBRARY_VERSION_PATTERN = "(\\d+.\\d+)"
     }
 
     override fun getDescription(properties: KobaltLibraryProperties): String? {
@@ -27,11 +30,11 @@ class KobaltLibraryPresentationProvider : LibraryPresentationProvider<KobaltLibr
 
     override fun detect(classesRoots: MutableList<VirtualFile>): KobaltLibraryProperties? {
         val kobaltJarVersion = detectKobaltJarVersion(VfsUtilCore.toVirtualFileArray(classesRoots))
-        if(kobaltJarVersion.isNotEmpty()) return KobaltLibraryProperties(kobaltJarVersion[0])
+        if (kobaltJarVersion.isNotEmpty()) return KobaltLibraryProperties(kobaltJarVersion[0])
         return null
     }
 
     private fun detectKobaltJarVersion(libraryFiles: Array<out VirtualFile>) = libraryFiles
-            .filter { libraryFile -> libraryFile.name.startsWith("kobalt-") && libraryFile.name.endsWith(".jar") }
-            .map { libraryFile -> libraryFile.name.substring(libraryFile.name.lastIndexOf("-") + 1, libraryFile.name.lastIndexOf(".jar")) }
+            .filter { libraryFile -> Regex(KOBALT_LIBRARY_NAME_PATTERN).matches(libraryFile.name) }
+            .map { libraryFile -> Regex(KOBALT_LIBRARY_VERSION_PATTERN).find(libraryFile.name)?.value ?: "Not determined" }
 }
