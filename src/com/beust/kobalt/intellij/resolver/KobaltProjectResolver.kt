@@ -87,10 +87,16 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
                     setCompileOutputPath(ExternalSystemSourceType.SOURCE, "$projectPath/$KOBALT_BUILD_CLASSES_DIR_NAME")
                     setCompileOutputPath(ExternalSystemSourceType.TEST, "$projectPath/$KOBALT_BUILD_TEST_CLASSES_DIR_NAME")
                 }
+        val contentRoot = ContentRootData(KOBALT_SYSTEM_ID, moduleRootPath)
+        populateContentRoot(contentRoot, ExternalSystemSourceType.SOURCE, setOf("src"))
+
         val moduleDataNode = projectDataNode.createChild(ProjectKeys.MODULE, moduleData)
+        moduleDataNode.createChild(ProjectKeys.CONTENT_ROOT, contentRoot)
+
         dependenciesData.pluginDependencies?.forEach { pluginDependency ->
             buildLibraryDependenciesNodes(moduleDataNode, moduleData, pluginDependency, DependencyScope.COMPILE)
         }
+
         buildLibraryDependenciesNodes(moduleDataNode, moduleData,
                 DependencyData(
                         id = "com.beust.kobalt:kobalt:jar:${executionSettings.kobaltVersion}",
