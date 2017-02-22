@@ -16,8 +16,8 @@ class KobaltLibraryPresentationProvider : LibraryPresentationProvider<KobaltLibr
     companion object {
         private val KOBALT_KIND = LibraryKind.create(Constants.KOBALT_LIBRARY_KIND)
 
-        private const val KOBALT_LIBRARY_NAME_PATTERN = "(kobalt-(\\d+.\\d+).jar)"
         private const val KOBALT_LIBRARY_VERSION_PATTERN = "(\\d+.\\d+)"
+        private const val KOBALT_LIBRARY_NAME_PATTERN = "(kobalt-$KOBALT_LIBRARY_VERSION_PATTERN.jar)"
     }
 
     override fun getDescription(properties: KobaltLibraryProperties): String? {
