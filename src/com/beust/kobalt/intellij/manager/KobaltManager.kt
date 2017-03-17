@@ -3,7 +3,7 @@ package com.beust.kobalt.intellij.manager
 import com.beust.kobalt.intellij.BuildUtils
 import com.beust.kobalt.intellij.Constants
 import com.beust.kobalt.intellij.KFiles
-import com.beust.kobalt.intellij.KobaltApplicationComponent
+import com.beust.kobalt.intellij.KobaltProjectComponent
 import com.beust.kobalt.intellij.import.KobaltAutoImportAware
 import com.beust.kobalt.intellij.resolver.KobaltProjectResolver
 import com.beust.kobalt.intellij.settings.*
@@ -14,6 +14,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.ExternalSystemAutoImportAware
 import com.intellij.openapi.externalSystem.ExternalSystemConfigurableAware
 import com.intellij.openapi.externalSystem.ExternalSystemManager
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemJdkUtil
 import com.intellij.openapi.externalSystem.service.project.autoimport.CachingExternalSystemAutoImportAware
 import com.intellij.openapi.externalSystem.service.ui.DefaultExternalSystemUiAware
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
@@ -22,6 +23,8 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.fileChooser.FileChooserDescriptor
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.projectRoots.JavaSdkType
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Pair
 import com.intellij.openapi.util.text.StringUtil
@@ -32,6 +35,7 @@ import com.intellij.util.containers.ContainerUtilRt
 import com.intellij.util.net.HttpConfigurable
 import icons.KobaltIcons
 import okhttp3.OkHttpClient
+import okhttp3.ws.WebSocket
 import okio.Sink
 import org.apache.http.auth.Credentials
 import retrofit2.Retrofit
@@ -91,11 +95,19 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Sink::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(GsonConverterFactory::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Credentials::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(WebSocket::class.java))
         parameters.classPath.addAll(additionalClasspath)
         parameters.charset = CharsetToolkit.UTF8_CHARSET
         parameters.vmParametersList.addProperty("file.encoding", CharsetToolkit.UTF8)
         parameters.vmParametersList.addProperty(
                 ExternalSystemConstants.EXTERNAL_SYSTEM_ID_KEY, Constants.KOBALT_SYSTEM_ID.id)
+
+        // To debug the retrieval of dependencies, uncomment this and launch a remote debugging
+        // configuration. Note that suspend=y, so the sync will not proceed until the remote
+        // connects to it.
+//        parameters.vmParametersList.addParametersString(
+//                "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5009")
+
         with(HttpConfigurable.getInstance()){
             with(parameters.vmParametersList) {
                 if (!StringUtil.isEmpty(PROXY_EXCEPTIONS)) {
@@ -103,9 +115,9 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
                     addProperty("http.nonProxyHosts",nonProxyHosts)
                     addProperty("https.nonProxyHosts",nonProxyHosts)
                 }
-                if (USE_HTTP_PROXY && StringUtil.isNotEmpty(PROXY_LOGIN)) {
-                    addProperty("http.proxyUser", PROXY_LOGIN)
-                    addProperty("https.proxyUser", PROXY_LOGIN)
+                if (USE_HTTP_PROXY && StringUtil.isNotEmpty(proxyLogin)) {
+                    addProperty("http.proxyUser", proxyLogin)
+                    addProperty("https.proxyUser", proxyLogin)
                     addProperty("http.proxyPassword", plainProxyPassword)
                     addProperty("https.proxyPassword", plainProxyPassword)
                 }
@@ -116,8 +128,16 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
 
     override fun getExecutionSettingsProvider(): Function<Pair<Project, String>, KobaltExecutionSettings> =
             Function { pair ->
-                val kobaltVersion = BuildUtils.kobaltVersion(pair.first)?: KobaltApplicationComponent.latestKobaltVersion
-                KobaltExecutionSettings(KFiles.distributionsDir, BuildUtils.findKobaltJar(kobaltVersion).toFile().absolutePath)
+                val project = pair.first
+                val kobaltVersion = BuildUtils.kobaltVersion(project) ?: KobaltProjectComponent.getInstance(project).latestKobaltVersion
+                val projectSdk = ProjectRootManager.getInstance(project).projectSdk
+                        ?: ExternalSystemJdkUtil.getAvailableJdk(project)?.second
+                        ?: throw RuntimeException("JDK not found in system! Please add one and define JAVA_HOME variable")
+                val vmExecutablePath = (projectSdk).let { sdk ->
+                    val javaSDKType = sdk.sdkType as JavaSdkType
+                    javaSDKType.getVMExecutablePath(sdk)
+                }
+                KobaltExecutionSettings(KFiles.distributionsDir, kobaltVersion, BuildUtils.findKobaltJar(kobaltVersion).toFile().absolutePath, vmExecutablePath)
             }
 
     override fun getTaskManagerClass() = KobaltTaskManager::class.java

@@ -1,0 +1,5 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="org.jetbrains.kotlin">
+        <projectConfigurator implementation="com.beust.kobalt.intellij.configurator.KotlinKobaltProjectConfigurator"/>
+    </extensions>
+</idea-plugin>

@@ -1,6 +1,7 @@
 package com.beust.kobalt.intellij.server
 
 import com.beust.kobalt.intellij.GetDependenciesData
+import com.beust.kobalt.intellij.PingResponse
 import com.beust.kobalt.intellij.TemplatesData
 import com.intellij.openapi.diagnostic.Logger
 import okhttp3.OkHttpClient
@@ -26,7 +27,7 @@ class ServerFacade(val port: Int?) {
                 : Call<GetDependenciesData>
         @GET("/v0/getTemplates") fun getTemplates(): Call<TemplatesData>
         @GET("/quit") fun quit(): Call<ResponseBody>
-        @GET("/ping") fun ping(): Call<ResponseBody>
+        @GET("/ping") fun ping(): Call<PingResponse>
     }
 
     fun sendPingCommand() = buildService().ping().execute()

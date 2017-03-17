@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.109</version>
+    <version>1.120</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,34 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.120</h1>
+        <ul>
+            <li>Fixed: Incorrect of a Kobalt configuration in Gradle projects.
+        </ul>
+        <h1>1.118</h1>
+        <ul>
+            <li>Display the dependencies as a tree instead of a list.
+        </ul>
+        <h1>1.117</h1>
+        <ul>
+            <li>Remove duplication of Tasks nodes.
+        </ul>
+        <h1>1.115</h1>
+        <ul>
+            <li>Make plugin compatible regarding changes in API (com.intellij.util.net.HttpConfigurable).
+        </ul>
+        <h1>1.114</h1>
+        <ul>
+            <li>Better synchronizing progress messages with Websockets.
+        </ul>
+        <h1>1.113</h1>
+        <ul>
+            <li>Imported projects are now named after their project name instead of "Kobalt project".
+        </ul>
+        <h1>1.112</h1>
+        <ul>
+            <li>Build.kt files can now have breakpoints.
+        </ul>
         <h1>1.103</h1>
         <ul>
             <li>Can choose specific Kobalt version
@@ -175,7 +203,7 @@
     </change-notes>
 
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-    <idea-version since-build="131"/>
+    <idea-version since-build="162.1121.32"/>
 
     <depends>com.intellij.modules.androidstudio</depends>
 
@@ -185,6 +213,8 @@
     <!-- uncomment to enable plugin in all products
     <depends>com.intellij.modules.lang</depends>
     -->
+
+    <depends optional="true" config-file="kotlin-idea-plugin-integration.xml">org.jetbrains.kotlin</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <!--<weigher key="completion" implementationClass="com.beust.kobalt.intellij.KobaltWeigher" />-->
@@ -199,9 +229,14 @@
                 text="_Sync build file" description="Sync the build file" icon="AllIcons.Actions.Refresh">
             <keyboard-shortcut first-keystroke="control alt K" keymap="$default"/>
         </action>
+        <action id="kobalt.FindKobaltProject" class="com.beust.kobalt.intellij.FindDetachedKobaltProjectAction"
+                text="Find detached _Kobalt project" description="Recheck this project for detached Kobalt project" icon="AllIcons.Actions.Search">
+            <keyboard-shortcut first-keystroke="alt shift K" keymap="$default"/>
+        </action>
         <group id="kobalt.ToolsMenu" class="com.beust.kobalt.intellij.KobaltToolsGroup" popup="true"
                text="_Kobalt" description="Kobalt">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <reference id="kobalt.FindKobaltProject"/>
             <!--<reference id="kobalt.SyncBuildFile"/>-->
 <!--
             <action id="kobalt.EnableBuildCompletion" class="com.beust.kobalt.intellij.EnableBuildCompletionAction"
@@ -247,7 +282,6 @@
 
         <projectImportProvider implementation="com.beust.kobalt.intellij.import.KobaltProjectImportProvider"/>
         <projectImportBuilder implementation="com.beust.kobalt.intellij.import.KobaltProjectImportBuilder"/>
-
         <externalSystemExecutionConsoleManager
                 implementation="com.beust.kobalt.intellij.execution.KobaltExecutionConsoleManager" order="last"/>
         <externalSystemManager implementation="com.beust.kobalt.intellij.manager.KobaltManager"/>
@@ -256,7 +290,8 @@
         <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltSettings"/>
         <projectService serviceImplementation="com.beust.kobalt.intellij.settings.KobaltLocalSettings"/>
         <stepsBeforeRunProvider implementation="com.beust.kobalt.intellij.execution.KobaltBeforeRunTaskProvider" />
-        <configurationProducer implementation="com.beust.kobalt.intellij.execution.KobaltRuntimeConfigurationProducer"/>
+        <externalSystemTaskNotificationListener implementation="com.beust.kobalt.intellij.task.KobaltTaskNotificationListenerAdapter"/>
+        <runConfigurationProducer implementation="com.beust.kobalt.intellij.execution.KobaltRunConfigurationProducer"/>
         <library.presentationProvider
                 implementation="com.beust.kobalt.intellij.config.KobaltLibraryPresentationProvider" order="last"/>
         <moduleBuilder builderClass="com.beust.kobalt.intellij.project.wizard.KobaltModuleBuilder"/>

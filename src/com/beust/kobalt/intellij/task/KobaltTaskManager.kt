@@ -27,8 +27,9 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
                               listener: ExternalSystemTaskNotificationListener) {
 
         val kobaltJar = settings?.kobaltJar ?: return
-        val parameters = prepareTaskExecutionParameters(projectPath, kobaltJar, taskNames)
-        processHandler = MyCapturingProcessHandler(parameters.toCommandLine()).apply {
+        val vmExecutablePath = settings?.vmExecutablePath ?: return
+        val parameters = prepareTaskExecutionParameters(projectPath, kobaltJar, taskNames, scriptParameters, vmOptions, debuggerSetup)
+        processHandler = MyCapturingProcessHandler(parameters.toCommandLine(vmExecutablePath)).apply {
              addProcessListener(
                      object : ProcessAdapter() {
                          override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>?) {
@@ -40,12 +41,19 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
         processOutput = processHandler?.runProcess()
     }
 
-    private fun prepareTaskExecutionParameters(projectPath: String, kobaltJar: String, taskNames: MutableList<String>): SimpleJavaParameters {
+    private fun prepareTaskExecutionParameters(projectPath: String, kobaltJar: String, taskNames: MutableList<String>,
+                                               scriptParameters: MutableList<String>, vmOptions: MutableList<String>,
+                                               debuggerSetup: String?): SimpleJavaParameters {
         val parameters = SimpleJavaParameters().apply {
             workingDirectory = projectPath
             mainClass = "com.beust.kobalt.MainKt"
             classPath.add(kobaltJar)
+            vmParametersList.addAll(vmOptions)
+            if(debuggerSetup!=null) {
+                vmParametersList.addParametersString(debuggerSetup)
+            }
             programParametersList.addAll(taskNames)
+            programParametersList.addAll(scriptParameters)
         }
         return parameters
     }
@@ -59,6 +67,6 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
 
 }
 
-fun SimpleJavaParameters.toCommandLine(): GeneralCommandLine {
-    return JdkUtil.setupJVMCommandLine("java", this, false) //TODO get path for java from module JDK definition
+fun SimpleJavaParameters.toCommandLine(vmExecutablePath:String): GeneralCommandLine {
+    return JdkUtil.setupJVMCommandLine(vmExecutablePath, this, false)
 }

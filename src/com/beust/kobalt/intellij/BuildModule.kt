@@ -20,6 +20,7 @@ import java.nio.file.Path
 /**
  * Add a module "Build.kt" that enables auto completion of the build file.
  */
+@Deprecated("External system API now handle Build.kt module creation/disposion ")
 class BuildModule {
     companion object {
         val LOG = Logger.getInstance(BuildModule::class.java)
@@ -91,13 +92,14 @@ class BuildModule {
             result = ltModel.getLibraryByName(libraryName) ?: ltModel.createLibrary(libraryName)
             result!!.modifiableModel.let { libModel ->
                     val location = kobaltJar.toFile().absolutePath
-                    val url = VirtualFileManager.constructUrl(JarFileSystem.PROTOCOL, location) +
+                    val kobaltJarUrl = VirtualFileManager.constructUrl(JarFileSystem.PROTOCOL, location) +
                             JarFileSystem.JAR_SEPARATOR
                     //remove old kobalt.jar
                     libModel.getUrls(OrderRootType.CLASSES).forEach {
                         libModel.removeRoot(it, OrderRootType.CLASSES)
                     }
-                    libModel.addRoot(url, OrderRootType.CLASSES)
+                    libModel.addRoot(kobaltJarUrl, OrderRootType.CLASSES)
+                    libModel.addRoot(kobaltJarUrl, OrderRootType.SOURCES)
 
                 libModel.commit()
             }

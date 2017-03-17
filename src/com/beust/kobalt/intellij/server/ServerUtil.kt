@@ -1,13 +1,13 @@
 package com.beust.kobalt.intellij.server
 
 import com.beust.kobalt.intellij.KFiles
-import com.beust.kobalt.intellij.KobaltApplicationComponent
 import com.beust.kobalt.intellij.MyCapturingProcessHandler
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.execution.process.ProcessAdapter
 import com.intellij.execution.process.ProcessEvent
+import com.intellij.execution.process.ProcessOutputTypes
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.projectRoots.JdkUtil
 import com.intellij.openapi.util.Key
@@ -18,6 +18,7 @@ import java.io.IOException
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import com.beust.kobalt.intellij.use  //FIXME see the workaround explanation in com.beust.kobalt.intellij.Closeable.kt file
 
 class ServerUtil {
 
@@ -33,7 +34,8 @@ class ServerUtil {
 
         val LOG = Logger.getInstance(ServerUtil::class.java)
 
-        fun findServerPort(): Int? {
+        fun findServerPort(): Int {
+            val defaultPort = 1234
             val file = File(SERVER_FILE)
             if (file.exists()) {
                 val p = Properties().apply {
@@ -43,7 +45,8 @@ class ServerUtil {
                 }
                 return p.getProperty(KEY_PORT).toInt()
             } else {
-                return null
+                LOG.warn("Cannot found Kobalt server port in $SERVER_FILE. The default port $defaultPort will be used.")
+                return defaultPort
             }
         }
 
@@ -81,10 +84,10 @@ class ServerUtil {
         }
 
         fun isServerRunning(): Boolean {
-            findServerPort()?.let { port ->
+            findServerPort().let { port ->
                 try {
                     val response = ServerFacade(findServerPort()).sendPingCommand()
-                    return if(response.isSuccessful) response.body().string() == PING_SUCCESSFUL_RESPONSE else false
+                    return if(response.isSuccessful) response.body().result == PING_SUCCESSFUL_RESPONSE else false
                 } catch(ex: IOException) {
                     LOG.debug("    Couldn't connect to $port: $ex")
                     // ignore
@@ -104,7 +107,7 @@ class ServerUtil {
             threadPool = null
         }
 
-        @Synchronized fun launchServer(kobaltJar: String) {
+        @Synchronized fun launchServer(vmExecutablePath:String, kobaltJar: String) {
             if (shuttingDown) {
                 return
             }
@@ -115,17 +118,19 @@ class ServerUtil {
             threadPool = Executors.newFixedThreadPool(2)
             LOG.info("Kobalt jar: $kobaltJar")
             if (!File(kobaltJar).exists()) {
-                KobaltApplicationComponent.LOG.error("Can't find the jar file",
-                        kobaltJar + " can't be found")
-                LOG.error(null, "Can't find the jar file", kobaltJar + " can't be found")
+                LOG.error("Can't find the jar file $kobaltJar")
             } else {
                 val serverExecutionParams = prepareServerExecutionParameters(kobaltJar)
-                processHandler = MyCapturingProcessHandler(serverExecutionParams.toCommandLine()).apply {
+                processHandler = MyCapturingProcessHandler(serverExecutionParams.toCommandLine(vmExecutablePath)).apply {
                     addProcessListener(
                             object : ProcessAdapter() {
                                 override fun onTextAvailable(event: ProcessEvent?, outputType: Key<*>?) {
                                     if (event != null) {
-                                        LOG.info(event.text)
+                                        if (outputType != null && outputType.equals(ProcessOutputTypes.STDERR)) {
+                                            LOG.error(event.text)
+                                        } else {
+                                            LOG.info(event.text)
+                                        }
                                     }
                                 }
                             }
@@ -159,15 +164,8 @@ class ServerUtil {
             return parameters
         }
 
-        fun SimpleJavaParameters.toCommandLine(): GeneralCommandLine {
-            return JdkUtil.setupJVMCommandLine(findJava(), this, false) //TODO get path for java from module JDK definition
-        }
-
-        private fun findJava(): String {
-            //TODO should use java from project SDK
-            val javaHome = System.getProperty("java.home")
-            val result = if (javaHome != null) "$javaHome/bin/java" else "java"
-            return result
+        fun SimpleJavaParameters.toCommandLine(vmExecutablePath:String): GeneralCommandLine {
+            return JdkUtil.setupJVMCommandLine(vmExecutablePath, this, false)
         }
     }
 }
