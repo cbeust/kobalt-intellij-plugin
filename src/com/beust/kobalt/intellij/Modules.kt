@@ -2,7 +2,6 @@ package com.beust.kobalt.intellij
 
 import com.google.gson.GsonBuilder
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.StdModuleTypes
