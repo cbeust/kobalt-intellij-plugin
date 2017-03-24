@@ -1,6 +1,8 @@
 package com.beust.kobalt.intellij.resolver
 
 import com.beust.kobalt.intellij.Constants
+import com.beust.kobalt.intellij.Constants.Companion.BUILD_CLASSES_DIR_NAME
+import com.beust.kobalt.intellij.Constants.Companion.BUILD_TEST_CLASSES_DIR_NAME
 import com.beust.kobalt.intellij.Constants.Companion.KOBALT_BUILD_CLASSES_DIR_NAME
 import com.beust.kobalt.intellij.Constants.Companion.KOBALT_BUILD_DIR_NAME
 import com.beust.kobalt.intellij.Constants.Companion.KOBALT_BUILD_TEST_CLASSES_DIR_NAME
@@ -84,8 +86,8 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
                 projectPath)
                 .apply {
                     isInheritProjectCompileOutputPath = false
-                    setCompileOutputPath(ExternalSystemSourceType.SOURCE, "$projectPath/$KOBALT_BUILD_CLASSES_DIR_NAME")
-                    setCompileOutputPath(ExternalSystemSourceType.TEST, "$projectPath/$KOBALT_BUILD_TEST_CLASSES_DIR_NAME")
+                    setCompileOutputPath(ExternalSystemSourceType.SOURCE, "$moduleRootPath/out/$BUILD_CLASSES_DIR_NAME")
+                    setCompileOutputPath(ExternalSystemSourceType.TEST, "$moduleRootPath/out/$BUILD_TEST_CLASSES_DIR_NAME")
                 }
         val contentRoot = ContentRootData(KOBALT_SYSTEM_ID, moduleRootPath)
         populateContentRoot(contentRoot, ExternalSystemSourceType.SOURCE, setOf("src"))

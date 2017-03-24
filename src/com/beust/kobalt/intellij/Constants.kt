@@ -18,8 +18,10 @@ class Constants {
         val BUILD_FILE_EXTENSIONS = "kt"
 
         val KOBALT_BUILD_DIR_NAME = "kobaltBuild"
-        val KOBALT_BUILD_CLASSES_DIR_NAME = "$KOBALT_BUILD_DIR_NAME/classes"
-        val KOBALT_BUILD_TEST_CLASSES_DIR_NAME = "$KOBALT_BUILD_DIR_NAME/test-classes"
+        val BUILD_CLASSES_DIR_NAME="classes"
+        val BUILD_TEST_CLASSES_DIR_NAME="test-classes"
+        val KOBALT_BUILD_CLASSES_DIR_NAME = "$KOBALT_BUILD_DIR_NAME/$BUILD_CLASSES_DIR_NAME"
+        val KOBALT_BUILD_TEST_CLASSES_DIR_NAME = "$KOBALT_BUILD_DIR_NAME/$BUILD_TEST_CLASSES_DIR_NAME"
 
         val KOBALT_LIBRARY_KIND = "kobalt.library"
     }
