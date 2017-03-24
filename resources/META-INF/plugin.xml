@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.120</version>
+    <version>1.122</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,15 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.122</h1>
+        <ul>
+            <li>Implemented Kotlin plugin configurator: This will add ability to include Kotlin runtime dependencies directly to Build.kt file
+            <li>Some fixes
+        </ul>
+        <h1>1.121</h1>
+        <ul>
+            <li>Kotlin 1.1
+        </ul>
         <h1>1.120</h1>
         <ul>
             <li>Fixed: Incorrect of a Kobalt configuration in Gradle projects.
