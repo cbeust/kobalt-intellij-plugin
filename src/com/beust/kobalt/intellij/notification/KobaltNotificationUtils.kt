@@ -49,7 +49,7 @@ fun showNotificationForUnlinkedkobaltProject(project: Project) {
                     val projectDataManager = ServiceManager.getService(ProjectDataManager::class.java)
                     val kobaltProjectImportBuilder = KobaltProjectImportBuilder(projectDataManager)
                     val kobaltProjectImportProvider = KobaltProjectImportProvider(kobaltProjectImportBuilder)
-                    val wizard = AddModuleWizard(null, kobaltBuildFile.path, kobaltProjectImportProvider)
+                    val wizard = AddModuleWizard(project, kobaltBuildFile.path, kobaltProjectImportProvider)
                     if (wizard.stepCount <= 0 || wizard.showAndGet()) {
                         ImportModuleAction.createFromWizard(project, wizard)
                     }
