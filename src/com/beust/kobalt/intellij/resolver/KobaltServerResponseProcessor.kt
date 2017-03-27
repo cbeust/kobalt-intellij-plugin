@@ -55,20 +55,19 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
     }
 
     private fun sendGetDependenciesWebSocket(executionSettings: KobaltExecutionSettings, projectPath: String, taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): GetDependenciesData? {
-        val buildFile = File(projectPath + File.separator + Constants.BUILD_FILE)
-        val buildFilePath = FileUtil.toSystemIndependentName(buildFile.canonicalPath)
-        if (!buildFile.exists()) {
-            LOG.warn("Couldn't find ${Constants.BUILD_FILE} in $buildFilePath, aborting")
+        val projectRootPath = FileUtil.toSystemIndependentName(projectPath)
+        if (!File(projectRootPath).exists()) {
+            LOG.warn("Couldn't determine project root path $projectRootPath, aborting")
             return null
         }
         if (!ServerUtil.isServerRunning()) {
             ServerUtil.launchServer(executionSettings.vmExecutablePath, kobaltJar)
         }
-        LOG.debug("Call GetDependencies for build file $buildFilePath")
+        LOG.debug("Call GetDependencies for project path $projectPath")
 
         kobaltWebSocketClient = KobaltWebSocketClient(
                 port = ServerUtil.findServerPort(),
-                url = "/v1/getDependencyGraph?buildFile=$buildFilePath${executionSettings.getProfilesQueryParam()}",
+                url = "/v1/getDependencyGraph?projectRoot=$projectRootPath${executionSettings.getProfilesQueryParam()}",
                 onOpen = { response ->
                     processServerSocketOpen(response, taskId, listener)
                 },
