@@ -6,7 +6,7 @@ import com.intellij.openapi.externalSystem.settings.ExternalProjectSettings
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltProjectSettings(var kobaltHome: String? = null, var autoDownloadKobalt: Boolean? = null) : ExternalProjectSettings() {
+class KobaltProjectSettings(var kobaltHome: String? = null, var autoDownloadKobalt: Boolean? = null, var profiles: String? = null) : ExternalProjectSettings() {
 
     fun kobaltVersion(): String? {
         val home = kobaltHome
@@ -18,5 +18,6 @@ class KobaltProjectSettings(var kobaltHome: String? = null, var autoDownloadKoba
         this@KobaltProjectSettings.copyTo(this)
         this@apply.kobaltHome = this@KobaltProjectSettings.kobaltHome
         this@apply.autoDownloadKobalt = this@KobaltProjectSettings.autoDownloadKobalt
+        this@apply.profiles = this@KobaltProjectSettings.profiles
     }
 }

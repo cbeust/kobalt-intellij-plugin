@@ -3,6 +3,7 @@ package com.beust.kobalt.intellij.resolver
 import com.beust.kobalt.intellij.*
 import com.beust.kobalt.intellij.server.ServerFacade
 import com.beust.kobalt.intellij.server.ServerUtil
+import com.beust.kobalt.intellij.settings.KobaltExecutionSettings
 import com.google.gson.Gson
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.model.ExternalSystemException
@@ -34,9 +35,9 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
 
     private val cancelGetDependenciesFuture = CompletableFuture<Boolean>()
 
-    fun resolveDependencies(vmExecutablePath: String, projectPath: String, taskId: ExternalSystemTaskId,
+    fun resolveDependencies(executionSettings: KobaltExecutionSettings, projectPath: String, taskId: ExternalSystemTaskId,
                             listener: ExternalSystemTaskNotificationListener, callback: (GetDependenciesData) -> Unit)
-            = sendGetDependenciesWebSocket(vmExecutablePath, projectPath, taskId, listener)?.run { callback.invoke(this) }
+            = sendGetDependenciesWebSocket(executionSettings, projectPath, taskId, listener)?.run { callback.invoke(this) }
 
     @Deprecated("Substituded with websocket communication. Will be removed in future")
     fun run(vmExecutablePath: String, projectPath: String, callback: (GetDependenciesData) -> Unit) = sendGetDependencies(vmExecutablePath, projectPath)?.run { callback.invoke(this) }
@@ -53,7 +54,7 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
         }
     }
 
-    private fun sendGetDependenciesWebSocket(vmExecutablePath: String, projectPath: String, taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): GetDependenciesData? {
+    private fun sendGetDependenciesWebSocket(executionSettings: KobaltExecutionSettings, projectPath: String, taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): GetDependenciesData? {
         val buildFile = File(projectPath + File.separator + Constants.BUILD_FILE)
         val buildFilePath = FileUtil.toSystemIndependentName(buildFile.canonicalPath)
         if (!buildFile.exists()) {
@@ -61,13 +62,13 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
             return null
         }
         if (!ServerUtil.isServerRunning()) {
-            ServerUtil.launchServer(vmExecutablePath, kobaltJar)
+            ServerUtil.launchServer(executionSettings.vmExecutablePath, kobaltJar)
         }
         LOG.debug("Call GetDependencies for build file $buildFilePath")
 
         kobaltWebSocketClient = KobaltWebSocketClient(
                 port = ServerUtil.findServerPort(),
-                url = "/v1/getDependencyGraph?buildFile=$buildFilePath",
+                url = "/v1/getDependencyGraph?buildFile=$buildFilePath${executionSettings.getProfilesQueryParam()}",
                 onOpen = { response ->
                     processServerSocketOpen(response, taskId, listener)
                 },
@@ -89,6 +90,8 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
             throw ExternalSystemException(e.cause ?: e)
         }
     }
+
+    private fun KobaltExecutionSettings.getProfilesQueryParam() = if (profiles != null && profiles.isNotBlank()) "&profiles=$profiles" else ""
 
     private fun processServerSocketOpen(response: Response, taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener) {
         LOG.info("Connected to Kobalt server via websocket. response message: ${response.message()} response code: ${response.code()}")
