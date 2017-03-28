@@ -1,7 +1,7 @@
 <idea-plugin version="2">
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.122</version>
+    <version>1.123</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.123</h1>
+        <ul>
+            <li> added profiles field in Kobalt settings.
+            <li> fix "project directory is already taken" error.
+            <li> implemented getDependencyGraph by project root.
+        </ul>
         <h1>1.122</h1>
         <ul>
             <li>Implemented Kotlin plugin configurator: This will add ability to include Kotlin runtime dependencies directly to Build.kt file
