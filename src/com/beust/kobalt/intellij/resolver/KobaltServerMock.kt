@@ -11,7 +11,7 @@ import java.io.File
  */
 class KobaltServerMock {
 
-    fun run(projectPath:String, callback: (List<ProjectData>) -> Unit) = callback.invoke(mockData)
+    fun run(projectPath: String, callback: (List<ProjectData>) -> Unit) = callback.invoke(mockData)
 
     val mockData =
             listOf(ProjectData(
@@ -28,8 +28,8 @@ class KobaltServerMock {
                     testDirs = setOf("src/test/java"),
                     sourceResourceDirs = setOf("main/resources"),
                     testResourceDirs = setOf("test/resources"),
-                    tasks = listOf(TaskData("assemble","Assemble Module", "build"),
-                            TaskData("compile","Compile Module", "build"))),
+                    tasks = setOf(TaskData("assemble", "Assemble Module", "build"),
+                            TaskData("compile", "Compile Module", "build"))),
 
                     ProjectData(
                             name = "module2",
@@ -45,7 +45,7 @@ class KobaltServerMock {
                             testDirs = setOf("src/test/java"),
                             sourceResourceDirs = setOf("main/resources"),
                             testResourceDirs = setOf("test/resources"),
-                            tasks = listOf(TaskData("assemble","Assemble Module", "build"),
+                            tasks = setOf(TaskData("assemble", "Assemble Module", "build"),
                                     TaskData("compile", "Compile Module", "build")))
             )
 
