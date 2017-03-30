@@ -24,7 +24,11 @@ import com.intellij.openapi.projectRoots.JavaSdkVersion
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
+import com.intellij.util.io.isFile
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 /**
  * @author Dmitry Zhuravlev
@@ -171,8 +175,15 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
     private fun buildLibraryDependenciesNodes(moduleDataNode: DataNode<ModuleData>, moduleData: ModuleData, serverDepLibrary: DependencyData, depScope: DependencyScope,
                                               libraryDepDataNode: DataNode<LibraryDependencyData>? = null) {
         val libraryFile = File(serverDepLibrary.path)
-        val libraryData = LibraryData(KOBALT_SYSTEM_ID, serverDepLibrary.id, !libraryFile.exists())
-        libraryData.addPath(LibraryPathType.BINARY, serverDepLibrary.path)
+        val libraryData = LibraryData(KOBALT_SYSTEM_ID, serverDepLibrary.id, !libraryFile.exists()).apply {
+            addPath(LibraryPathType.BINARY, serverDepLibrary.path)
+            findSources(serverDepLibrary.path)?.let { sourcesPath ->
+                addPath(LibraryPathType.SOURCE, sourcesPath)
+            }
+            findJavaDoc(serverDepLibrary.path)?.let { javaDocPath ->
+                addPath(LibraryPathType.DOC, javaDocPath)
+            }
+        }
 
         val libraryDepData = LibraryDependencyData(moduleData, libraryData, LibraryLevel.MODULE).apply {
             scope = depScope
@@ -184,8 +195,25 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         }
     }
 
-    private fun populateContentRoot(contentRoot: ContentRootData, type: ExternalSystemSourceType,
-                                    dirs: Set<String>) =
+    private fun findSources(binaryPath: String) = Paths.get(binaryPath).parent?.let {
+        Files.walk(it)
+                .filter(Path::isFile)
+                .map(Path::toString)
+                .filter {it.endsWith("sources.jar") }
+                .findFirst().orElse(null)
+                ?.let { FileUtil.toSystemIndependentName(it) }
+    }
+
+    private fun findJavaDoc(binaryPath: String) = Paths.get(binaryPath).parent?.let {
+        Files.walk(it)
+                .filter(Path::isFile)
+                .map(Path::toString)
+                .filter {it.endsWith("javadoc.jar") }
+                .findFirst().orElse(null)
+                ?.let { FileUtil.toSystemIndependentName(it) }
+    }
+
+    private fun populateContentRoot(contentRoot: ContentRootData, type: ExternalSystemSourceType, dirs: Set<String>) =
             dirs.forEach { dir ->
                 contentRoot.storePath(type, contentRoot.rootPath + File.separator + dir)
             }
