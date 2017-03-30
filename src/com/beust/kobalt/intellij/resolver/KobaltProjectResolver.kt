@@ -20,8 +20,10 @@ import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotifica
 import com.intellij.openapi.externalSystem.model.task.TaskData
 import com.intellij.openapi.externalSystem.service.project.ExternalSystemProjectResolver
 import com.intellij.openapi.module.StdModuleTypes
+import com.intellij.openapi.projectRoots.JavaSdkVersion
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.pom.java.LanguageLevel
 import java.io.File
 
 /**
@@ -189,9 +191,9 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
             }
 
 
-    fun createJavaProjectData(projectPath: String): JavaProjectData {
-        val javaProjectData = JavaProjectData(KOBALT_SYSTEM_ID, "$projectPath/$KOBALT_BUILD_CLASSES_DIR_NAME")
-        return javaProjectData
+    fun createJavaProjectData(projectPath: String) = JavaProjectData(KOBALT_SYSTEM_ID, "$projectPath/$KOBALT_BUILD_CLASSES_DIR_NAME").apply {
+        languageLevel = LanguageLevel.JDK_1_8
+        jdkVersion = JavaSdkVersion.JDK_1_8
     }
 
     override fun cancelTask(taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener)
