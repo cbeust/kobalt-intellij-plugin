@@ -67,7 +67,7 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
 
         kobaltWebSocketClient = KobaltWebSocketClient(
                 port = ServerUtil.findServerPort(),
-                url = "/v1/getDependencyGraph?projectRoot=$projectRootPath${executionSettings.getProfilesQueryParam()}",
+                url = "/v1/getDependencyGraph?projectRoot=$projectRootPath${executionSettings.getProfilesQueryParam()}${executionSettings.getDownloadSourcesQueryParam()}",
                 onOpen = { response ->
                     processServerSocketOpen(response, taskId, listener)
                 },
@@ -91,6 +91,7 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
     }
 
     private fun KobaltExecutionSettings.getProfilesQueryParam() = if (profiles != null && profiles.isNotBlank()) "&profiles=$profiles" else ""
+    private fun KobaltExecutionSettings.getDownloadSourcesQueryParam() = if (downloadSources != null ) "&downloadSources=$downloadSources" else ""
 
     private fun processServerSocketOpen(response: Response, taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener) {
         LOG.info("Connected to Kobalt server via websocket. response message: ${response.message()} response code: ${response.code()}")

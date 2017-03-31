@@ -139,7 +139,8 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
                 }
                 KobaltExecutionSettings(KFiles.distributionsDir, kobaltVersion,
                         BuildUtils.findKobaltJar(kobaltVersion).toFile().absolutePath,
-                        vmExecutablePath, BuildUtils.kobaltProjectSettings(project)?.profiles)
+                        vmExecutablePath, BuildUtils.kobaltProjectSettings(project)?.profiles,
+                        BuildUtils.kobaltProjectSettings(project)?.downloadSources)
             }
 
     override fun getTaskManagerClass() = KobaltTaskManager::class.java
