@@ -88,6 +88,12 @@ private fun downloadAndInstallKobalt(project: Project) {
             onSuccessDownload = { installedVersion ->
                 ServerUtil.stopServer()
                 BuildUtils.updateWrapperVersion(project, installedVersion)
+                with(StartupManager.getInstance(project)) {
+                    BuildUtils.kobaltProjectSettings(project)?.let { settings ->
+                        ExternalSystemUtil.refreshProject(project, Constants.KOBALT_SYSTEM_ID,
+                                settings.externalProjectPath, false, ProgressExecutionMode.IN_BACKGROUND_ASYNC)
+                    }
+                }
             },
             onKobaltJarPresent = { installedVersion ->
                 with(StartupManager.getInstance(project)) {
@@ -95,8 +101,6 @@ private fun downloadAndInstallKobalt(project: Project) {
                         //BuildModule().run(project, BuildUtils.findKobaltJar(installedVersion))
                         BuildUtils.kobaltProjectSettings(project)?.let { settings ->
                             settings.kobaltHome = KFiles.kobaltHomeDir(installedVersion)
-                            ExternalSystemUtil.refreshProject(project, Constants.KOBALT_SYSTEM_ID,
-                                    settings.externalProjectPath, false, ProgressExecutionMode.IN_BACKGROUND_ASYNC)
                         }
                     }
                 }
