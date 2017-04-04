@@ -101,6 +101,10 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         val moduleDataNode = projectDataNode.createChild(ProjectKeys.MODULE, moduleData)
         moduleDataNode.createChild(ProjectKeys.CONTENT_ROOT, contentRoot)
 
+        dependenciesData.buildContentRoots.forEach { contentRoot->
+            moduleDataNode.createChild(ProjectKeys.CONTENT_ROOT, ContentRootData(KOBALT_SYSTEM_ID, contentRoot).apply { populateContentRoot(this, ExternalSystemSourceType.SOURCE, setOf("src")) })
+        }
+
         dependenciesData.pluginDependencies?.forEach { pluginDependency ->
             buildLibraryDependenciesNodes(moduleDataNode, moduleData, pluginDependency, DependencyScope.COMPILE)
         }
