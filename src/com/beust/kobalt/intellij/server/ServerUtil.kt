@@ -19,6 +19,7 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import com.beust.kobalt.intellij.use  //FIXME see the workaround explanation in com.beust.kobalt.intellij.Closeable.kt file
+import java.util.concurrent.TimeUnit
 
 class ServerUtil {
 
@@ -55,7 +56,7 @@ class ServerUtil {
             while (attempts < 7) {
                 if (!isServerRunning()) {
                     LOG.debug("     Server is still starting, sleeping a bit")
-                    Thread.sleep(1000)
+                    TimeUnit.SECONDS.sleep(5)
                     attempts++
                 } else {
                     LOG.debug("     Server is now running")
@@ -72,7 +73,7 @@ class ServerUtil {
             while (attempts < 7) {
                 if (isServerRunning()) {
                     LOG.debug("     Server is still running, sleeping a bit")
-                    Thread.sleep(1000)
+                    TimeUnit.SECONDS.sleep(5)
                     attempts++
                 } else {
                     LOG.debug("    Server stopped")
