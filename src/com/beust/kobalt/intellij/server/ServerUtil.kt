@@ -18,7 +18,6 @@ import java.io.IOException
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import com.beust.kobalt.intellij.use  //FIXME see the workaround explanation in com.beust.kobalt.intellij.Closeable.kt file
 import java.util.concurrent.TimeUnit
 
 class ServerUtil {
@@ -127,7 +126,7 @@ class ServerUtil {
                             object : ProcessAdapter() {
                                 override fun onTextAvailable(event: ProcessEvent?, outputType: Key<*>?) {
                                     if (event != null) {
-                                        if (outputType != null && outputType.equals(ProcessOutputTypes.STDERR)) {
+                                        if (outputType != null && outputType == ProcessOutputTypes.STDERR) {
                                             LOG.error(event.text)
                                         } else {
                                             LOG.info(event.text)
