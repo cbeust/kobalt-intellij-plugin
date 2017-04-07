@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.124</version>
+    <version>1.125</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.125</h1>
+        <ul>
+            <li> implement handling for multiple build content roots.
+            <li> increase a little bit waiting time for server start.
+            <li> fix possible SOF.
+            <li> other fixes.
+        </ul>
         <h1>1.124</h1>
         <ul>
             <li> added ability to specify if Kobalt should download all sources/javadoc for all dependencies.
