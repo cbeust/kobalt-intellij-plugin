@@ -6,39 +6,57 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.execution.process.ProcessAdapter
 import com.intellij.execution.process.ProcessEvent
-import com.intellij.execution.process.ProcessOutput
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
 import com.intellij.openapi.externalSystem.task.AbstractExternalSystemTaskManager
 import com.intellij.openapi.projectRoots.JdkUtil
 import com.intellij.openapi.util.Key
+import com.intellij.util.containers.ContainerUtil
 
 /**
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
 class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSettings>() {
-    var processOutput: ProcessOutput? = null
-    var processHandler: MyCapturingProcessHandler? = null
+    private var processHandler: MyCapturingProcessHandler? = null
+    private val canceledTasks = ContainerUtil.newConcurrentSet<ExternalSystemTaskId>()
 
     override fun executeTasks(id: ExternalSystemTaskId, taskNames: MutableList<String>, projectPath: String,
                               settings: KobaltExecutionSettings?, vmOptions: MutableList<String>,
                               scriptParameters: MutableList<String>, debuggerSetup: String?,
                               listener: ExternalSystemTaskNotificationListener) {
-
+        if (canceledTasks.contains(id)) {
+            canceledTasks.remove(id)
+            return
+        }
         val kobaltJar = settings?.kobaltJar ?: return
-        val vmExecutablePath = settings?.vmExecutablePath ?: return
+        val vmExecutablePath = settings.vmExecutablePath
         val parameters = prepareTaskExecutionParameters(projectPath, kobaltJar, taskNames, scriptParameters, vmOptions, debuggerSetup)
         processHandler = MyCapturingProcessHandler(parameters.toCommandLine(vmExecutablePath)).apply {
-             addProcessListener(
-                     object : ProcessAdapter() {
-                         override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>?) {
-                             listener.onTaskOutput(id, event.text, true)
-                         }
-                     }
-             )
+            addProcessListener(
+                    object : ProcessAdapter() {
+                        override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>?) {
+                            listener.onTaskOutput(id, event.text, true)
+                        }
+
+                        override fun processTerminated(event: ProcessEvent?) {
+                            if (event?.exitCode != 0) {
+                                listener.onTaskOutput(id, "Kobalt task execution canceled.\n", false)
+                                listener.onCancel(id)
+                            }
+                        }
+                    }
+            )
         }
-        processOutput = processHandler?.runProcess()
+        processHandler?.runProcess()
+    }
+
+    override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
+        processHandler?.destroyProcess()
+        canceledTasks.add(id)
+        listener.onTaskOutput(id, "Canceling Kobalt task execution...\n", false)
+        listener.beforeCancel(id)
+        return true
     }
 
     private fun prepareTaskExecutionParameters(projectPath: String, kobaltJar: String, taskNames: MutableList<String>,
@@ -49,7 +67,7 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
             mainClass = "com.beust.kobalt.MainKt"
             classPath.add(kobaltJar)
             vmParametersList.addAll(vmOptions)
-            if(debuggerSetup!=null) {
+            if (debuggerSetup != null) {
                 vmParametersList.addParametersString(debuggerSetup)
             }
             programParametersList.addAll(taskNames)
@@ -58,15 +76,8 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
         return parameters
     }
 
-    override fun cancelTask(id: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): Boolean {
-        //TODO
-        processHandler?.destroyProcess()
-        processOutput?.setCancelled()
-        return processOutput?.isCancelled ?: false
-    }
-
 }
 
-fun SimpleJavaParameters.toCommandLine(vmExecutablePath:String): GeneralCommandLine {
+fun SimpleJavaParameters.toCommandLine(vmExecutablePath: String): GeneralCommandLine {
     return JdkUtil.setupJVMCommandLine(vmExecutablePath, this, false)
 }

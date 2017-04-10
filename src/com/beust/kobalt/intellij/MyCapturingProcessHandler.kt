@@ -1,43 +1,29 @@
 package com.beust.kobalt.intellij
 
-import com.beust.kobalt.intellij.server.ServerUtil
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.CapturingProcessHandler
-import com.intellij.execution.process.OSProcessManager
+import com.intellij.openapi.diagnostic.Logger
 
 /**
  * @author Dmitry Zhuravlev
  *         Date:  13.05.2016
  */
 class MyCapturingProcessHandler(commandLine: GeneralCommandLine) : CapturingProcessHandler(commandLine) {
+    companion object{
+        private val LOG = Logger.getInstance(MyCapturingProcessHandler::class.java)
+    }
+
     override fun killProcessTree(process: Process) {
-        executeOnPooledThread({
-            killProcessTreeSync(process);
-        }
-        )
+        executeOnPooledThread { doDestroy(process) }
     }
 
-    private fun killProcessTreeSync(process: Process) {
-        ServerUtil.LOG.debug("killing process tree")
-        val destroyed = OSProcessManager.getInstance().killProcessTree(process)
-        if (!destroyed) {
-            if (isTerminated(process)) {
-                ServerUtil.LOG.warn("Process has been already terminated: " + this.myCommandLine)
-            } else {
-                ServerUtil.LOG.warn("Cannot kill process tree. Trying to destroy process using Java API. Cmdline:\n" + this.myCommandLine)
-                process.destroy()
-            }
+    private fun doDestroy(process: Process) {
+        LOG.debug("destroying process...")
+        if (!process.isAlive) {
+            LOG.warn("Process has been already terminated: " + this.myCommandLine)
+        } else {
+            LOG.debug("Trying to destroy process using Java API. Cmdline:\n" + this.myCommandLine)
+            process.destroy()
         }
-
-    }
-
-    private fun isTerminated(process: Process): Boolean {
-        try {
-            process.exitValue()
-            return true
-        } catch (var2: IllegalThreadStateException) {
-            return false
-        }
-
     }
 }
