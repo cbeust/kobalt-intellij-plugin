@@ -34,14 +34,12 @@ class ServerFacade(val port: Int?) {
 
     fun sendQuitCommand() = buildService().quit().execute()
 
-    fun sendGetDependencies(pathToBuildFile: String) =
-            buildService().getDependencies(pathToBuildFile).execute()
+    fun sendGetDependencies(pathToBuildFile: String) = buildService().getDependencies(pathToBuildFile).execute()
 
-    fun sendGetTemplates() =
-            buildService().getTemplates().execute()
+    fun sendGetTemplates() = buildService().getTemplates().execute()
 
-    private fun buildService(): ServerApi {
-        return Retrofit.Builder()
+    private fun buildService() =
+         Retrofit.Builder()
                 .client(OkHttpClient.Builder()
                         .connectTimeout(3, TimeUnit.MINUTES)
                         .readTimeout(3, TimeUnit.MINUTES)
@@ -50,5 +48,4 @@ class ServerFacade(val port: Int?) {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
                 .create(ServerApi::class.java)
-    }
 }

@@ -109,6 +109,10 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
             buildLibraryDependenciesNodes(moduleDataNode, moduleData, pluginDependency, DependencyScope.COMPILE)
         }
 
+        dependenciesData.buildFileDependencies?.forEach { buildFileDependency ->
+            buildLibraryDependenciesNodes(moduleDataNode, moduleData, buildFileDependency, DependencyScope.COMPILE)
+        }
+
         buildLibraryDependenciesNodes(moduleDataNode, moduleData,
                 DependencyData(
                         id = "com.beust.kobalt:kobalt:jar:${executionSettings.kobaltVersion}",
@@ -152,9 +156,9 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         populateContentRoot(contentRoot, ExternalSystemSourceType.TEST, serverData.testDirs)
         populateContentRoot(contentRoot, ExternalSystemSourceType.TEST_RESOURCE, serverData.testResourceDirs)
 
-        val tasksData = serverData.tasks.map { serverTaskData ->
-            TaskData(KOBALT_SYSTEM_ID, "${moduleData.id}:${serverTaskData.name}", projectPath, serverTaskData.description)
-                    .apply { group = serverTaskData.group }
+        val tasksData = serverData.tasks.map { (name, description, group) ->
+            TaskData(KOBALT_SYSTEM_ID, "${moduleData.id}:$name", projectPath, description)
+                    .apply { this.group = group }
         }
         return KobaltModuleData(moduleData, tasksData, contentRoot, serverData.compileDependencies, serverData.testDependencies)
     }

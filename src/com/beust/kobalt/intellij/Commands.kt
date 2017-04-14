@@ -22,6 +22,7 @@ data class ProjectData(val name: String, val directory: String,
 
 data class GetDependenciesData(val projects: List<ProjectData>, val allTasks: Set<TaskData>,
                                val pluginDependencies: List<DependencyData>?,
+                               val buildFileDependencies: List<DependencyData>?,
                                val buildContentRoots: Set<String> = emptySet(),
                                val errorMessage: String?){
     companion object {
