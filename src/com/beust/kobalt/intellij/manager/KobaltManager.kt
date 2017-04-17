@@ -57,15 +57,19 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
 
     private val autoImportDelegate = CachingExternalSystemAutoImportAware(KobaltAutoImportAware())
 
-    override fun getConfigurable(project: Project) = KobaltConfigurable(project);
+    override fun getConfigurable(project: Project) = KobaltConfigurable(project)
 
     override fun getExternalProjectConfigDescriptor(): FileChooserDescriptor? = null //TODO
 
-    override fun getProjectRepresentationName(targetProjectPath: String, rootProjectPath: String?) =
-            ExternalSystemApiUtil.getProjectRepresentationName(targetProjectPath, rootProjectPath);
+    override fun getProjectRepresentationName(targetProjectPath: String, rootProjectPath: String?)
+            = ExternalSystemApiUtil.getProjectRepresentationName(targetProjectPath, rootProjectPath)
 
-    override fun getAffectedExternalProjectPath(changedFileOrDirPath: String, project: Project): String?
+    override fun getAffectedExternalProjectPath(changedFileOrDirPath: String, project: Project)
             = autoImportDelegate.getAffectedExternalProjectPath(changedFileOrDirPath, project)
+
+    override fun getAffectedExternalProjectFiles(projectPath: String?, project: Project)
+            = autoImportDelegate.getAffectedExternalProjectFiles(projectPath, project)
+
 
     override fun runActivity(project: Project) {
         val connection = project.messageBus.connect(project)
