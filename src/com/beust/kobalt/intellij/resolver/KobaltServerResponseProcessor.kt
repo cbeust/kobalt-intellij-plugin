@@ -122,7 +122,7 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
             val processorEx = RuntimeException(errorMessage)
             LOG.warn(errorMessage)
             listener.onFailure(taskId, processorEx)
-//            dependenciesFuture.completeExceptionally(processorEx)
+            dependenciesFuture.complete(null)
         } else {
             when (wsCommand.commandName) {
                 GetDependenciesData.NAME -> {
@@ -143,11 +143,11 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
                     cancelGetDependenciesFuture.complete(true)
                 }
                 else -> {
-                    val errorMessage = "Unknown command: ${wsCommand.commandName} json:\n$json"
+                    val errorMessage = "Unknown command received: ${wsCommand.commandName} json:\n$json"
                     val processorEx = RuntimeException(errorMessage)
                     LOG.error(errorMessage)
                     listener.onFailure(taskId, processorEx)
-//                    dependenciesFuture.completeExceptionally(processorEx)
+                    dependenciesFuture.complete(null)
                 }
             }
         }
