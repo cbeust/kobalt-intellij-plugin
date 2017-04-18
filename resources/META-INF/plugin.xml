@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.125</version>
+    <version>1.126</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
+         <h1>1.126</h1>
+        <ul>
+            <li> add tracking of Kotlin sources (in Build.kt module content roots) for changes.
+            <li> fix: prevent endless "resolve project" loop.
+            <li> handling for build file classpath dependencies. relates to cbeust/kobalt#410.
+            <li> fixed canceling of task execution.
+        </ul>
         <h1>1.125</h1>
         <ul>
             <li> implement handling for multiple build content roots.
