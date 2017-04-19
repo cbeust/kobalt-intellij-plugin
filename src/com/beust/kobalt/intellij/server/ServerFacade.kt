@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
  * @author Dmitry Zhuravlev
  *         Date: 08.05.16
  */
-class ServerFacade(val port: Int?) {
+class ServerFacade(val port: Int) {
     companion object {
         val LOG = Logger.getInstance(ServerFacade::class.java)
     }

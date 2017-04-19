@@ -86,7 +86,7 @@ class ServerUtil {
         fun isServerRunning(): Boolean {
             findServerPort().let { port ->
                 try {
-                    val response = ServerFacade(findServerPort()).sendPingCommand()
+                    val response = ServerFacade(port).sendPingCommand()
                     return if(response.isSuccessful) response.body().result == PING_SUCCESSFUL_RESPONSE else false
                 } catch(ex: IOException) {
                     LOG.debug("    Couldn't connect to $port: $ex")
