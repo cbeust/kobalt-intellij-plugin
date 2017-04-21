@@ -40,9 +40,10 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
                         }
 
                         override fun processTerminated(event: ProcessEvent?) {
-                            if (event?.exitCode != 0) {
+                            if (event?.exitCode != 0 && canceledTasks.contains(id)) {
                                 listener.onTaskOutput(id, "Kobalt task execution canceled.\n", false)
                                 listener.onCancel(id)
+                                canceledTasks.remove(id)
                             }
                         }
                     }
