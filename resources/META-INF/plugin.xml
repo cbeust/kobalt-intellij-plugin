@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.126</version>
+    <version>1.127</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,7 +9,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
-         <h1>1.126</h1>
+         <h1>1.127</h1>
+        <ul>
+            <li> fix Kotlin configurator in correspond to the the new version of Kotlin plugin.
+            <li> remove unnecessary findServerPort() call.
+            <li> improvement: do not print "task canceled" message in case if task execution failed.
+        </ul>
+        <h1>1.126</h1>
         <ul>
             <li> add tracking of Kotlin sources (in Build.kt module content roots) for changes.
             <li> fix: prevent endless "resolve project" loop.
