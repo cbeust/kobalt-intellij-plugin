@@ -27,7 +27,7 @@ class KotlinKobaltProjectConfigurator : KotlinProjectConfigurator {
     override val targetPlatform = JvmPlatform
 
     override fun configure(project: Project, excludeModules: Collection<Module>) {
-        val dialog = ConfigureDialogWithModulesAndVersion(project, this, excludeModules)
+        val dialog = ConfigureDialogWithModulesAndVersion(project, this, excludeModules, "1.0.6")
 
         dialog.show()
         if (!dialog.isOK) return
