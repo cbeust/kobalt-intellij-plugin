@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.127</version>
+    <version>1.128</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,7 +9,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
-         <h1>1.127</h1>
+        <h1>1.128</h1>
+        <ul>
+            <li> Kotlin configurator: prevent duplication of runtime lib in Build.kt.
+            <li> Kotlin configurator: remove kotlin-test lib configuration since it is not a part of Kotlin runtime and could be optional to user.
+        </ul>
+        <h1>1.127</h1>
         <ul>
             <li> fix Kotlin configurator in correspond to the the new version of Kotlin plugin.
             <li> remove unnecessary findServerPort() call.
