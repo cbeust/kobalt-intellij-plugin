@@ -35,32 +35,28 @@ class KotlinKobaltProjectConfigurator : KotlinProjectConfigurator {
         WriteCommandAction.runWriteCommandAction(project) {
             val collector = createConfigureKotlinNotificationCollector(project)
             val buildFile = BuildUtils.buildFile(project)?.toPsiFile(project)
+            var configuredAtLeastInOneModule = false
             if (buildFile != null && buildFile is KtFile && canConfigureFile(buildFile)) {
                 for (module in dialog.modulesToConfigure) {
-                    changeBuildFile(buildFile, dialog.kotlinVersion, module, collector)
+                    if(!hasKotlinRuntimeInDependencies(module, buildFile)) {
+                        changeBuildFile(buildFile, dialog.kotlinVersion, module, collector)
+                        configuredAtLeastInOneModule = true
+                    }
                 }
                 OpenFileAction.openFile(buildFile.virtualFile, project)
             }
-            collector.showNotification()
+            if(configuredAtLeastInOneModule) collector.showNotification()
         }
     }
 
     private fun changeBuildFile(buildFile: KtFile, kotlinVersion: String, module: Module, collector: NotificationMessageCollector) {
         val projectInitializerExpr = getProjectInitializersMapByName(buildFile)[module.name]
         val dependenciesBlock = projectInitializerExpr?.findCallExpressionByName("dependencies")?.findLambdaBlockExpression()
-        val testDependenciesBlock = projectInitializerExpr?.findCallExpressionByName("dependenciesTest")?.findLambdaBlockExpression()
         dependenciesBlock?.apply {
             KtPsiFactory(this).run {
                 add(createNewLine())
                 add(createExpression(kotlinStdLibDependencyTemplate(kotlinVersion)))
                 collector.addMessage("Dependencies block in ${buildFile.virtualFile.path} was modified")
-            }
-        }
-        testDependenciesBlock?.apply {
-            KtPsiFactory(this).run {
-                add(createNewLine())
-                add(createExpression(kotlinTestDependencyTemplate(kotlinVersion)))
-                collector.addMessage("Test dependencies block in ${buildFile.virtualFile.path} was modified")
             }
         }
         collector.addMessage(buildFile.virtualFile.path + " was modified")
@@ -86,21 +82,15 @@ class KotlinKobaltProjectConfigurator : KotlinProjectConfigurator {
 
     companion object {
         const val KOTLIN_STD_LIB_DEFINITION = "org.jetbrains.kotlin:kotlin-stdlib"
-        const val KOTLIN_TEST_LIB_DEFINITION = "org.jetbrains.kotlin:kotlin-test"
 
         private fun kotlinStdLibDependencyTemplate(kotlinVersion: String)
                 = """compile("$KOTLIN_STD_LIB_DEFINITION:$kotlinVersion")"""
-
-        private fun kotlinTestDependencyTemplate(kotlinVersion: String)
-                = """compile("$KOTLIN_TEST_LIB_DEFINITION:$kotlinVersion")"""
     }
 
     private fun hasKotlinRuntimeInDependencies(module: Module, kotlinBuildFile: KtFile): Boolean {
         val projectInitializerExpr = getProjectInitializersMapByName(kotlinBuildFile)[module.name]
         val dependenciesBlock = projectInitializerExpr?.findCallExpressionByName("dependencies")?.findLambdaBlockExpression()
-        val testDependenciesBlock = projectInitializerExpr?.findCallExpressionByName("dependenciesTest")?.findLambdaBlockExpression()
-        return (dependenciesBlock?.text?.contains(KOTLIN_STD_LIB_DEFINITION) ?: false)
-                && (testDependenciesBlock?.text?.contains(KOTLIN_TEST_LIB_DEFINITION) ?: false)
+        return dependenciesBlock?.children?.firstOrNull { dependency -> dependency.text?.contains(KOTLIN_STD_LIB_DEFINITION) ?: false } != null
     }
 
     private fun canConfigureFile(file: PsiFile) = WritingAccessProvider.isPotentiallyWritable(file.virtualFile, null)
