@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.128</version>
+    <version>1.129</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
+         <h1>1.129</h1>
+        <ul>
+            <li> Fix NPE while importing detached project.
+        </ul>
         <h1>1.128</h1>
         <ul>
             <li> Kotlin configurator: prevent duplication of runtime lib in Build.kt.
