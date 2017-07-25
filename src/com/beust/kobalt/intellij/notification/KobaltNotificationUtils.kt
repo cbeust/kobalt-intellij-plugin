@@ -13,9 +13,8 @@ import com.intellij.ide.util.newProjectWizard.AddModuleWizard
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationListener
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
-import com.intellij.openapi.externalSystem.service.project.manage.ProjectDataManager
+import com.intellij.openapi.externalSystem.service.project.ProjectDataManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupManager
@@ -46,7 +45,7 @@ fun showNotificationForUnlinkedkobaltProject(project: Project) {
             override fun hyperlinkActivated(notification: Notification, e: HyperlinkEvent) {
                 notification.expire()
                 if (KobaltStartupActivity.IMPORT_EVENT_DESCRIPTION == e.description) {
-                    val projectDataManager = ServiceManager.getService(ProjectDataManager::class.java)
+                    val projectDataManager = ProjectDataManager.getInstance()
                     val kobaltProjectImportBuilder = KobaltProjectImportBuilder(projectDataManager)
                     val kobaltProjectImportProvider = KobaltProjectImportProvider(kobaltProjectImportBuilder)
                     val wizard = AddModuleWizard(project, kobaltBuildFile.path, kobaltProjectImportProvider)
