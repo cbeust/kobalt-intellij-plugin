@@ -62,7 +62,8 @@ class KotlinKobaltProjectConfigurator : KotlinProjectConfigurator {
         collector.addMessage(buildFile.virtualFile.path + " was modified")
     }
 
-    override fun getStatus(module: Module): ConfigureKotlinStatus {
+    override fun getStatus(moduleSourceRootGroup: ModuleSourceRootGroup): ConfigureKotlinStatus {
+        val module = moduleSourceRootGroup.baseModule
         if (!isKobaltModule(module))
             return ConfigureKotlinStatus.NON_APPLICABLE
         val project = module.project
