@@ -56,7 +56,7 @@ class ProjectSettingsUIBuilder(val initialSettings: KobaltProjectSettings) {
             DistributionDownloader.downloadAndInstallKobaltJarSynchronously(project, latestKobaltVersionOrDefault(MIN_KOBALT_VERSION), false)
         }
         val kobaltHome = myKobaltHomePathField.text
-        if (kobaltHome == null || !File(kobaltHome).exists()) {
+        if (!File(kobaltHome).exists()) {
             DelayedBalloonInfo(MessageType.ERROR, LocationSettingType.UNKNOWN, 0).run()
             throw ConfigurationException("Kobalt location is incorrect!")
         }

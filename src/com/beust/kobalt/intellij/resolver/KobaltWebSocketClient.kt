@@ -14,12 +14,12 @@ import java.util.concurrent.TimeUnit
  *         Date: 16.06.16
  */
 class KobaltWebSocketClient(val port: Int, val host: String = "localhost", val url: String,
-                            val onOpen: (Response) -> Unit = { r -> },
-                            val onPong: (Buffer?) -> Unit = { b -> },
-                            val onClose: (Int, String?) -> Unit = { c, r -> },
-                            val onFailure: (IOException, Response?) -> Unit = { e, r -> },
-                            val onMessage: (ResponseBody) -> Unit = { b -> },
-                            val readTimeoutInHours: Long = 1) {
+                            val onOpen: (Response) -> Unit = { },
+                            val onPong: (Buffer?) -> Unit = { },
+                            val onClose: (Int, String?) -> Unit = { _, _ -> },
+                            val onFailure: (IOException, Response?) -> Unit = { _, _ -> },
+                            val onMessage: (ResponseBody) -> Unit = { },
+                            readTimeoutInHours: Long = 1) {
 
     private var socket: WebSocket? = null
 

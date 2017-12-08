@@ -8,7 +8,7 @@ import com.intellij.execution.process.ProcessAdapter
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
-import com.intellij.openapi.externalSystem.task.AbstractExternalSystemTaskManager
+import com.intellij.openapi.externalSystem.task.ExternalSystemTaskManager
 import com.intellij.openapi.projectRoots.JdkUtil
 import com.intellij.openapi.util.Key
 import com.intellij.util.containers.ContainerUtil
@@ -17,13 +17,12 @@ import com.intellij.util.containers.ContainerUtil
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
  */
-class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSettings>() {
+class KobaltTaskManager : ExternalSystemTaskManager<KobaltExecutionSettings> {
     private var processHandler: MyCapturingProcessHandler? = null
     private val canceledTasks = ContainerUtil.newConcurrentSet<ExternalSystemTaskId>()
 
     override fun executeTasks(id: ExternalSystemTaskId, taskNames: MutableList<String>, projectPath: String,
-                              settings: KobaltExecutionSettings?, vmOptions: MutableList<String>,
-                              scriptParameters: MutableList<String>, debuggerSetup: String?,
+                              settings: KobaltExecutionSettings?, jvmAgentSetup: String?,
                               listener: ExternalSystemTaskNotificationListener) {
         if (canceledTasks.contains(id)) {
             canceledTasks.remove(id)
@@ -31,16 +30,16 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
         }
         val kobaltJar = settings?.kobaltJar ?: return
         val vmExecutablePath = settings.vmExecutablePath
-        val parameters = prepareTaskExecutionParameters(projectPath, kobaltJar, taskNames, scriptParameters, vmOptions, debuggerSetup)
+        val parameters = prepareTaskExecutionParameters(projectPath, kobaltJar, taskNames, settings.arguments, settings.vmOptions, jvmAgentSetup)
         processHandler = MyCapturingProcessHandler(parameters.toCommandLine(vmExecutablePath)).apply {
             addProcessListener(
                     object : ProcessAdapter() {
-                        override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>?) {
+                        override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
                             listener.onTaskOutput(id, event.text, true)
                         }
 
-                        override fun processTerminated(event: ProcessEvent?) {
-                            if (event?.exitCode != 0 && canceledTasks.contains(id)) {
+                        override fun processTerminated(event: ProcessEvent) {
+                            if (event.exitCode != 0 && canceledTasks.contains(id)) {
                                 listener.onTaskOutput(id, "Kobalt task execution canceled.\n", false)
                                 listener.onCancel(id)
                                 canceledTasks.remove(id)
@@ -61,20 +60,17 @@ class KobaltTaskManager : AbstractExternalSystemTaskManager<KobaltExecutionSetti
     }
 
     private fun prepareTaskExecutionParameters(projectPath: String, kobaltJar: String, taskNames: MutableList<String>,
-                                               scriptParameters: MutableList<String>, vmOptions: MutableList<String>,
-                                               debuggerSetup: String?): SimpleJavaParameters {
-        val parameters = SimpleJavaParameters().apply {
-            workingDirectory = projectPath
-            mainClass = "com.beust.kobalt.MainKt"
-            classPath.add(kobaltJar)
-            vmParametersList.addAll(vmOptions)
-            if (debuggerSetup != null) {
-                vmParametersList.addParametersString(debuggerSetup)
-            }
-            programParametersList.addAll(taskNames)
-            programParametersList.addAll(scriptParameters)
+                                               scriptParameters: MutableList<String>, vmOptions: Set<String>, jvmAgentSetup: String?
+    ): SimpleJavaParameters = SimpleJavaParameters().apply {
+        workingDirectory = projectPath
+        mainClass = "com.beust.kobalt.MainKt"
+        classPath.add(kobaltJar)
+        vmParametersList.addAll(vmOptions.toList())
+        if (jvmAgentSetup != null) {
+            vmParametersList.addParametersString(jvmAgentSetup)
         }
-        return parameters
+        programParametersList.addAll(taskNames)
+        programParametersList.addAll(scriptParameters)
     }
 
 }

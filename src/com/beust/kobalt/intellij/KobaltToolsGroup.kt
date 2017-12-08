@@ -6,7 +6,7 @@ import com.intellij.openapi.actionSystem.DefaultActionGroup
 
 class KobaltToolsGroup : DefaultActionGroup() {
     override fun update(e: AnActionEvent?) {
-        val p = e?.getData(CommonDataKeys.PROJECT) ?: null
+        val p = e?.getData(CommonDataKeys.PROJECT)
         e?.presentation?.isVisible = p != null
     }
 }

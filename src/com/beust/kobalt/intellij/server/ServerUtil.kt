@@ -87,8 +87,8 @@ class ServerUtil {
             findServerPort().let { port ->
                 try {
                     val response = ServerFacade(port).sendPingCommand()
-                    return if(response.isSuccessful) response.body().result == PING_SUCCESSFUL_RESPONSE else false
-                } catch(ex: IOException) {
+                    return if (response.isSuccessful) response.body().result == PING_SUCCESSFUL_RESPONSE else false
+                } catch (ex: IOException) {
                     LOG.debug("    Couldn't connect to $port: $ex")
                     // ignore
                 }
@@ -97,8 +97,8 @@ class ServerUtil {
         }
 
 
-
-        @Synchronized fun stopServer() {
+        @Synchronized
+        fun stopServer() {
             sendQuitCommand()
             if (processHandler?.isProcessTerminated ?: true) return
             processHandler?.destroyProcess()
@@ -107,7 +107,8 @@ class ServerUtil {
             threadPool = null
         }
 
-        @Synchronized fun launchServer(vmExecutablePath:String, kobaltJar: String) {
+        @Synchronized
+        fun launchServer(vmExecutablePath: String, kobaltJar: String) {
             if (shuttingDown) {
                 return
             }
@@ -124,13 +125,11 @@ class ServerUtil {
                 processHandler = MyCapturingProcessHandler(serverExecutionParams.toCommandLine(vmExecutablePath)).apply {
                     addProcessListener(
                             object : ProcessAdapter() {
-                                override fun onTextAvailable(event: ProcessEvent?, outputType: Key<*>?) {
-                                    if (event != null) {
-                                        if (outputType != null && outputType == ProcessOutputTypes.STDERR) {
-                                            LOG.error(event.text)
-                                        } else {
-                                            LOG.info(event.text)
-                                        }
+                                override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+                                    if (outputType == ProcessOutputTypes.STDERR) {
+                                        LOG.error(event.text)
+                                    } else {
+                                        LOG.info(event.text)
                                     }
                                 }
                             }
@@ -150,7 +149,6 @@ class ServerUtil {
         }
 
 
-
         private fun prepareServerExecutionParameters(kobaltJar: String): SimpleJavaParameters {
             val parameters = SimpleJavaParameters().apply {
                 mainClass = "com.beust.kobalt.MainKt"
@@ -164,7 +162,7 @@ class ServerUtil {
             return parameters
         }
 
-        fun SimpleJavaParameters.toCommandLine(vmExecutablePath:String): GeneralCommandLine {
+        fun SimpleJavaParameters.toCommandLine(vmExecutablePath: String): GeneralCommandLine {
             return JdkUtil.setupJVMCommandLine(vmExecutablePath, this, false)
         }
     }

@@ -135,7 +135,7 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
                 val project = pair.first
                 val kobaltVersion = BuildUtils.kobaltVersion(project) ?: KobaltProjectComponent.getInstance(project).latestKobaltVersion
                 val projectSdk = ProjectRootManager.getInstance(project).projectSdk
-                        ?: ExternalSystemJdkUtil.getAvailableJdk(project)?.second
+                        ?: ExternalSystemJdkUtil.getAvailableJdk(project).second
                         ?: throw RuntimeException("JDK not found in system! Please add one and define JAVA_HOME variable")
                 val vmExecutablePath = (projectSdk).let { sdk ->
                     val javaSDKType = sdk.sdkType as JavaSdkType

@@ -7,11 +7,16 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ExternalLibraryDescriptor
 import com.intellij.openapi.vfs.WritingAccessProvider
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import org.jetbrains.kotlin.config.ApiVersion
+import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.idea.configuration.*
 import org.jetbrains.kotlin.idea.framework.ui.ConfigureDialogWithModulesAndVersion
 import org.jetbrains.kotlin.idea.refactoring.toPsiFile
+import org.jetbrains.kotlin.idea.versions.LibraryJarDescriptor
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 import org.jetbrains.kotlin.psi.psiUtil.plainContent
@@ -25,6 +30,18 @@ class KotlinKobaltProjectConfigurator : KotlinProjectConfigurator {
     override val name = "kobalt"
     override val presentableText = "Kobalt"
     override val targetPlatform = JvmPlatform
+
+    override fun addLibraryDependency(module: Module, element: PsiElement, library: ExternalLibraryDescriptor, libraryJarDescriptors: List<LibraryJarDescriptor>) {
+        //noop
+    }
+
+    override fun changeCoroutineConfiguration(module: Module, state: LanguageFeature.State) {
+        //noop
+    }
+
+    override fun updateLanguageVersion(module: Module, languageVersion: String?, apiVersion: String?, requiredStdlibVersion: ApiVersion, forTests: Boolean) {
+        //noop
+    }
 
     override fun configure(project: Project, excludeModules: Collection<Module>) {
         val dialog = ConfigureDialogWithModulesAndVersion(project, this, excludeModules, "1.0.6")
@@ -99,9 +116,8 @@ class KotlinKobaltProjectConfigurator : KotlinProjectConfigurator {
     private fun getProjectInitializersMapByName(psi: KtFile) = psi.declarations.filter { it is KtProperty }
             .map { declaration ->
                 val property = declaration as KtProperty
-                var initializer = property.initializer
+                val initializer = property.initializer
                 return@map if ((initializer as? KtCallExpression)?.calleeExpression?.text == "project") {
-                    initializer = initializer as KtCallExpression
                     val moduleName = (initializer.lambdaArguments.firstOrNull()
                             ?.getLambdaExpression()?.bodyExpression
                             ?.getChildrenOfType<KtBinaryExpression>()
