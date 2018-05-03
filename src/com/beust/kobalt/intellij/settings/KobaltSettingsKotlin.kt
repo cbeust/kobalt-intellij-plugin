@@ -17,9 +17,8 @@ class KobaltSettingsKotlin(project: Project) : AbstractExternalSystemSettings<Ko
         fun getInstance(project: Project) = ServiceManager.getService<KobaltSettingsKotlin>(project, KobaltSettingsKotlin::class.java)
     }
 
-    override fun loadState(state: KobaltSettings.KobaltSettingsState?) {
-        if (state != null)
-            super.loadState(state)
+    override fun loadState(state: KobaltSettings.KobaltSettingsState) {
+        super.loadState(state)
     }
 
     override fun getState() = KobaltSettings.KobaltSettingsState().apply { fillState(this) }

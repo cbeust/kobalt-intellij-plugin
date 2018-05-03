@@ -227,7 +227,7 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
             }
 
 
-    fun createJavaProjectData(projectPath: String) = JavaProjectData(KOBALT_SYSTEM_ID, "$projectPath/$KOBALT_BUILD_CLASSES_DIR_NAME").apply {
+    private fun createJavaProjectData(projectPath: String) = JavaProjectData(KOBALT_SYSTEM_ID, "$projectPath/$KOBALT_BUILD_CLASSES_DIR_NAME").apply {
         languageLevel = LanguageLevel.JDK_1_8
         jdkVersion = JavaSdkVersion.JDK_1_8
     }
