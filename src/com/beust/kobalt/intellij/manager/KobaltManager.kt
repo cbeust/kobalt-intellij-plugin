@@ -8,6 +8,7 @@ import com.beust.kobalt.intellij.import.KobaltAutoImportAware
 import com.beust.kobalt.intellij.resolver.KobaltProjectResolver
 import com.beust.kobalt.intellij.settings.*
 import com.beust.kobalt.intellij.task.KobaltTaskManager
+import com.fasterxml.jackson.core.JsonFactory
 import com.google.gson.JsonParser
 import com.intellij.execution.configurations.SimpleJavaParameters
 import com.intellij.openapi.diagnostic.Logger
@@ -38,6 +39,8 @@ import okhttp3.OkHttpClient
 import okhttp3.ws.WebSocket
 import okio.Sink
 import org.apache.http.auth.Credentials
+import org.nustaq.serialization.FSTObjectSerializer
+import org.objenesis.Objenesis
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.URL
@@ -100,6 +103,9 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(GsonConverterFactory::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Credentials::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(WebSocket::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(FSTObjectSerializer::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(JsonFactory::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Objenesis::class.java))
         parameters.classPath.addAll(additionalClasspath)
         parameters.charset = CharsetToolkit.UTF8_CHARSET
         parameters.vmParametersList.addProperty("file.encoding", CharsetToolkit.UTF8)
