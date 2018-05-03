@@ -100,6 +100,7 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(GsonConverterFactory::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Credentials::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(WebSocket::class.java))
+
         parameters.classPath.addAll(additionalClasspath)
         parameters.charset = CharsetToolkit.UTF8_CHARSET
         parameters.vmParametersList.addProperty("file.encoding", CharsetToolkit.UTF8)
@@ -109,8 +110,10 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         // To debug the retrieval of dependencies, uncomment this and launch a remote debugging
         // configuration. Note that suspend=y, so the sync will not proceed until the remote
         // connects to it.
-//        parameters.vmParametersList.addParametersString(
-//                "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5009")
+        // parameters.vmParametersList.addParametersString("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5009")
+        // parameters.vmParametersList.addParametersString("-Djava.rmi.server.logCalls=true")
+        // parameters.vmParametersList.addParametersString("-Dsun.rmi.server.exceptionTrace=true")
+        // parameters.vmParametersList.addParametersString("-Dsun.rmi.loader.logLevel=VERBOSE")
 
         with(HttpConfigurable.getInstance()){
             with(parameters.vmParametersList) {
