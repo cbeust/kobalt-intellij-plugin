@@ -42,6 +42,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.URL
 
+import org.nustaq.serialization.FSTObjectSerializer
+import com.fasterxml.jackson.core.JsonFactory
+import com.intellij.core.JavaCoreBundle
+import org.objenesis.Objenesis
+
+
 /**
  * @author Dmitry Zhuravlev
  *         Date:  26.04.2016
@@ -100,6 +106,11 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(GsonConverterFactory::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Credentials::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(WebSocket::class.java))
+
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(JavaCoreBundle::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(FSTObjectSerializer::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(JsonFactory::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Objenesis::class.java))
 
         parameters.classPath.addAll(additionalClasspath)
         parameters.charset = CharsetToolkit.UTF8_CHARSET
