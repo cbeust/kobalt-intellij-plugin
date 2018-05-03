@@ -118,11 +118,13 @@ class KotlinKobaltProjectConfigurator : KotlinProjectConfigurator {
                 val property = declaration as KtProperty
                 val initializer = property.initializer
                 return@map if ((initializer as? KtCallExpression)?.calleeExpression?.text == "project") {
-                    val moduleName = (initializer.lambdaArguments.firstOrNull()
+                    val moduleFacts = initializer.lambdaArguments.firstOrNull()
                             ?.getLambdaExpression()?.bodyExpression
-                            ?.getChildrenOfType<KtBinaryExpression>()
-                            ?.firstOrNull { it.left?.text == "name" }
-                            ?.right as? KtStringTemplateExpression)?.plainContent
+                            ?.children?.filter { it is KtBinaryExpression } as List<KtBinaryExpression>?
+
+                    val moduleName = (moduleFacts?.firstOrNull { it.left?.text == "name" }
+                            ?.right as? KtStringTemplateExpression?)?.plainContent
+
                     if (moduleName != null) moduleName to initializer else null
                 } else null
             }.filterNotNull().toMap()
@@ -130,9 +132,10 @@ class KotlinKobaltProjectConfigurator : KotlinProjectConfigurator {
     private fun KtCallExpression.findLambdaBlockExpression() = lambdaArguments.firstOrNull()?.getLambdaExpression()?.bodyExpression
 
     private fun KtCallExpression.findCallExpressionByName(name: String)
-            = lambdaArguments.firstOrNull()
+            = (lambdaArguments.firstOrNull()
             ?.getLambdaExpression()?.bodyExpression
-            ?.getChildrenOfType<KtCallExpression>()?.firstOrNull { it.calleeExpression?.text == name }
+            ?.children?.filter { it is KtCallExpression } as List<KtCallExpression>?)
+            ?.firstOrNull { it.calleeExpression?.text == name }
 
     private fun isKobaltModule(module: Module) = ExternalSystemApiUtil.isExternalSystemAwareModule(KOBALT_SYSTEM_ID, module)
 
