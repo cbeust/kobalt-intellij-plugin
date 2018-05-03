@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.130</version>
+    <version>1.131</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.131</h1>
+        <ul>
+            <li> Compatibility with IDEA 181.4668.68.
+        </ul>
         <h1>1.130</h1>
         <ul>
             <li> Compatibility with IDEA 172.3968.16.
