@@ -11,7 +11,7 @@ class KobaltLibraryProperties(val version: String?) : LibraryProperties<KobaltLi
 
     override fun getState() = null
 
-    override fun loadState(properties: KobaltLibraryProperties?) {
+    override fun loadState(properties: KobaltLibraryProperties) {
     }
 
     override fun hashCode() = if (version != null) version.hashCode() else 0;
