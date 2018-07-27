@@ -122,7 +122,7 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
             val processorEx = RuntimeException(errorMessage)
             LOG.warn(errorMessage)
             listener.onFailure(taskId, processorEx)
-            dependenciesFuture.complete(null)
+            dependenciesFuture.completeExceptionally(processorEx)
         } else {
             when (wsCommand.commandName) {
                 GetDependenciesData.NAME -> {
@@ -147,7 +147,7 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
                     val processorEx = RuntimeException(errorMessage)
                     LOG.error(errorMessage)
                     listener.onFailure(taskId, processorEx)
-                    dependenciesFuture.complete(null)
+                    dependenciesFuture.completeExceptionally(processorEx)
                 }
             }
         }
