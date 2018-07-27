@@ -50,7 +50,61 @@ class ServerUtil {
             }
         }
 
-        fun waitForServerToStart(): Boolean {
+        fun isServerRunning(): Boolean {
+            findServerPort().let { port ->
+                try {
+                    val response = ServerFacade(port).sendPingCommand()
+                    return if (response.isSuccessful) response.body().result == PING_SUCCESSFUL_RESPONSE else false
+                } catch (ex: IOException) {
+                    LOG.debug("    Couldn't connect to $port: $ex")
+                    // ignore
+                }
+            }
+            return false
+        }
+
+        @Synchronized
+        fun launchServer(vmExecutablePath: String, kobaltJar: String) {
+            if (shuttingDown) {
+                return
+            }
+            if (ShutDownTracker.isShutdownHookRunning()) {
+                shuttingDown = true
+                return
+            }
+            threadPool = Executors.newFixedThreadPool(1)
+            val serverExecutionParams = prepareServerExecutionParameters(kobaltJar)
+            processHandler = MyCapturingProcessHandler(serverExecutionParams.toCommandLine(vmExecutablePath)).apply {
+                addProcessListener(
+                        object : ProcessAdapter() {
+                            override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+                                if (outputType == ProcessOutputTypes.STDERR) {
+                                    LOG.error(event.text)
+                                } else {
+                                    LOG.info(event.text)
+                                }
+                            }
+                        }
+                )
+            }
+            threadPool?.execute {
+                processHandler?.runProcess()
+            }
+            waitForServerToStart()
+        }
+
+
+        @Synchronized
+        fun stopServer() {
+            sendQuitCommand()
+            if (processHandler?.isProcessTerminated ?: true) return
+            processHandler?.destroyProcess()
+            processHandler = null
+            threadPool?.shutdown()
+            threadPool = null
+        }
+
+        private fun waitForServerToStart(): Boolean {
             var attempts = 0
             while (attempts < 7) {
                 if (!isServerRunning()) {
@@ -66,7 +120,7 @@ class ServerUtil {
             return false
         }
 
-        fun waitForServerToStop(): Boolean {
+        private fun waitForServerToStop(): Boolean {
             var attempts = 0
 
             while (attempts < 7) {
@@ -83,65 +137,6 @@ class ServerUtil {
             return false
         }
 
-        fun isServerRunning(): Boolean {
-            findServerPort().let { port ->
-                try {
-                    val response = ServerFacade(port).sendPingCommand()
-                    return if (response.isSuccessful) response.body().result == PING_SUCCESSFUL_RESPONSE else false
-                } catch (ex: IOException) {
-                    LOG.debug("    Couldn't connect to $port: $ex")
-                    // ignore
-                }
-            }
-            return false
-        }
-
-
-        @Synchronized
-        fun stopServer() {
-            sendQuitCommand()
-            if (processHandler?.isProcessTerminated ?: true) return
-            processHandler?.destroyProcess()
-            processHandler = null
-            threadPool?.shutdown()
-            threadPool = null
-        }
-
-        @Synchronized
-        fun launchServer(vmExecutablePath: String, kobaltJar: String) {
-            if (shuttingDown) {
-                return
-            }
-            if (ShutDownTracker.isShutdownHookRunning()) {
-                shuttingDown = true
-                return
-            }
-            threadPool = Executors.newFixedThreadPool(2)
-            LOG.info("Kobalt jar: $kobaltJar")
-            if (!File(kobaltJar).exists()) {
-                LOG.error("Can't find the jar file $kobaltJar")
-            } else {
-                val serverExecutionParams = prepareServerExecutionParameters(kobaltJar)
-                processHandler = MyCapturingProcessHandler(serverExecutionParams.toCommandLine(vmExecutablePath)).apply {
-                    addProcessListener(
-                            object : ProcessAdapter() {
-                                override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
-                                    if (outputType == ProcessOutputTypes.STDERR) {
-                                        LOG.error(event.text)
-                                    } else {
-                                        LOG.info(event.text)
-                                    }
-                                }
-                            }
-                    )
-                }
-                threadPool?.execute {
-                    processHandler?.runProcess()
-                }
-                waitForServerToStart()
-            }
-        }
-
         private fun sendQuitCommand() {
             if (!isServerRunning()) return
             ServerFacade(findServerPort()).sendQuitCommand()
@@ -150,7 +145,7 @@ class ServerUtil {
 
 
         private fun prepareServerExecutionParameters(kobaltJar: String): SimpleJavaParameters {
-            val parameters = SimpleJavaParameters().apply {
+            return SimpleJavaParameters().apply {
                 mainClass = "com.beust.kobalt.MainKt"
                 classPath.add(kobaltJar)
                 programParametersList.add("--log", "3")
@@ -159,7 +154,6 @@ class ServerUtil {
                 programParametersList.add("--server")
 
             }
-            return parameters
         }
 
         fun SimpleJavaParameters.toCommandLine(vmExecutablePath: String): GeneralCommandLine {

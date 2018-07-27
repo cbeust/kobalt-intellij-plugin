@@ -36,8 +36,7 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
     private val cancelGetDependenciesFuture = CompletableFuture<Boolean>()
 
     fun resolveDependencies(executionSettings: KobaltExecutionSettings, projectPath: String, taskId: ExternalSystemTaskId,
-                            listener: ExternalSystemTaskNotificationListener, callback: (GetDependenciesData) -> Unit)
-            = sendGetDependenciesWebSocket(executionSettings, projectPath, taskId, listener)?.run { callback.invoke(this) }
+                            listener: ExternalSystemTaskNotificationListener, callback: (GetDependenciesData) -> Unit) = sendGetDependenciesWebSocket(executionSettings, projectPath, taskId, listener)?.run { callback.invoke(this) }
 
     @Deprecated("Substituded with websocket communication. Will be removed in future")
     fun run(vmExecutablePath: String, projectPath: String, callback: (GetDependenciesData) -> Unit) = sendGetDependencies(vmExecutablePath, projectPath)?.run { callback.invoke(this) }
@@ -56,10 +55,9 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
 
     private fun sendGetDependenciesWebSocket(executionSettings: KobaltExecutionSettings, projectPath: String, taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener): GetDependenciesData? {
         val projectRootPath = FileUtil.toSystemIndependentName(projectPath)
-        if (!File(projectRootPath).exists()) {
-            LOG.warn("Couldn't determine project root path $projectRootPath, aborting")
-            return null
-        }
+
+        if(notValidProjectRootPath(projectRootPath) || notValidKobaltJar(kobaltJar)) return null
+
         if (!ServerUtil.isServerRunning()) {
             ServerUtil.launchServer(executionSettings.vmExecutablePath, kobaltJar)
         }
@@ -85,13 +83,29 @@ class KobaltServerResponseProcessor(val kobaltJar: String) {
                 })
         try {
             return dependenciesFuture.get()
-        } catch(e: ExecutionException) {
+        } catch (e: ExecutionException) {
             throw ExternalSystemException(e.cause ?: e)
         }
     }
 
+    private fun notValidProjectRootPath(projectRootPath: String): Boolean {
+        if (!File(projectRootPath).exists()) {
+            LOG.error("Couldn't determine project root path $projectRootPath, aborting")
+            return true
+        }
+        return false
+    }
+
+    private fun notValidKobaltJar(kobaltJar: String): Boolean {
+        if (!File(kobaltJar).exists()) {
+            LOG.error("Can't find the jar file $kobaltJar")
+            return true
+        }
+        return false
+    }
+
     private fun KobaltExecutionSettings.getProfilesQueryParam() = if (profiles != null && profiles.isNotBlank()) "&profiles=$profiles" else ""
-    private fun KobaltExecutionSettings.getDownloadSourcesQueryParam() = if (downloadSources != null ) "&downloadSources=$downloadSources" else ""
+    private fun KobaltExecutionSettings.getDownloadSourcesQueryParam() = if (downloadSources != null) "&downloadSources=$downloadSources" else ""
 
     private fun processServerSocketOpen(response: Response, taskId: ExternalSystemTaskId, listener: ExternalSystemTaskNotificationListener) {
         LOG.info("Connected to Kobalt server via websocket. response message: ${response.message()} response code: ${response.code()}")
