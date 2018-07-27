@@ -30,22 +30,24 @@ class ServerFacade(val port: Int) {
         @GET("/ping") fun ping(): Call<PingResponse>
     }
 
-    fun sendPingCommand() = buildService().ping().execute()
-
-    fun sendQuitCommand() = buildService().quit().execute()
-
-    fun sendGetDependencies(pathToBuildFile: String) = buildService().getDependencies(pathToBuildFile).execute()
-
-    fun sendGetTemplates() = buildService().getTemplates().execute()
+    private val serviceApi = buildService()
 
     private fun buildService() =
-         Retrofit.Builder()
-                .client(OkHttpClient.Builder()
-                        .connectTimeout(3, TimeUnit.MINUTES)
-                        .readTimeout(3, TimeUnit.MINUTES)
-                        .build())
-                .baseUrl("http://localhost:$port")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
-                .create(ServerApi::class.java)
+            Retrofit.Builder()
+                    .client(OkHttpClient.Builder()
+                            .connectTimeout(3, TimeUnit.MINUTES)
+                            .readTimeout(3, TimeUnit.MINUTES)
+                            .build())
+                    .baseUrl("http://localhost:$port")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                    .create(ServerApi::class.java)
+
+    fun sendPingCommand() = serviceApi.ping().execute()
+
+    fun sendQuitCommand() = serviceApi.quit().execute()
+
+    fun sendGetDependencies(pathToBuildFile: String) = serviceApi.getDependencies(pathToBuildFile).execute()
+
+    fun sendGetTemplates() = serviceApi.getTemplates().execute()
 }
