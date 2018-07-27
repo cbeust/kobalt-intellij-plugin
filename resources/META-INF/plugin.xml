@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.131</version>
+    <version>1.132</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.132</h1>
+        <ul>
+            <li> Improved some error response handling from Kobalt server.
+        </ul>
         <h1>1.131</h1>
         <ul>
             <li> Compatibility with IDEA 181.4668.68.
