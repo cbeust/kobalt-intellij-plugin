@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.idea.configuration.*
 import org.jetbrains.kotlin.idea.framework.ui.ConfigureDialogWithModulesAndVersion
 import org.jetbrains.kotlin.idea.refactoring.toPsiFile
+import org.jetbrains.kotlin.idea.util.application.runReadAction
 import org.jetbrains.kotlin.idea.versions.LibraryJarDescriptor
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
@@ -84,7 +85,7 @@ class KotlinKobaltProjectConfigurator : KotlinProjectConfigurator {
         if (!isKobaltModule(module))
             return ConfigureKotlinStatus.NON_APPLICABLE
         val project = module.project
-        val psi = BuildUtils.buildFile(project)?.toPsiFile(project)
+        val psi = runReadAction { BuildUtils.buildFile(project)?.toPsiFile(project) }
         if (psi == null
                 || !psi.isValid
                 || psi !is KtFile
