@@ -24,7 +24,6 @@ import com.intellij.openapi.projectRoots.JavaSdkVersion
 import com.intellij.openapi.roots.DependencyScope
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.pom.java.LanguageLevel
-import com.intellij.util.io.isFile
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -205,7 +204,7 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
 
     private fun findSources(binaryPath: String) = Paths.get(binaryPath).parent?.let {
         Files.walk(it)
-                .filter(Path::isFile)
+                .filter { it.isFile() }
                 .map(Path::toString)
                 .filter {it.endsWith("sources.jar") }
                 .findFirst().orElse(null)
@@ -214,7 +213,7 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
 
     private fun findJavaDoc(binaryPath: String) = Paths.get(binaryPath).parent?.let {
         Files.walk(it)
-                .filter(Path::isFile)
+                .filter { it.isFile() }
                 .map(Path::toString)
                 .filter {it.endsWith("javadoc.jar") }
                 .findFirst().orElse(null)
@@ -247,5 +246,7 @@ class KobaltProjectResolver : ExternalSystemProjectResolver<KobaltExecutionSetti
         "runtime" -> DependencyScope.RUNTIME
         else -> DependencyScope.COMPILE
     }
+
+    private fun Path.isFile(): Boolean = Files.isRegularFile(this)
 
 }

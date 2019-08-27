@@ -173,7 +173,7 @@ class KobaltModuleBuilder : AbstractExternalModuleBuilder<KobaltProjectSettings>
         return JavaModuleBuilder.BUILD_SYSTEM_WEIGHT
     }
 
-    override fun getModuleType(): ModuleType<ModuleBuilder> {
+    override fun getModuleType(): ModuleType<*> {
         return StdModuleTypes.JAVA
     }
 

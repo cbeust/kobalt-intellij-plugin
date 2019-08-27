@@ -30,6 +30,7 @@ import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.util.Pair
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.CharsetToolkit
+import com.intellij.pom.java.LanguageLevel
 import com.intellij.util.Function
 import com.intellij.util.PathUtil
 import com.intellij.util.containers.ContainerUtilRt
@@ -39,11 +40,9 @@ import okhttp3.OkHttpClient
 import okhttp3.ws.WebSocket
 import okio.Sink
 import org.apache.http.auth.Credentials
-import org.nustaq.serialization.FSTObjectSerializer
 import org.objenesis.Objenesis
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.net.URL
 
 /**
  * @author Dmitry Zhuravlev
@@ -88,9 +87,6 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         })
     }
 
-    override fun enhanceLocalProcessing(urls: MutableList<URL>) {
-    }
-
     override fun enhanceRemoteProcessing(parameters: SimpleJavaParameters) {
         // Add Kotlin runtime. This is a workaround because at the moment RemoteExternalSystemCommunicationManager
         // has classpath without Kotlin and cannot call ProjectResolver
@@ -103,9 +99,9 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(GsonConverterFactory::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Credentials::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(WebSocket::class.java))
-        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(FSTObjectSerializer::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(JsonFactory::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Objenesis::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(LanguageLevel::class.java))
         parameters.classPath.addAll(additionalClasspath)
         parameters.charset = CharsetToolkit.UTF8_CHARSET
         parameters.vmParametersList.addProperty("file.encoding", CharsetToolkit.UTF8)

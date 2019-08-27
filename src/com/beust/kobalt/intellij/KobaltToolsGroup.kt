@@ -5,8 +5,8 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 
 class KobaltToolsGroup : DefaultActionGroup() {
-    override fun update(e: AnActionEvent?) {
-        val p = e?.getData(CommonDataKeys.PROJECT)
-        e?.presentation?.isVisible = p != null
+    override fun update(e: AnActionEvent) {
+        val p = e.getData(CommonDataKeys.PROJECT)
+        e.presentation.isVisible = p != null
     }
 }

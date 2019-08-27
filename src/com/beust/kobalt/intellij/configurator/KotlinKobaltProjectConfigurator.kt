@@ -28,9 +28,15 @@ import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatform
  *         Date:  26.01.2017
  */
 class KotlinKobaltProjectConfigurator : KotlinProjectConfigurator {
+
     override val name = "kobalt"
+
     override val presentableText = "Kobalt"
     override val targetPlatform = JvmPlatform
+
+    override fun changeGeneralFeatureConfiguration(module: Module, feature: LanguageFeature, state: LanguageFeature.State, forTests: Boolean) {
+        //noop
+    }
 
     override fun addLibraryDependency(module: Module, element: PsiElement, library: ExternalLibraryDescriptor, libraryJarDescriptors: List<LibraryJarDescriptor>) {
         //noop
