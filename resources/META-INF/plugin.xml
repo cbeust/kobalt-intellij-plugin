@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.beust.kobalt.intellij</id>
     <name>Kobalt</name>
-    <version>1.133</version>
+    <version>1.134</version>
     <vendor email="cedric@beust.com" url="http://beust.com/kobalt">Kobalt, by Cédric Beust</vendor>
 
     <description><![CDATA[
@@ -9,6 +9,11 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h1>1.134</h1>
+        <ul>
+            <li> Release for Intellij Platform 2019.3
+            <li> Fix compatibility issues.
+        </ul>
         <h1>1.133</h1>
         <ul>
             <li> Fix exception while creating new Kobalt based project from IDEA wizard.
@@ -269,7 +274,7 @@
     </change-notes>
 
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-    <idea-version since-build="173.3727.127"/>
+    <idea-version since-build="193.5233.102"/>
 
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
          on how to target different products -->
