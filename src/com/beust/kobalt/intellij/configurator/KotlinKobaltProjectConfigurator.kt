@@ -14,14 +14,14 @@ import com.intellij.psi.PsiFile
 import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.idea.configuration.*
+import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import org.jetbrains.kotlin.idea.framework.ui.ConfigureDialogWithModulesAndVersion
-import org.jetbrains.kotlin.idea.refactoring.toPsiFile
 import org.jetbrains.kotlin.idea.util.application.runReadAction
 import org.jetbrains.kotlin.idea.versions.LibraryJarDescriptor
+import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 import org.jetbrains.kotlin.psi.psiUtil.plainContent
-import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatform
 
 /**
  * @author Dmitry Zhuravlev
@@ -32,7 +32,9 @@ class KotlinKobaltProjectConfigurator : KotlinProjectConfigurator {
     override val name = "kobalt"
 
     override val presentableText = "Kobalt"
-    override val targetPlatform = JvmPlatform
+    override val targetPlatform = JvmPlatforms.unspecifiedJvmPlatform
+    @Suppress("DEPRECATION_ERROR")
+    override fun getTargetPlatform() = JvmPlatforms.CompatJvmPlatform
 
     override fun changeGeneralFeatureConfiguration(module: Module, feature: LanguageFeature, state: LanguageFeature.State, forTests: Boolean) {
         //noop

@@ -11,6 +11,7 @@ import com.beust.kobalt.intellij.task.KobaltTaskManager
 import com.fasterxml.jackson.core.JsonFactory
 import com.google.gson.JsonParser
 import com.intellij.execution.configurations.SimpleJavaParameters
+import com.intellij.execution.process.OSProcessHandler
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.ExternalSystemAutoImportAware
 import com.intellij.openapi.externalSystem.ExternalSystemConfigurableAware
@@ -102,6 +103,7 @@ class KobaltManager : DefaultExternalSystemUiAware(), ExternalSystemConfigurable
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(JsonFactory::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(Objenesis::class.java))
         ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(LanguageLevel::class.java))
+        ContainerUtilRt.addIfNotNull(additionalClasspath, PathUtil.getJarPathForClass(OSProcessHandler::class.java))
         parameters.classPath.addAll(additionalClasspath)
         parameters.charset = CharsetToolkit.UTF8_CHARSET
         parameters.vmParametersList.addProperty("file.encoding", CharsetToolkit.UTF8)
